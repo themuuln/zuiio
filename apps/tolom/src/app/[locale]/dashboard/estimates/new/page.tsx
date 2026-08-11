@@ -2,7 +2,6 @@
 
 import { useOrgMutation } from "@zuiio/query";
 import {
-  ArrowLeft,
   Edit3,
   Package,
   Plus,
@@ -18,6 +17,7 @@ import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
@@ -292,11 +292,11 @@ export default function NewEstimatePage() {
       <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-7xl flex-col gap-6 pb-8">
         <div className="flex flex-col gap-5 pb-2 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex flex-col gap-y-3">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="size-4" />
-              {commonT("back")}
-            </Button>
-
+            <CreatePageHeader
+              backHref="/dashboard/estimates"
+              title={t("newQuoteTitle")}
+              subtitle={t("pageDescription")}
+            />
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
                 <Receipt className="size-3.5" />
@@ -307,15 +307,6 @@ export default function NewEstimatePage() {
                   {commonT("branch")}
                 </Badge>
               )}
-            </div>
-
-            <div>
-              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {t("newQuoteTitle")}
-              </Typography.H1>
-              <Typography.Muted className="mt-1 max-w-2xl text-sm">
-                {t("pageDescription")}
-              </Typography.Muted>
             </div>
           </div>
 

@@ -8,6 +8,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +32,6 @@ import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { useExpenseStats, useExpenses } from "@/lib/queries/use-expenses";
 import { formatMNT } from "@/lib/utils";
-import { KpiCard } from "./_kpi-card";
 
 function ExpensesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations() as (
@@ -51,37 +51,41 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("expenses.totalExpenses")}
           value={loading ? "\u2014" : String(stats?.totalExpenses ?? 0)}
           icon={Wallet}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("expenses.totalAmount")}
           value={loading ? "\u2014" : formatMNT(stats?.totalAmount ?? 0)}
           icon={DollarSign}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("expenses.thisMonth")}
           value={loading ? "\u2014" : formatMNT(stats?.thisMonth ?? 0)}
           icon={TrendingUp}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("expenses.unpaid")}
           value={loading ? "\u2014" : formatMNT(stats?.unpaidAmount ?? 0)}
           icon={Clock}
-          subtitle={
+          sub={
             stats
               ? `${stats.unpaidAmount > 0 ? t("finance.percentOfTotal", { percent: ((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0) }) : t("finance.allPaid")}`
               : undefined
           }
           loading={loading}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
 
       <div className="flex items-center justify-between">
         <Typography.Muted className="text-sm font-medium text-muted-foreground">

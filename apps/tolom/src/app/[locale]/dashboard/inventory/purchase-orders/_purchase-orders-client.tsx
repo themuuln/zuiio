@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
@@ -107,16 +107,10 @@ export default function PurchaseOrdersPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("purchaseOrdersTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("purchaseOrdersSubtitle")}
-        </Typography.Muted>
-      </div>
-
+    <ListPageShell
+      title={t("purchaseOrdersTitle")}
+      description={t("purchaseOrdersSubtitle")}
+    >
       <ListToolbar
         search={{
           placeholder: t("searchPOs"),
@@ -203,6 +197,6 @@ export default function PurchaseOrdersPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

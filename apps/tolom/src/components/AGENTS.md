@@ -20,7 +20,7 @@ src/components/
 └── app-sidebar/          # App-level sidebar
 ```
 
-Plus root-level shared components: `data-table-dashboard.tsx`, `page-header.tsx`, `page-state.tsx`, `status-badge.tsx`, `search-input.tsx`, etc.
+Plus root-level shared components: `stat-card.tsx`, `page-header.tsx`, `page-state.tsx`, `status-badge.tsx`, `search-input.tsx`, etc.
 
 ## Conventions
 
@@ -28,7 +28,7 @@ Plus root-level shared components: `data-table-dashboard.tsx`, `page-header.tsx`
 - **Feature components** (`bay-view-v2/`, `vehicles/`) are scoped to their domain. Don't use them outside it.
 - **`_`-prefixed files** next to pages = extracted sub-components for that page (e.g., `dashboard/_charts.tsx`).
 - **Each feature subdir** should have its own barrel export (`index.ts`) or the parent component is the entry point.
-- **Large file threshold is 500 lines.** Files >800 lines must be split. Current offenders: `data-table-dashboard.tsx` (1094 lines), `org-theme-settings.tsx` (939 lines).
+- **Large file threshold is 500 lines.** Files >800 lines must be split. Current offenders: `org-theme-settings.tsx` (939 lines).
 
 ## Гарын авлага Sync
 
@@ -42,7 +42,7 @@ These are used across features — keep them generic:
 |-----------|---------|
 | `page-header.tsx` | Consistent page title + actions layout |
 | `page-state.tsx` | Loading/empty/error state wrappers |
-| `data-table-dashboard.tsx` | Reusable data table with sorting, pagination |
+| `stat-card.tsx` | KPI stat card with icon, accent, trend, optional link |
 | `status-badge.tsx` | Status display (uses `<Badge>`) |
 | `search-input.tsx` | Search field with debounce |
 | `filter-chips.tsx` | Active filter display |

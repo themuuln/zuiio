@@ -4,6 +4,7 @@ import { Smartphone, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DeviceRegistrationDialog } from "@/components/bay-view-v2/device-registration-dialog";
+import { ListPageShell } from "@/components/list-page-shell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,14 +82,11 @@ export default function DevicesPage() {
 
   if (isPending && devices.length === 0) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="mt-1 h-4 w-64" />
-          </div>
-          <Skeleton className="h-9 w-36" />
-        </div>
+      <ListPageShell
+        title={t("deviceManagement.title")}
+        description={t("deviceManagement.subtitle")}
+        loading
+      >
         <div className="rounded-lg border">
           {[1, 2, 3].map((i) => (
             <div
@@ -103,7 +101,7 @@ export default function DevicesPage() {
             </div>
           ))}
         </div>
-      </div>
+      </ListPageShell>
     );
   }
 
@@ -111,15 +109,10 @@ export default function DevicesPage() {
 
   if (error && devices.length === 0) {
     return (
-      <div className="flex flex-col gap-6">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("deviceManagement.title")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {t("deviceManagement.subtitle")}
-          </Typography.Muted>
-        </div>
+      <ListPageShell
+        title={t("deviceManagement.title")}
+        description={t("deviceManagement.subtitle")}
+      >
         <div className="rounded-lg border p-6">
           <Typography.Text className="text-destructive">
             {error.message}
@@ -128,138 +121,134 @@ export default function DevicesPage() {
             {t("common.retry")}
           </Button>
         </div>
-      </div>
+      </ListPageShell>
     );
   }
 
   // ── Render ─────────────────────────────────────────────────
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("deviceManagement.title")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {t("deviceManagement.subtitle")}
-          </Typography.Muted>
-        </div>
-        <Button onClick={() => setShowRegisterDialog(true)}>
-          <Smartphone className="mr-2 size-4" />
-          {t("deviceRegistration.title")}
-        </Button>
-      </div>
-
-      {/* Empty state */}
-      {!isPending && devices.length === 0 && (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Smartphone className="size-8 text-muted-foreground" />
-            </EmptyMedia>
-            <EmptyTitle>{t("deviceManagement.noDevices")}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
-      )}
-
-      {/* Devices table */}
-      {devices.length > 0 && (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  {t("deviceManagement.mechanicName") || "Mechanic"}
-                </TableHead>
-                <TableHead>
-                  {t("deviceManagement.deviceNameLabel") || "Device"}
-                </TableHead>
-                <TableHead>{t("deviceManagement.lastUsed")}</TableHead>
-                <TableHead>{t("deviceManagement.status")}</TableHead>
-                <TableHead className="w-20">{t("common.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {devices.map((device) => (
-                <TableRow key={device.deviceId}>
-                  <TableCell className="font-medium">
-                    {device.mechanicName || "\u2014"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {device.deviceName || "\u2014"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(device.lastUsedAt)}
-                  </TableCell>
-                  <TableCell>
-                    {device.isActive ? (
-                      <Badge variant="outline">
-                        {t("deviceManagement.active")}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        {t("deviceManagement.revoked_status")}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {device.isActive && (
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setRevokingId(device.deviceId)}
-                      >
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {/* Register device dialog */}
-      <DeviceRegistrationDialog
-        open={showRegisterDialog}
-        onOpenChange={setShowRegisterDialog}
-        orgId={orgId}
-      />
-
-      {/* Revoke confirmation */}
-      <AlertDialog
-        open={!!revokingId}
-        onOpenChange={(open) => {
-          if (!open) setRevokingId(null);
-        }}
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("deviceManagement.title")}
+        description={t("deviceManagement.subtitle")}
+        headerAction={
+          <Button onClick={() => setShowRegisterDialog(true)}>
+            <Smartphone className="mr-2 size-4" />
+            {t("deviceRegistration.title")}
+          </Button>
+        }
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("deviceManagement.revokeConfirm")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("deviceManagement.revokeConfirmDesc")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteDevice.isPending}>
-              {t("common.cancel")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deleteDevice.isPending}
-              onClick={handleRevoke}
-            >
-              {deleteDevice.isPending
-                ? t("common.saving")
-                : t("deviceManagement.revoke")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Empty state */}
+        {!isPending && devices.length === 0 && (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Smartphone className="size-8 text-muted-foreground" />
+              </EmptyMedia>
+              <EmptyTitle>{t("deviceManagement.noDevices")}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        )}
+
+        {/* Devices table */}
+        {devices.length > 0 && (
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    {t("deviceManagement.mechanicName") || "Mechanic"}
+                  </TableHead>
+                  <TableHead>
+                    {t("deviceManagement.deviceNameLabel") || "Device"}
+                  </TableHead>
+                  <TableHead>{t("deviceManagement.lastUsed")}</TableHead>
+                  <TableHead>{t("deviceManagement.status")}</TableHead>
+                  <TableHead className="w-20">{t("common.actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {devices.map((device) => (
+                  <TableRow key={device.deviceId}>
+                    <TableCell className="font-medium">
+                      {device.mechanicName || "\u2014"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {device.deviceName || "\u2014"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(device.lastUsedAt)}
+                    </TableCell>
+                    <TableCell>
+                      {device.isActive ? (
+                        <Badge variant="outline">
+                          {t("deviceManagement.active")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          {t("deviceManagement.revoked_status")}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {device.isActive && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setRevokingId(device.deviceId)}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Register device dialog */}
+        <DeviceRegistrationDialog
+          open={showRegisterDialog}
+          onOpenChange={setShowRegisterDialog}
+          orgId={orgId}
+        />
+
+        {/* Revoke confirmation */}
+        <AlertDialog
+          open={!!revokingId}
+          onOpenChange={(open) => {
+            if (!open) setRevokingId(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("deviceManagement.revokeConfirm")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("deviceManagement.revokeConfirmDesc")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteDevice.isPending}>
+                {t("common.cancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleteDevice.isPending}
+                onClick={handleRevoke}
+              >
+                {deleteDevice.isPending
+                  ? t("common.saving")
+                  : t("deviceManagement.revoke")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </ListPageShell>
     </div>
   );
 }

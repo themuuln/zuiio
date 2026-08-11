@@ -4,17 +4,11 @@ import { Clock3, ShieldCheck, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Typography } from "@/components/ui/typography";
 import { useBranches } from "@/lib/queries/use-branches";
 import {
   useCancelInvite,
@@ -142,128 +136,102 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 pb-8">
-      <div className="rounded-xl border border-border/60 bg-card p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex flex-col gap-y-2">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
-                <ShieldCheck className="mr-1 size-3.5" />
-                {t("roleLabel")}
-              </Badge>
-              <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
-                <Clock3 className="mr-1 size-3.5" />
-                {t("pendingCount", { count: invites.length })}
-              </Badge>
-            </div>
-            <div>
-              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {t("title")}
-              </Typography.H1>
-              <Typography.Muted className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                {t("subtitle")}
-              </Typography.Muted>
-            </div>
+    <div className="px-4 pt-4 pb-6 md:px-6 pb-8">
+      <ListPageShell
+        title={t("title")}
+        description={t("subtitle")}
+        headerAction={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
+              <ShieldCheck className="mr-1 size-3.5" />
+              {t("roleLabel")}
+            </Badge>
+            <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
+              <Clock3 className="mr-1 size-3.5" />
+              {t("pendingCount", { count: invites.length })}
+            </Badge>
+            <Button
+              onClick={() => setInviteSheetOpen(true)}
+              className="h-11 rounded-xl px-5"
+              disabled={!orgId}
+            >
+              <UserPlus className="mr-2 size-4" />
+              {t("inviteButton")}
+            </Button>
           </div>
-          <Button
-            onClick={() => setInviteSheetOpen(true)}
-            className="h-11 rounded-xl px-5"
-            disabled={!orgId}
-          >
-            <UserPlus className="mr-2 size-4" />
-            {t("inviteButton")}
-          </Button>
+        }
+      >
+        <InviteDrawer
+          open={inviteSheetOpen}
+          onOpenChange={setInviteSheetOpen}
+          sending={createInvite.isPending}
+          onSubmit={handleInvite}
+          roles={roles}
+          defaultRoleId={roles[0]?.id ?? ""}
+          t={t}
+        />
+
+        {(pageError || invitePanelError) && (
+          <Alert variant="destructive">
+            <AlertTitle>{commonT("somethingWentWrong")}</AlertTitle>
+            <AlertDescription>{pageError ?? invitePanelError}</AlertDescription>
+          </Alert>
+        )}
+
+        <StatCards columns={3}>
+          <StatCard
+            label={t("members")}
+            sub={t("membersDescription")}
+            value={members.length}
+          />
+          <StatCard
+            label={t("pendingInvites")}
+            sub={t("pendingDescription")}
+            value={invites.length}
+          />
+          <StatCard
+            label={t("branchLabel")}
+            sub={commonT("stats")}
+            value={branches.length}
+          />
+        </StatCards>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
+          <MemberList
+            loading={loadingMembers}
+            members={members}
+            roles={roles}
+            onRoleChange={handleRoleChange}
+            onEdit={setEditingMember}
+            onRemove={removeMember}
+            t={t}
+          />
+
+          <PendingInvites
+            loading={loadingInvites}
+            invites={invites}
+            onCopyLink={copyInviteLink}
+            onResend={handleResendInvite}
+            onCancel={handleCancelInvite}
+            t={t}
+          />
         </div>
-      </div>
 
-      <InviteDrawer
-        open={inviteSheetOpen}
-        onOpenChange={setInviteSheetOpen}
-        sending={createInvite.isPending}
-        onSubmit={handleInvite}
-        roles={roles}
-        defaultRoleId={roles[0]?.id ?? ""}
-        t={t}
-      />
-
-      {(pageError || invitePanelError) && (
-        <Alert variant="destructive">
-          <AlertTitle>{commonT("somethingWentWrong")}</AlertTitle>
-          <AlertDescription>{pageError ?? invitePanelError}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">{t("members")}</CardTitle>
-            <CardDescription>{t("membersDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {members.length}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">{t("pendingInvites")}</CardTitle>
-            <CardDescription>{t("pendingDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {invites.length}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">{t("branchLabel")}</CardTitle>
-            <CardDescription>{commonT("stats")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {branches.length}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
-        <MemberList
-          loading={loadingMembers}
-          members={members}
-          roles={roles}
-          onRoleChange={handleRoleChange}
-          onEdit={setEditingMember}
-          onRemove={removeMember}
-          t={t}
-        />
-
-        <PendingInvites
-          loading={loadingInvites}
-          invites={invites}
-          onCopyLink={copyInviteLink}
-          onResend={handleResendInvite}
-          onCancel={handleCancelInvite}
-          t={t}
-        />
-      </div>
-
-      {editingMember && (
-        <EditMemberDrawer
-          open={!!editingMember}
-          onOpenChange={(open) => {
-            if (!open) setEditingMember(null);
-          }}
-          member={editingMember}
-          roles={roles}
-          branches={branches}
-          onSave={handleSaveMember}
-          saving={updateMember.isPending}
-          t={t}
-        />
-      )}
+        {editingMember && (
+          <EditMemberDrawer
+            open={!!editingMember}
+            onOpenChange={(open) => {
+              if (!open) setEditingMember(null);
+            }}
+            member={editingMember}
+            roles={roles}
+            branches={branches}
+            onSave={handleSaveMember}
+            saving={updateMember.isPending}
+            t={t}
+          />
+        )}
+      </ListPageShell>
     </div>
   );
 }

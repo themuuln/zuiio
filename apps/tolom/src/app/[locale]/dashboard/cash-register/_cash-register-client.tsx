@@ -16,6 +16,8 @@ import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,74 +69,68 @@ export function CashRegisterClient() {
 
   return (
     <div className="flex flex-col gap-6 pb-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Banknote className="size-5 text-primary" />
-          <Typography.H2 className="m-0 text-xl font-semibold">
-            {t("cashRegister.title")}
-          </Typography.H2>
-        </div>
-        {!session && (
-          <Button onClick={() => setShowOpenDialog(true)}>
-            <PlusCircle className="mr-1.5 size-3.5" />
-            {t("cashRegister.openSession")}
-          </Button>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* Status + Actions */}
-      {showSkeleton ? (
-        <>
-          <Skeleton className="h-16 rounded-xl" />
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((n) => (
-              <Skeleton key={n} className="h-24 rounded-xl" />
-            ))}
-          </div>
-        </>
-      ) : session ? (
-        <SessionHeader
-          session={session}
-          onClose={() => setShowCloseDialog(true)}
-          onCashOut={() => setShowCashOutDialog(true)}
-        />
-      ) : (
-        <NoSessionCard onOpen={() => setShowOpenDialog(true)} />
-      )}
-
-      {/* Transaction List */}
-      {showSkeleton ? (
-        <Skeleton className="h-48 rounded-xl" />
-      ) : session?.entries && session.entries.length > 0 ? (
-        <TransactionList entries={session.entries} />
-      ) : null}
-
-      {/* Dialogs */}
-      <OpenSessionDialog
-        open={showOpenDialog}
-        onOpenChange={setShowOpenDialog}
-        orgId={orgId}
-        branchId={branchFilter}
-      />
-      {session && (
-        <>
-          <CloseSessionDialog
-            open={showCloseDialog}
-            onOpenChange={setShowCloseDialog}
-            orgId={orgId}
+      <ListPageShell
+        title={t("cashRegister.title")}
+        headerAction={
+          !session ? (
+            <Button onClick={() => setShowOpenDialog(true)}>
+              <PlusCircle className="mr-1.5 size-3.5" />
+              {t("cashRegister.openSession")}
+            </Button>
+          ) : undefined
+        }
+      >
+        {/* Status + Actions */}
+        {showSkeleton ? (
+          <>
+            <Skeleton className="h-16 rounded-xl" />
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((n) => (
+                <Skeleton key={n} className="h-24 rounded-xl" />
+              ))}
+            </div>
+          </>
+        ) : session ? (
+          <SessionHeader
             session={session}
+            onClose={() => setShowCloseDialog(true)}
+            onCashOut={() => setShowCashOutDialog(true)}
           />
-          <CashOutDialog
-            open={showCashOutDialog}
-            onOpenChange={setShowCashOutDialog}
-            orgId={orgId}
-            sessionId={session.id}
-          />
-        </>
-      )}
+        ) : (
+          <NoSessionCard onOpen={() => setShowOpenDialog(true)} />
+        )}
+
+        {/* Transaction List */}
+        {showSkeleton ? (
+          <Skeleton className="h-48 rounded-xl" />
+        ) : session?.entries && session.entries.length > 0 ? (
+          <TransactionList entries={session.entries} />
+        ) : null}
+
+        {/* Dialogs */}
+        <OpenSessionDialog
+          open={showOpenDialog}
+          onOpenChange={setShowOpenDialog}
+          orgId={orgId}
+          branchId={branchFilter}
+        />
+        {session && (
+          <>
+            <CloseSessionDialog
+              open={showCloseDialog}
+              onOpenChange={setShowCloseDialog}
+              orgId={orgId}
+              session={session}
+            />
+            <CashOutDialog
+              open={showCashOutDialog}
+              onOpenChange={setShowCashOutDialog}
+              orgId={orgId}
+              sessionId={session.id}
+            />
+          </>
+        )}
+      </ListPageShell>
     </div>
   );
 }
@@ -187,32 +183,32 @@ function SessionHeader({
       </div>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <BalanceCard
+      <StatCards>
+        <StatCard
           icon={DollarSign}
           label={t("cashRegister.openingBalance")}
-          value={session.opening_balance}
-          accent="text-muted-foreground"
+          value={formatCurrency(session.opening_balance)}
+          accent="default"
         />
-        <BalanceCard
+        <StatCard
           icon={ArrowDownCircle}
           label={t("cashRegister.cashIn")}
-          value={session.cash_in}
-          accent="text-green-500"
+          value={formatCurrency(session.cash_in)}
+          accent="success"
         />
-        <BalanceCard
+        <StatCard
           icon={ArrowUpCircle}
           label={t("cashRegister.cashOut")}
-          value={session.cash_out}
-          accent="text-red-500"
+          value={formatCurrency(session.cash_out)}
+          accent="danger"
         />
-        <BalanceCard
+        <StatCard
           icon={Receipt}
           label={t("cashRegister.expectedBalance")}
-          value={expectedBalance}
-          accent="text-blue-500"
+          value={formatCurrency(expectedBalance)}
+          accent="info"
         />
-      </div>
+      </StatCards>
 
       {/* Actions */}
       <div className="flex gap-2">
@@ -229,34 +225,6 @@ function SessionHeader({
         </Button>
       </div>
     </div>
-  );
-}
-
-// ── Balance Card ───────────────────────────────────────────
-
-function BalanceCard({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  accent?: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col gap-1.5 p-4">
-        <div className="flex items-center gap-2">
-          <Icon className={`size-4 ${accent ?? "text-muted-foreground"}`} />
-          <Typography.Muted className="text-xs">{label}</Typography.Muted>
-        </div>
-        <Typography.H3 className="m-0 text-2xl font-bold tracking-tight">
-          {formatCurrency(value)}
-        </Typography.H3>
-      </CardContent>
-    </Card>
   );
 }
 

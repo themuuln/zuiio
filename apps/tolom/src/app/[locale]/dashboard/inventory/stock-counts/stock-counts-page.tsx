@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { StockCountDetailDrawer } from "@/components/inventory/stock-count/detail-drawer";
 import { StartCountDrawer } from "@/components/inventory/stock-count/start-count-drawer";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useStockCountSessions } from "@/lib/queries/use-stock-counts";
 
@@ -64,22 +64,15 @@ export function StockCountsPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("stockCountTitle")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {t("stockCountSubtitle")}
-          </Typography.Muted>
-        </div>
+    <ListPageShell
+      title={t("stockCountTitle")}
+      description={t("stockCountSubtitle")}
+      headerAction={
         <Button size="default" onClick={() => setStartDrawerOpen(true)}>
           <Plus className="size-5" /> {t("startCount")}
         </Button>
-      </div>
-
+      }
+    >
       {/* Sessions list */}
       <Card>
         <CardContent className="p-0">
@@ -169,6 +162,6 @@ export function StockCountsPage() {
         orgId={orgId ?? ""}
         sessionId={selectedSessionId ?? ""}
       />
-    </div>
+    </ListPageShell>
   );
 }

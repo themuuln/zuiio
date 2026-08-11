@@ -10,10 +10,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { Link } from "@/lib/i18n/navigation";
 import {
@@ -82,55 +81,33 @@ function InventoryPage() {
           </span>
         </div>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          {showSkeleton ? (
-            <Skeleton className="h-8 w-48" />
-          ) : (
-            <Typography.H1 className="text-2xl font-semibold tracking-tight">
-              {t("title")}
-            </Typography.H1>
-          )}
-          {showSkeleton ? (
-            <Skeleton className="h-4 w-64" />
-          ) : (
-            <Typography.Muted className="text-muted-foreground">
-              {t("subtitleParts")}
-            </Typography.Muted>
-          )}
-        </div>
-        <Button
-          render={<Link href="/dashboard/inventory/alerts" />}
-          variant="outline"
-          size="sm"
-          nativeButton={false}
-        >
-          <AlertTriangle className="size-4" />
-          Alerts
-        </Button>
-      </div>
-
-      {/* ── Reports KPI Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card>
-          <CardContent className="flex flex-col gap-1 p-3">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Package className="size-3" />
-              {t("totalSKUs")}
-            </span>
-            <span className="text-xl font-semibold tabular-nums">
-              {showSkeleton ? "—" : parts.length}
-            </span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-1 p-3">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <BarChart3 className="size-3" />
-              {t("totalStockValue")}
-            </span>
-            <span className="text-xl font-semibold tabular-nums">
-              {showSkeleton
+      <ListPageShell
+        title={t("title")}
+        description={t("subtitleParts")}
+        loading={showSkeleton}
+        headerAction={
+          <Button
+            render={<Link href="/dashboard/inventory/alerts" />}
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+          >
+            <AlertTriangle className="size-4" />
+            Alerts
+          </Button>
+        }
+      >
+        {/* ── Reports KPI Cards ── */}
+        <StatCards>
+          <StatCard
+            label={t("totalSKUs")}
+            value={showSkeleton ? "—" : parts.length}
+            icon={Package}
+          />
+          <StatCard
+            label={t("totalStockValue")}
+            value={
+              showSkeleton
                 ? "—"
                 : formatMNT(
                     balances.reduce(
@@ -139,49 +116,38 @@ function InventoryPage() {
                         (b.quantity_on_hand ?? 0) * (b.default_price ?? 0),
                       0,
                     ),
-                  )}
-            </span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-1 p-3">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <TrendingDown className="size-3" />
-              {t("turnoverRate")}
-            </span>
-            <span className="text-xl font-semibold tabular-nums">
-              {showSkeleton
+                  )
+            }
+            icon={BarChart3}
+          />
+          <StatCard
+            label={t("turnoverRate")}
+            value={
+              showSkeleton
                 ? "—"
                 : turnover?.turnoverRate != null
                   ? `${turnover.turnoverRate.toFixed(1)}x`
-                  : "—"}
-            </span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-1 p-3">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="size-3" />
-              {t("reports")}
-            </span>
-            <span className="text-xl font-semibold tabular-nums">
-              {showSkeleton ? "—" : slowMoving.length}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {t("slowMovers")}
-            </span>
-          </CardContent>
-        </Card>
-      </div>
+                  : "—"
+            }
+            icon={TrendingDown}
+          />
+          <StatCard
+            label={t("reports")}
+            value={showSkeleton ? "—" : slowMoving.length}
+            icon={Clock}
+            sub={t("slowMovers")}
+          />
+        </StatCards>
 
-      {/* Parts inventory - main view */}
-      <PartsTab
-        orgId={orgId ?? ""}
-        branchFilter={branchFilter}
-        search={search}
-        onSearchChange={setSearch}
-        onNavigate={handleTabChange}
-      />
+        {/* Parts inventory - main view */}
+        <PartsTab
+          orgId={orgId ?? ""}
+          branchFilter={branchFilter}
+          search={search}
+          onSearchChange={setSearch}
+          onNavigate={handleTabChange}
+        />
+      </ListPageShell>
     </div>
   );
 }

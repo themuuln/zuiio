@@ -454,6 +454,7 @@ describe("updateWorkOrderStatus", () => {
     expect(syncWorkOrderToSchedules).toHaveBeenCalledWith(
       expect.anything(),
       "wo-1",
+      "test-user-id",
     );
 
     // Inventory movements created

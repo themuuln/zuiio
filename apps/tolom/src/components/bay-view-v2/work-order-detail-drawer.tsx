@@ -1,7 +1,20 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
+import {
+  ArrowLeft,
+  Clock,
+  Fingerprint,
+  Gauge,
+  Hash,
+  MapPin,
+  Maximize2,
+  Minimize2,
+  User,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -13,7 +26,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { VariantSelectionDialog } from "@/components/services/variant-selection-dialog";
+import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
+import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
@@ -27,18 +44,16 @@ import {
 } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { savePostServiceData } from "@/lib/services/post-service-service";
+import type { Customer } from "@/lib/types";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import { CustomerPickerDrawer } from "./_customer-picker-drawer";
 import { DrawerCelebration } from "./_drawer-celebration";
-import { DrawerContentPanel } from "./_drawer-content-panel";
 import { DrawerFooter } from "./_drawer-footer";
-import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerSkeleton } from "./_drawer-loading";
 import { DrawerNestedForms } from "./_drawer-nested-forms";
-import { DrawerSkeletonLayout } from "./_drawer-skeleton-layout";
 import type {
   CatalogPartItem,
   CatalogServiceItem,
@@ -47,8 +62,19 @@ import type {
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { createInvoiceAndRecordPayment } from "./_payment-helpers";
+import { StatusPill } from "./_status-pill";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import { useVariantSelection } from "./_use-variant-selection";
+import {
+  NotesSectionV2,
+  PartsSectionV2,
+  ServicesSectionV2,
+} from "./drawer-v2/_sections";
+import {
+  CustomerCardV2,
+  MechanicCardV2,
+  TimelineCardV2,
+} from "./drawer-v2/_sidebar";
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -61,6 +87,8 @@ export function WorkOrderDetailDrawer({
   branchFilter,
   assignMechanicMutation: drawerAssignMechanicMutation,
   assignCustomerMutation: drawerAssignCustomerMutation,
+  addHelperMutation: drawerAddHelperMutation,
+  removeHelperMutation: drawerRemoveHelperMutation,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView") as (
     key: string,
@@ -71,8 +99,7 @@ export function WorkOrderDetailDrawer({
 
   // ── Data layer ──
 
-  const { orgId, orgIdRef, wo, setWo, isLoading, error } =
-    useDrawerQueries(workOrderId);
+  const { orgId, orgIdRef, wo, setWo, error } = useDrawerQueries(workOrderId);
 
   const { catalog, partsCatalog, mechanics, orgSettings } = useDrawerCatalogs(
     orgId,
@@ -220,8 +247,6 @@ export function WorkOrderDetailDrawer({
     canCancel,
     canInvoice,
     invoicePublicToken,
-    lastAddedServiceId,
-    lastAddedPartId,
   } = useDrawerMutations({
     workOrderId,
     orgIdRef,
@@ -261,6 +286,58 @@ export function WorkOrderDetailDrawer({
       ? ([bayViewKeys.data(branchFilter)] as const)
       : undefined,
   });
+
+  const noteFieldMutation = useOrgMutation<
+    unknown,
+    Record<string, string | null>
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    optimisticQueryKey:
+      orgId && workOrderId
+        ? drawerDetailKeys.all(orgId, workOrderId)
+        : undefined,
+    onOptimisticUpdate: (
+      qc: QueryClient,
+      vars: Record<string, string | null>,
+    ) => {
+      if (!orgId || !workOrderId) return undefined;
+      const key = drawerDetailKeys.all(orgId, workOrderId);
+      const prev = qc.getQueryData<DrawerDetailResponse>(key);
+      if (prev?.workOrder) {
+        qc.setQueryData<DrawerDetailResponse>(key, {
+          ...prev,
+          workOrder: {
+            ...prev.workOrder,
+            ...vars,
+          } as WorkOrderDetail,
+        });
+      }
+      return prev;
+    },
+    invalidateKeys: branchFilter
+      ? ([bayViewKeys.data(branchFilter)] as const)
+      : undefined,
+  });
+
+  const handleSaveNoteField = useCallback(
+    async (field: "complaint" | "diagnosis" | "notes", value: string) => {
+      const prevWo = wo;
+      try {
+        await noteFieldMutation.mutateAsync({ [field]: value.trim() || null });
+        void fetchWo(true);
+        toast.success(t("saved"));
+      } catch {
+        // Rollback the optimistic cache patch (useOrgMutation does not
+        // auto-rollback when onOptimisticUpdate is set).
+        if (prevWo) setWo(prevWo);
+        toast.error(t("failedToSave"));
+      }
+    },
+    [noteFieldMutation, fetchWo, setWo, wo, t],
+  );
 
   // ── Local-only state ──
 
@@ -452,11 +529,6 @@ export function WorkOrderDetailDrawer({
     [setWo, nuatMutation],
   );
   // ── Stable callbacks for sub-components ──
-  const handleHelpersChange = useCallback(() => {
-    void fetchWo(true);
-    onRefresh();
-  }, [fetchWo, onRefresh]);
-
   const handleToggleFullScreen = useCallback(
     () => setIsFullScreen((f) => !f),
     [],
@@ -472,10 +544,6 @@ export function WorkOrderDetailDrawer({
     [],
   );
 
-  const handleNotesUpdated = useCallback(() => {
-    void fetchWo(true);
-  }, [fetchWo]);
-
   const handleConfirmCancel = useCallback(() => {
     setConfirmStatus(null);
     setStatusNotes("");
@@ -488,8 +556,14 @@ export function WorkOrderDetailDrawer({
   );
 
   const handleCustomerSelect = useCallback(
-    (customer: { id: string }) => {
-      assignCustomer(customer.id);
+    (customer: Customer) => {
+      assignCustomer(
+        customer.id,
+        [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
+          customer.phone ||
+          null,
+        customer,
+      );
     },
     [assignCustomer],
   );
@@ -503,6 +577,22 @@ export function WorkOrderDetailDrawer({
     [setPendingVariantItem],
   );
 
+  // ── Derived display values ──
+
+  const vehicle = wo?.vehicle;
+  const customerName = wo?.customer
+    ? [wo.customer.first_name, wo.customer.last_name]
+        .filter(Boolean)
+        .join(" ") ||
+      wo.customer.full_name ||
+      wo.customer.phone ||
+      t("listHeaderCustomer")
+    : t("listHeaderCustomer");
+  const mechanicName = wo?.mechanic?.full_name ?? "—";
+  const createdLabel = wo?.created_at
+    ? new Date(wo.created_at).toLocaleDateString()
+    : "";
+
   // ── Render ──
 
   return (
@@ -510,7 +600,7 @@ export function WorkOrderDetailDrawer({
       <DetailDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        size="1/2"
+        size={isFullScreen ? "full" : "detail"}
         backdropClassName={
           isFullScreen ? "bg-black/80 !backdrop-blur-none" : undefined
         }
@@ -519,21 +609,165 @@ export function WorkOrderDetailDrawer({
         )}
         viewportClassName={isFullScreen ? "p-0" : undefined}
       >
-        <DrawerHeaderSection
-          wo={wo}
-          loading={isLoading && !wo}
-          isFullScreen={isFullScreen}
-          onToggleFullScreen={handleToggleFullScreen}
-          onClose={handleClose}
-          showBack={showPostServiceForm}
-          onBack={handleCancelPostService}
-          t={t}
-        />
+        <DrawerTitle className="sr-only">
+          {t("workOrder")} —{" "}
+          {vehicle?.plate_number ?? workOrderId?.slice(0, 8) ?? ""}
+        </DrawerTitle>
+        <DrawerDescription className="sr-only">
+          {t("workOrderDrawerDescription")}
+        </DrawerDescription>
 
-        {/* Content — PPR pattern: always render structure, skeleton-load values */}
+        {/* ── Header ─────────────────────────────────────── */}
+        <header
+          className={cn(
+            "shrink-0 border-b border-border/70 bg-card",
+            isFullScreen && "mx-auto w-full max-w-6xl",
+          )}
+        >
+          <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              {showPostServiceForm && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={handleCancelPostService}
+                  aria-label={t("backLabel")}
+                >
+                  <ArrowLeft className="size-4" />
+                </Button>
+              )}
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+                {!wo ? (
+                  <div className="size-10 animate-pulse rounded-lg bg-muted" />
+                ) : (
+                  <VehicleMakeLogo
+                    make={vehicle?.make}
+                    size={20}
+                    className="text-primary"
+                  />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  {vehicle?.plate_number ? (
+                    <MongolianLicensePlate plate={vehicle.plate_number} />
+                  ) : !wo ? (
+                    <div className="h-6 w-24 animate-pulse rounded-md bg-muted" />
+                  ) : (
+                    <span className="text-sm font-semibold">
+                      {t("workOrder")}
+                    </span>
+                  )}
+                  {wo?.status && <StatusPill status={wo.status} />}
+                </div>
+                <p className="mt-1 truncate text-xs font-medium text-foreground/85">
+                  {vehicle
+                    ? [
+                        `${vehicle.make} ${vehicle.model}`,
+                        vehicle.year,
+                        vehicle.color,
+                        vehicle.fuel_type
+                          ? `${t("fuel")}: ${vehicle.fuel_type}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")
+                    : t("workOrder")}
+                  {wo?.id && (
+                    <>
+                      <span className="mx-1.5 text-muted-foreground/40">·</span>
+                      <span className="font-mono font-normal text-muted-foreground">
+                        WO#{wo.id.slice(0, 8)}
+                      </span>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex shrink-0 items-center gap-1">
+              {!showPostServiceForm && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={handleToggleFullScreen}
+                  aria-label={
+                    isFullScreen ? t("exitFullscreen") : t("fullscreen")
+                  }
+                >
+                  {isFullScreen ? (
+                    <Minimize2 className="size-4" />
+                  ) : (
+                    <Maximize2 className="size-4" />
+                  )}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleClose}
+                aria-label={t("close")}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Meta chips */}
+          {wo && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/50 bg-muted/25 px-4 py-2 text-xs text-muted-foreground/80 sm:px-5">
+              <span className="flex items-center gap-1.5">
+                <Hash className="size-3.5 text-muted-foreground/50" />
+                <span className="font-mono tabular-nums">
+                  #{wo.id.slice(0, 8)}
+                </span>
+              </span>
+              {wo.bay_number != null && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="size-3.5 text-muted-foreground/50" />
+                  {t("bay")} {wo.bay_number}
+                </span>
+              )}
+              {vehicle?.vin && (
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <Fingerprint className="size-3.5 shrink-0 text-muted-foreground/50" />
+                  <span className="font-mono tabular-nums">{vehicle.vin}</span>
+                </span>
+              )}
+              {(wo.odometer_at_service ?? vehicle?.odometer) != null && (
+                <span className="flex items-center gap-1.5">
+                  <Gauge className="size-3.5 text-muted-foreground/50" />
+                  {(
+                    wo.odometer_at_service ??
+                    vehicle?.odometer ??
+                    0
+                  ).toLocaleString()}{" "}
+                  {t("km")}
+                </span>
+              )}
+              <span className="flex min-w-0 items-center gap-1.5">
+                <User className="size-3.5 shrink-0 text-muted-foreground/50" />
+                <span className="truncate">{customerName}</span>
+              </span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Wrench className="size-3.5 shrink-0 text-muted-foreground/50" />
+                <span className="truncate">{mechanicName}</span>
+              </span>
+              {createdLabel && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="size-3.5 text-muted-foreground/50" />
+                  {t("created")} {createdLabel}
+                </span>
+              )}
+            </div>
+          )}
+        </header>
+
+        {/* ── Content ─────────────────────────────────────── */}
         <div
           className={cn(
-            "flex flex-col min-h-0 flex-1 overflow-hidden transition-[transform,opacity] duration-300 ease-out",
+            "flex min-h-0 flex-1 flex-col overflow-hidden contain-layout contain-paint transition-[transform,opacity] duration-300 ease-out",
             transitioning ? "scale-[0.98] opacity-95" : "scale-100 opacity-100",
           )}
         >
@@ -546,31 +780,85 @@ export function WorkOrderDetailDrawer({
               {null}
             </DrawerSkeleton>
           ) : !wo ? (
-            <DrawerSkeletonLayout isFullScreen={isFullScreen} />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div
+                className={cn(
+                  "mx-auto w-full px-4 py-4 sm:px-5",
+                  isFullScreen && "max-w-6xl",
+                )}
+              >
+                <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+                  <div className="flex min-w-0 flex-col gap-4">
+                    <div className="h-24 animate-pulse rounded-xl bg-muted/10" />
+                    <div className="h-24 animate-pulse rounded-xl bg-muted/10" />
+                    <div className="h-16 animate-pulse rounded-xl bg-muted/10" />
+                  </div>
+                  <div className="hidden gap-4 lg:flex lg:flex-col">
+                    <div className="h-28 animate-pulse rounded-xl bg-muted/10" />
+                    <div className="h-36 animate-pulse rounded-xl bg-muted/10" />
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
-              <DrawerContentPanel
-                wo={wo}
-                orgId={orgId ?? ""}
-                workOrderId={workOrderId ?? ""}
-                catalog={catalog}
-                partsCatalog={partsCatalog}
-                isFullScreen={isFullScreen}
-                onAddServiceOpenChange={handleServiceDrawerOpenChange}
-                onEditServicePriceSave={handleServicePriceSave}
-                onEditServiceQtySave={handleServiceQtySave}
-                onAddPartOpenChange={handlePartDrawerOpenChange}
-                onEditPartPriceSave={handlePartPriceSave}
-                onEditPartQtySave={handlePartQtySave}
-                lastAddedServiceId={lastAddedServiceId}
-                lastAddedPartId={lastAddedPartId}
-                onNotesUpdated={handleNotesUpdated}
-                mechanics={mechanics}
-                helpers={(wo?.helpers ?? []) as unknown as MechanicRef[]}
-                onAssignMechanic={assignMechanic}
-                onHelpersChange={handleHelpersChange}
-                onShowCustomerPicker={handleShowCustomerPicker}
-              />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <div
+                  className={cn(
+                    "mx-auto w-full px-4 py-4 sm:px-5",
+                    isFullScreen && "max-w-6xl",
+                  )}
+                >
+                  {/* Vehicle identity lives in the header — no hero card */}
+                  <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+                    <main className="flex min-w-0 flex-col gap-4">
+                      <ServicesSectionV2
+                        services={wo.services ?? []}
+                        t={t}
+                        onAddServiceOpenChange={handleServiceDrawerOpenChange}
+                        onEditServiceQty={handleServiceQtySave}
+                        onEditServicePrice={handleServicePriceSave}
+                      />
+                      <PartsSectionV2
+                        parts={wo.parts ?? []}
+                        t={t}
+                        onAddPartOpenChange={handlePartDrawerOpenChange}
+                        onEditPartQty={handlePartQtySave}
+                        onEditPartPrice={handlePartPriceSave}
+                      />
+                      {orgId && workOrderId && (
+                        <NotesSectionV2
+                          complaint={wo.complaint}
+                          diagnosis={wo.diagnosis}
+                          notes={wo.notes}
+                          t={t}
+                          onSaveNoteField={handleSaveNoteField}
+                        />
+                      )}
+                    </main>
+
+                    <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-4">
+                      <CustomerCardV2
+                        wo={wo}
+                        t={t}
+                        onOpenCustomerPicker={handleShowCustomerPicker}
+                      />
+                      <MechanicCardV2
+                        wo={wo}
+                        allMechanics={mechanics}
+                        helpers={(wo.helpers ?? []) as unknown as MechanicRef[]}
+                        workOrderId={workOrderId ?? ""}
+                        t={t}
+                        onAssignMechanic={assignMechanic}
+                        addHelperMutation={drawerAddHelperMutation}
+                        removeHelperMutation={drawerRemoveHelperMutation}
+                      />
+                      <TimelineCardV2 wo={wo} t={t} />
+                    </aside>
+                  </div>
+                </div>
+              </div>
+
               <DrawerFooter
                 wo={wo}
                 taxRate={orgSettings?.default_tax_rate ?? 0}
@@ -608,10 +896,10 @@ export function WorkOrderDetailDrawer({
         />
 
         {/* Nested drawers — rendered outside DrawerContent (portaled) but inside
-            DrawerPrimitive.Root via DetailDrawer's nestedContent slot.
-            This is the canonical Base UI pattern for nested drawer detection:
-            the child DrawerRoot's DialogRootContext finds the parent context
-            through React tree, enabling proper --nested-drawers stacking vars. */}
+            DrawerPrimitive.Root via DetailDrawer's children. This is the
+            canonical Base UI pattern for nested drawer detection: the child
+            DrawerRoot's DialogRootContext finds the parent context through the
+            React tree, enabling proper --nested-drawers stacking vars. */}
         <CatalogPickerDrawer
           open={showAddService}
           onOpenChange={handleServiceDrawerOpenChange}
@@ -653,7 +941,7 @@ export function WorkOrderDetailDrawer({
               name_mn: null,
               default_price: 0,
               _source: "global",
-            } as CatalogPartItem)
+            } as unknown as CatalogPartItem)
           }
           isAdded={(item) =>
             wo?.parts?.some((p) => p.part_id === item.id) ??

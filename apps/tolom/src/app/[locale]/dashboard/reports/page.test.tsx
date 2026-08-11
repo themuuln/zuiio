@@ -63,7 +63,12 @@ vi.mock("./_overview-tab", () => ({
 // ReportsTabBar renders clickable buttons so tab switching can
 // be exercised in tests.
 vi.mock("./_reports-header", () => ({
-  ReportsHeader: () => <div data-testid="reports-header">Header</div>,
+  ReportsHeader: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="reports-header">
+      Header
+      {children}
+    </div>
+  ),
 }));
 vi.mock("./_reports-tab-bar", () => ({
   ReportsTabBar: ({

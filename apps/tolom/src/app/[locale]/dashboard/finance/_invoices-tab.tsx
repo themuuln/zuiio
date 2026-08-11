@@ -1,5 +1,6 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { useFuzzySearch } from "@zuiio/hooks";
 import {
   ArrowUpRight,
@@ -10,22 +11,15 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { useTableFilters } from "@/lib/hooks/use-table-filters";
@@ -37,7 +31,6 @@ import {
 import { reportServerError } from "@/lib/sentry-report-server";
 import { formatCurrency } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { KpiCard } from "./_kpi-card";
 
 // ── Shared helpers (module scope to avoid per-render rebuild) ──
 
@@ -178,11 +171,14 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     minQueryLength: 1,
   });
 
-  const handleCopyLink = (token: string) => {
-    const url = `${window.location.origin}/invoice/${token}`;
-    navigator.clipboard.writeText(url);
-    toast.success(t("linkCopied"));
-  };
+  const handleCopyLink = useCallback(
+    (token: string) => {
+      const url = `${window.location.origin}/invoice/${token}`;
+      navigator.clipboard.writeText(url);
+      toast.success(t("linkCopied"));
+    },
+    [t],
+  );
 
   const invoiceExportColumns: ExportColumn<InvoiceListItem>[] = [
     { key: "invoice_number", label: t("invoiceNumber") },
@@ -195,38 +191,165 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     { key: "issued_at", label: t("date"), format: "date" },
   ];
 
+  const columns = useMemo<ColumnDef<InvoiceListItem>[]>(
+    () => [
+      {
+        accessorKey: "invoice_number",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("invoiceNumber")} />
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-medium">
+            <HighlightText text={row.original.invoice_number} query={search} />
+          </span>
+        ),
+      },
+      {
+        accessorKey: "customer_name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("customer")} />
+        ),
+        cell: ({ row }) =>
+          row.original.customer_name ? (
+            <HighlightText text={row.original.customer_name} query={search} />
+          ) : (
+            "\u2014"
+          ),
+      },
+      {
+        accessorKey: "vehicle_plate",
+        header: t("vehicle"),
+        cell: ({ row }) =>
+          row.original.vehicle_plate ? (
+            <HighlightText text={row.original.vehicle_plate} query={search} />
+          ) : (
+            "\u2014"
+          ),
+      },
+      {
+        accessorKey: "status",
+        header: t("status"),
+        cell: ({ row }) => <InvoiceStatusBadge status={row.original.status} />,
+      },
+      {
+        accessorKey: "total",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("total")} />
+        ),
+        meta: { align: "right" },
+        cell: ({ row }) => (
+          <span className="font-medium tabular-nums">
+            {formatCurrency(row.original.total)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "issued_at",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("date")} />
+        ),
+        meta: { align: "right" },
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {formatInvoiceDate(row.original.issued_at)}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: t("actions"),
+        meta: { align: "right" },
+        cell: ({ row }) => {
+          const inv = row.original;
+          return (
+            <div className="flex items-center justify-end gap-1">
+              {inv.email_sent_at && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 text-[11px]"
+                  title={t("sentOn", {
+                    date: new Date(inv.email_sent_at).toLocaleDateString(),
+                  })}
+                >
+                  <Mail className="size-3" />
+                  {t("sentBadge")}
+                </Badge>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCopyLink(inv.public_token)}
+                title={t("copyPublicLink")}
+              >
+                <ArrowUpRight className="size-3.5" />
+                {t("share")}
+              </Button>
+              {!inv.email_sent_at && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSendEmail(inv.id, inv.invoice_number)}
+                  disabled={sendEmail.isPending}
+                  title={
+                    inv.customer_email
+                      ? t("sendInvoiceTo", {
+                          email: inv.customer_email,
+                        })
+                      : t("noCustomerEmail")
+                  }
+                >
+                  {sendEmail.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Mail className="size-3.5" />
+                  )}
+                  {t("email")}
+                </Button>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [t, search, handleCopyLink, handleSendEmail, sendEmail.isPending],
+  );
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("totalInvoices")}
           value={isPending ? "\u2014" : String(stats?.total ?? 0)}
           icon={DollarSign}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("sent")}
           value={isPending ? "\u2014" : String(stats?.sent ?? 0)}
           icon={ArrowUpRight}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("paid")}
           value={isPending ? "\u2014" : String(stats?.paid ?? 0)}
           icon={TrendingUp}
-          subtitle={
+          sub={
             stats?.totalRevenue ? formatCurrency(stats.totalRevenue) : undefined
           }
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("outstanding")}
           value={isPending ? "\u2014" : formatCurrency(stats?.outstanding ?? 0)}
           icon={Clock}
-          subtitle={`${stats?.overdue ?? 0} ${t("overdueCount")}`}
+          sub={`${stats?.overdue ?? 0} ${t("overdueCount")}`}
           loading={isPending}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
       <ListToolbar
         search={{
           placeholder: t("searchInvoices"),
@@ -282,147 +405,19 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
       />
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("invoiceNumber")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("customer")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("vehicle")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("status")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("total")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("date")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("actions")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isPending ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="px-5 py-16">
-                      <Skeleton className="h-8 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="px-5 py-16 text-center text-muted-foreground"
-                    >
-                      No invoices found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((inv) => (
-                    <TableRow
-                      key={inv.id}
-                      className="border-b border-border transition-colors hover:bg-muted/30"
-                    >
-                      <TableCell className="px-5 py-3.5 font-mono text-xs font-medium">
-                        <HighlightText
-                          text={inv.invoice_number}
-                          query={search}
-                        />
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5">
-                        {inv.customer_name ? (
-                          <HighlightText
-                            text={inv.customer_name}
-                            query={search}
-                          />
-                        ) : (
-                          "\u2014"
-                        )}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-muted-foreground">
-                        {inv.vehicle_plate ? (
-                          <HighlightText
-                            text={inv.vehicle_plate}
-                            query={search}
-                          />
-                        ) : (
-                          "\u2014"
-                        )}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5">
-                        <InvoiceStatusBadge status={inv.status} />
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
-                        {formatCurrency(inv.total)}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
-                        {formatInvoiceDate(inv.issued_at)}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {inv.email_sent_at && (
-                            <Badge
-                              variant="outline"
-                              className="gap-1 text-[11px]"
-                              title={t("sentOn", {
-                                date: new Date(
-                                  inv.email_sent_at,
-                                ).toLocaleDateString(),
-                              })}
-                            >
-                              <Mail className="size-3" />
-                              {t("sentBadge")}
-                            </Badge>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCopyLink(inv.public_token)}
-                            title={t("copyPublicLink")}
-                          >
-                            <ArrowUpRight className="size-3.5" />
-                            {t("share")}
-                          </Button>
-                          {!inv.email_sent_at && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleSendEmail(inv.id, inv.invoice_number)
-                              }
-                              disabled={sendEmail.isPending}
-                              title={
-                                inv.customer_email
-                                  ? t("sendInvoiceTo", {
-                                      email: inv.customer_email,
-                                    })
-                                  : t("noCustomerEmail")
-                              }
-                            >
-                              {sendEmail.isPending ? (
-                                <Loader2 className="size-3.5 animate-spin" />
-                              ) : (
-                                <Mail className="size-3.5" />
-                              )}
-                              {t("email")}
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={filtered}
+            getRowId={(row) => row.id}
+            pageSize={20}
+            loading={isPending}
+            insideCard
+            emptyState={
+              <div className="px-5 py-16 text-center text-muted-foreground">
+                No invoices found
+              </div>
+            }
+          />
         </CardContent>
       </Card>
     </div>

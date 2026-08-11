@@ -1,16 +1,16 @@
 "use client";
 
-import { Banknote, CheckCircle2, ChevronLeft, XCircle } from "lucide-react";
+import { Banknote, CheckCircle2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useIsFirstLoad } from "@/hooks/use-is-first-load";
-import { Link } from "@/lib/i18n/navigation";
 import { useCashRegisterSessions } from "@/lib/queries/use-cash-register";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatCurrency } from "@/lib/utils";
@@ -40,20 +40,10 @@ export function CashRegisterHistoryClient() {
 
   return (
     <div className="flex flex-col gap-6 pb-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard/cash-register">
-          <Button variant="ghost" size="sm">
-            <ChevronLeft className="size-4" />
-          </Button>
-        </Link>
-        <div className="flex items-center gap-2">
-          <Banknote className="size-5 text-primary" />
-          <Typography.H2 className="m-0 text-xl font-semibold">
-            {t("cashRegister.sessionHistory")}
-          </Typography.H2>
-        </div>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/cash-register"
+        title={t("cashRegister.sessionHistory")}
+      />
 
       <Separator />
       {error && (

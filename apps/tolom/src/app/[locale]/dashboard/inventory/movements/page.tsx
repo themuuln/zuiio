@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import {
@@ -148,234 +148,230 @@ export default function MovementsPage() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("movementsTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("movementsSubtitle")}
-        </Typography.Muted>
-      </div>
-
-      <ListToolbar
-        search={{
-          placeholder: t("searchMovements"),
-          value: search,
-          onChange: setSearch,
-        }}
-        filters={<FilterChips items={typeChips} />}
-        stats={
-          <span>
-            {filtered.length} {t("movements")}
-          </span>
-        }
-        actions={
-          <div className="flex items-center gap-2">
-            <ExportButton
-              data={filtered}
-              columns={exportColumns}
-              filename={`movements-${now.toISOString().split("T")[0]}.xlsx`}
-              sheetName="Movements"
-            />
-            <Button
-              size="default"
-              className="h-12"
-              onClick={() => setShowDialog(true)}
-            >
-              <Plus className="size-5" /> {t("newMovement")}
-            </Button>
-          </div>
-        }
-      />
-
-      <Card>
-        <CardContent className="p-0">
-          {isPending ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ClipboardList />
-                </EmptyMedia>
-                <EmptyTitle>{t("noMovements")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={() => setShowDialog(true)}>
-                  {t("recordFirstMovement")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <div className="divide-y divide-border">
-              {filtered.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center gap-4 p-4 min-h-[64px]"
-                >
-                  <span className="text-xs text-muted-foreground w-24 shrink-0">
-                    {new Date(m.created_at).toLocaleDateString("mn-MN")}
-                  </span>
-                  <Badge variant="outline" className="shrink-0">
-                    {t(
-                      `movement${m.movement_type.charAt(0).toUpperCase() + m.movement_type.slice(1)}` as string,
-                    )}
-                  </Badge>
-                  <span className="text-sm font-medium flex-1 min-w-0 truncate">
-                    {(m as InventoryMovement & { part_name?: string })
-                      .part_name ?? "—"}
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums shrink-0">
-                    {m.quantity}
-                  </span>
-                  <span className="text-sm text-muted-foreground shrink-0 hidden sm:block">
-                    {m.reference_type ?? "—"}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate max-w-[200px] hidden md:block">
-                    {m.notes ?? "—"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <DetailDrawer open={showDialog} onOpenChange={setShowDialog}>
-        <DetailDrawer.Header>
-          <DetailDrawer.Title>{t("newMovement")}</DetailDrawer.Title>
-        </DetailDrawer.Header>
-        <DetailDrawer.Body>
-          <form
-            id="movement-form"
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="part_id">{t("part")} *</Label>
-              <select
-                id="part_id"
-                name="part_id"
-                required
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                <option value="">{t("selectPart")}</option>
-                {parts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.part_number ?? t("noNumber")})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="movement_type">{t("movementType")} *</Label>
-              <select
-                id="movement_type"
-                name="movement_type"
-                required
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                <option value="">{t("selectType")}</option>
-                {MOVEMENT_TYPES.flatMap((tKey) =>
-                  tKey
-                    ? [
-                        <option key={tKey} value={tKey}>
-                          {t(
-                            `movement${tKey.charAt(0).toUpperCase() + tKey.slice(1)}` as string,
-                          )}
-                        </option>,
-                      ]
-                    : [],
-                )}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="quantity">{t("quantity")} *</Label>
-                <NumericInput
-                  id="quantity"
-                  name="quantity"
-                  value={quantity}
-                  onChange={(qty) => setQuantity(qty)}
-                  step={1}
-                  min={1}
-                  required
-                  className="h-11"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="unit_cost">{t("unitCost")}</Label>
-                <CurrencyInput
-                  id="unit_cost"
-                  name="unit_cost"
-                  value={unitCost}
-                  onChange={(cost) => setUnitCost(cost)}
-                  showPrefix={false}
-                  className="h-11"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="reference_type">{t("referenceType")}</Label>
-                <Input
-                  id="reference_type"
-                  name="reference_type"
-                  placeholder={t("referenceTypePlaceholder")}
-                  className="h-11"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="reference_id">{t("referenceId")}</Label>
-                <Input
-                  id="reference_id"
-                  name="reference_id"
-                  placeholder={t("referenceIdPlaceholder")}
-                  className="h-11"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="notes">{t("notes")}</Label>
-              <Input
-                id="notes"
-                name="notes"
-                placeholder={t("notesPlaceholder")}
-                className="h-11"
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("movementsTitle")}
+        description={t("movementsSubtitle")}
+      >
+        <ListToolbar
+          search={{
+            placeholder: t("searchMovements"),
+            value: search,
+            onChange: setSearch,
+          }}
+          filters={<FilterChips items={typeChips} />}
+          stats={
+            <span>
+              {filtered.length} {t("movements")}
+            </span>
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <ExportButton
+                data={filtered}
+                columns={exportColumns}
+                filename={`movements-${now.toISOString().split("T")[0]}.xlsx`}
+                sheetName="Movements"
               />
+              <Button
+                size="default"
+                className="h-12"
+                onClick={() => setShowDialog(true)}
+              >
+                <Plus className="size-5" /> {t("newMovement")}
+              </Button>
             </div>
-          </form>
-        </DetailDrawer.Body>
-        <DetailDrawer.Footer>
-          <DetailDrawer.FooterActions>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowDialog(false)}
+          }
+        />
+
+        <Card>
+          <CardContent className="p-0">
+            {isPending ? (
+              <div className="divide-y divide-border">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="flex items-center gap-4 p-4">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ClipboardList />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("noMovements")}</EmptyTitle>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button onClick={() => setShowDialog(true)}>
+                    {t("recordFirstMovement")}
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : (
+              <div className="divide-y divide-border">
+                {filtered.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-4 p-4 min-h-[64px]"
+                  >
+                    <span className="text-xs text-muted-foreground w-24 shrink-0">
+                      {new Date(m.created_at).toLocaleDateString("mn-MN")}
+                    </span>
+                    <Badge variant="outline" className="shrink-0">
+                      {t(
+                        `movement${m.movement_type.charAt(0).toUpperCase() + m.movement_type.slice(1)}` as string,
+                      )}
+                    </Badge>
+                    <span className="text-sm font-medium flex-1 min-w-0 truncate">
+                      {(m as InventoryMovement & { part_name?: string })
+                        .part_name ?? "—"}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums shrink-0">
+                      {m.quantity}
+                    </span>
+                    <span className="text-sm text-muted-foreground shrink-0 hidden sm:block">
+                      {m.reference_type ?? "—"}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[200px] hidden md:block">
+                      {m.notes ?? "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <DetailDrawer open={showDialog} onOpenChange={setShowDialog}>
+          <DetailDrawer.Header>
+            <DetailDrawer.Title>{t("newMovement")}</DetailDrawer.Title>
+          </DetailDrawer.Header>
+          <DetailDrawer.Body>
+            <form
+              id="movement-form"
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4"
             >
-              {t("cancel")}
-            </Button>
-            <Button
-              type="submit"
-              form="movement-form"
-              disabled={createMovement.isPending}
-              size="lg"
-            >
-              {createMovement.isPending ? t("saving") : t("save")}
-            </Button>
-          </DetailDrawer.FooterActions>
-        </DetailDrawer.Footer>
-      </DetailDrawer>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="part_id">{t("part")} *</Label>
+                <select
+                  id="part_id"
+                  name="part_id"
+                  required
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">{t("selectPart")}</option>
+                  {parts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.part_number ?? t("noNumber")})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="movement_type">{t("movementType")} *</Label>
+                <select
+                  id="movement_type"
+                  name="movement_type"
+                  required
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">{t("selectType")}</option>
+                  {MOVEMENT_TYPES.flatMap((tKey) =>
+                    tKey
+                      ? [
+                          <option key={tKey} value={tKey}>
+                            {t(
+                              `movement${tKey.charAt(0).toUpperCase() + tKey.slice(1)}` as string,
+                            )}
+                          </option>,
+                        ]
+                      : [],
+                  )}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="quantity">{t("quantity")} *</Label>
+                  <NumericInput
+                    id="quantity"
+                    name="quantity"
+                    value={quantity}
+                    onChange={(qty) => setQuantity(qty)}
+                    step={1}
+                    min={1}
+                    required
+                    className="h-11"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="unit_cost">{t("unitCost")}</Label>
+                  <CurrencyInput
+                    id="unit_cost"
+                    name="unit_cost"
+                    value={unitCost}
+                    onChange={(cost) => setUnitCost(cost)}
+                    showPrefix={false}
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="reference_type">{t("referenceType")}</Label>
+                  <Input
+                    id="reference_type"
+                    name="reference_type"
+                    placeholder={t("referenceTypePlaceholder")}
+                    className="h-11"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="reference_id">{t("referenceId")}</Label>
+                  <Input
+                    id="reference_id"
+                    name="reference_id"
+                    placeholder={t("referenceIdPlaceholder")}
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="notes">{t("notes")}</Label>
+                <Input
+                  id="notes"
+                  name="notes"
+                  placeholder={t("notesPlaceholder")}
+                  className="h-11"
+                />
+              </div>
+            </form>
+          </DetailDrawer.Body>
+          <DetailDrawer.Footer>
+            <DetailDrawer.FooterActions>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowDialog(false)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                form="movement-form"
+                disabled={createMovement.isPending}
+                size="lg"
+              >
+                {createMovement.isPending ? t("saving") : t("save")}
+              </Button>
+            </DetailDrawer.FooterActions>
+          </DetailDrawer.Footer>
+        </DetailDrawer>
+      </ListPageShell>
     </div>
   );
 }

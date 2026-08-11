@@ -15,8 +15,12 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
+import type { WorkOrderDetail } from "@/lib/types";
 import { bayViewKeys } from "./keys";
-import { drawerDetailKeys } from "./use-drawer-queries";
+import {
+  type DrawerDetailResponse,
+  drawerDetailKeys,
+} from "./use-drawer-queries";
 
 // ─── Optimistic Update Helper ─────────────────────────────────
 
@@ -47,6 +51,71 @@ function rollbackOnError(
 ) {
   if (context?.previous) {
     queryClient.setQueryData(bayViewKeys.data(branchId), context.previous);
+  }
+}
+
+// ─── Drawer Detail Optimistic Helpers ─────────────────────────
+
+/**
+ * Mechanic mutations optimistically update both the bay view cache and the
+ * open work-order drawer detail cache (`drawerDetailKeys`). The drawer
+ * renders `wo.mechanic` / `wo.helpers` from the detail query, so without
+ * this second update the change only appears after the post-mutation
+ * refetch settles (1-2s). The `onSettled` invalidation still reconciles
+ * with server truth (server-assigned helper row ids, sort order, ...).
+ */
+async function applyMechanicOptimistic(
+  queryClient: QueryClient,
+  branchId: string | undefined,
+  orgId: string | undefined,
+  woId: string,
+  bayFn: (data: BayViewData) => BayViewData,
+  drawerFn: (wo: WorkOrderDetail) => WorkOrderDetail,
+): Promise<{
+  previousBay: BayViewData | undefined;
+  previousDrawer: DrawerDetailResponse | undefined;
+}> {
+  const bayKey = bayViewKeys.data(branchId);
+  await queryClient.cancelQueries({ queryKey: bayKey });
+  const previousBay = queryClient.getQueryData<BayViewData>(bayKey);
+  if (previousBay) {
+    queryClient.setQueryData<BayViewData>(bayKey, bayFn(previousBay));
+  }
+
+  let previousDrawer: DrawerDetailResponse | undefined;
+  if (orgId && woId) {
+    const drawerKey = drawerDetailKeys.all(orgId, woId);
+    await queryClient.cancelQueries({ queryKey: drawerKey });
+    previousDrawer = queryClient.getQueryData<DrawerDetailResponse>(drawerKey);
+    if (previousDrawer) {
+      queryClient.setQueryData<DrawerDetailResponse>(drawerKey, (prev) =>
+        prev ? { ...prev, workOrder: drawerFn(prev.workOrder) } : prev,
+      );
+    }
+  }
+  return { previousBay, previousDrawer };
+}
+
+interface MechanicOptimisticContext {
+  previousBay: BayViewData | undefined;
+  previousDrawer: DrawerDetailResponse | undefined;
+}
+
+function rollbackMechanicOnError(
+  queryClient: QueryClient,
+  branchId: string | undefined,
+  orgId: string | undefined,
+  woId: string,
+  context: MechanicOptimisticContext | undefined,
+) {
+  if (context?.previousBay) {
+    queryClient.setQueryData(bayViewKeys.data(branchId), context.previousBay);
+  }
+  if (context?.previousDrawer && orgId) {
+    queryClient.setQueryData(
+      drawerDetailKeys.all(orgId, woId),
+      context.previousDrawer,
+    );
   }
 }
 
@@ -373,37 +442,57 @@ export function useAssignMechanicToWorkOrder(
       );
       await assignMechanicToWorkOrder(woId, mechanicId);
     },
-    onMutate: (vars) =>
-      applyBayViewOptimistic(queryClient, branchId, (data) => {
-        const mechanic = lookupMechanic(data.mechanics, vars.mechanicId);
-        return updateBaysInData(data, (b) => {
-          let bay = b;
-          // If mechanic was assigned elsewhere, clear them from that bay
-          if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
-            bay = {
-              ...bay,
-              workOrder: bay.workOrder
-                ? { ...bay.workOrder, mechanic: null, mechanic_id: null }
-                : null,
-            };
-          }
-          // Assign mechanic to target work order
-          if (bay.workOrder?.id === vars.woId && bay.workOrder) {
-            bay = {
-              ...bay,
-              workOrder: {
-                ...bay.workOrder,
-                mechanic: { id: vars.mechanicId, ...mechanic },
-                mechanic_id: vars.mechanicId,
-                status: "In Progress" as const,
-              },
-            };
-          }
-          return bay;
-        });
-      }),
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onMutate: async (vars) => {
+      const previousBay = queryClient.getQueryData<BayViewData>(
+        bayViewKeys.data(branchId),
+      );
+      const mechanic = lookupMechanic(
+        previousBay?.mechanics ?? [],
+        vars.mechanicId,
+      );
+      return applyMechanicOptimistic(
+        queryClient,
+        branchId,
+        orgId,
+        vars.woId,
+        (data) => {
+          const mech = lookupMechanic(data.mechanics, vars.mechanicId);
+          return updateBaysInData(data, (b) => {
+            let bay = b;
+            // If mechanic was assigned elsewhere, clear them from that bay
+            if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
+              bay = {
+                ...bay,
+                workOrder: bay.workOrder
+                  ? { ...bay.workOrder, mechanic: null, mechanic_id: null }
+                  : null,
+              };
+            }
+            // Assign mechanic to target work order
+            if (bay.workOrder?.id === vars.woId && bay.workOrder) {
+              bay = {
+                ...bay,
+                workOrder: {
+                  ...bay.workOrder,
+                  mechanic: { id: vars.mechanicId, ...mech },
+                  mechanic_id: vars.mechanicId,
+                  status: "In Progress" as const,
+                },
+              };
+            }
+            return bay;
+          });
+        },
+        (wo) => ({
+          ...wo,
+          mechanic: { id: vars.mechanicId, full_name: mechanic.full_name },
+          mechanic_id: vars.mechanicId,
+          status: "In Progress" as const,
+        }),
+      );
+    },
+    onError: (_err, vars, context) => {
+      rollbackMechanicOnError(queryClient, branchId, orgId, vars.woId, context);
       toast.error("Failed to assign mechanic");
     },
     onSuccess: () => {
@@ -436,22 +525,28 @@ export function useRemoveMechanicFromWorkOrder(
       await unassignMechanicFromWorkOrder(woId);
     },
     onMutate: (vars) =>
-      applyBayViewOptimistic(queryClient, branchId, (data) =>
-        updateBaysInData(data, (b) =>
-          b.workOrder?.id === vars.woId && b.workOrder
-            ? {
-                ...b,
-                workOrder: {
-                  ...b.workOrder,
-                  mechanic: null,
-                  mechanic_id: null,
-                },
-              }
-            : b,
-        ),
+      applyMechanicOptimistic(
+        queryClient,
+        branchId,
+        orgId,
+        vars.woId,
+        (data) =>
+          updateBaysInData(data, (b) =>
+            b.workOrder?.id === vars.woId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    mechanic: null,
+                    mechanic_id: null,
+                  },
+                }
+              : b,
+          ),
+        (wo) => ({ ...wo, mechanic: null, mechanic_id: null }),
       ),
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: (_err, vars, context) => {
+      rollbackMechanicOnError(queryClient, branchId, orgId, vars.woId, context);
       toast.error("Failed to remove mechanic");
     },
     onSuccess: () => {
@@ -489,28 +584,58 @@ export function useAddHelperToWorkOrder(
       );
       await assignHelperToWorkOrder(woId, mechanicId);
     },
-    onMutate: (vars) =>
-      applyBayViewOptimistic(queryClient, branchId, (data) => {
-        const mechanic = lookupMechanic(data.mechanics, vars.mechanicId);
-        return updateBaysInData(data, (b) => {
-          if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
-          if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
-            return b;
-          if (b.workOrder.mechanic?.id === vars.mechanicId) return b;
+    onMutate: async (vars) => {
+      const previousBay = queryClient.getQueryData<BayViewData>(
+        bayViewKeys.data(branchId),
+      );
+      const mechanic = lookupMechanic(
+        previousBay?.mechanics ?? [],
+        vars.mechanicId,
+      );
+      return applyMechanicOptimistic(
+        queryClient,
+        branchId,
+        orgId,
+        vars.woId,
+        (data) => {
+          const mech = lookupMechanic(data.mechanics, vars.mechanicId);
+          return updateBaysInData(data, (b) => {
+            if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
+            if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
+              return b;
+            if (b.workOrder.mechanic?.id === vars.mechanicId) return b;
+            return {
+              ...b,
+              workOrder: {
+                ...b.workOrder,
+                helpers: [
+                  ...b.workOrder.helpers,
+                  { id: vars.mechanicId, ...mech },
+                ],
+              },
+            };
+          });
+        },
+        (wo) => {
+          if (wo.helpers.some((h) => h.id === vars.mechanicId)) return wo;
+          if (wo.mechanic?.id === vars.mechanicId) return wo;
           return {
-            ...b,
-            workOrder: {
-              ...b.workOrder,
-              helpers: [
-                ...b.workOrder.helpers,
-                { id: vars.mechanicId, ...mechanic },
-              ],
-            },
+            ...wo,
+            helpers: [
+              ...wo.helpers,
+              {
+                id: vars.mechanicId,
+                mechanic_id: vars.mechanicId,
+                full_name: mechanic.full_name,
+                avatar_url: mechanic.avatar_url,
+              } as unknown as WorkOrderDetail["helpers"][number],
+            ],
           };
-        });
-      }),
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+        },
+      );
+    },
+    onError: (_err, vars, context) => {
+      rollbackMechanicOnError(queryClient, branchId, orgId, vars.woId, context);
       toast.error("Failed to add helper");
     },
     onSuccess: () => {
@@ -550,23 +675,39 @@ export function useRemoveHelperFromWorkOrder(
       await removeHelperFromWorkOrder(woId, mechanicId);
     },
     onMutate: (vars) =>
-      applyBayViewOptimistic(queryClient, branchId, (data) =>
-        updateBaysInData(data, (b) =>
-          b.workOrder?.id === vars.woId && b.workOrder
-            ? {
-                ...b,
-                workOrder: {
-                  ...b.workOrder,
-                  helpers: b.workOrder.helpers.filter(
-                    (h) => h.id !== vars.mechanicId,
-                  ),
-                },
-              }
-            : b,
-        ),
+      applyMechanicOptimistic(
+        queryClient,
+        branchId,
+        orgId,
+        vars.woId,
+        (data) =>
+          updateBaysInData(data, (b) =>
+            b.workOrder?.id === vars.woId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    helpers: b.workOrder.helpers.filter(
+                      (h) => h.id !== vars.mechanicId,
+                    ),
+                  },
+                }
+              : b,
+          ),
+        (wo) => ({
+          ...wo,
+          helpers: wo.helpers.filter(
+            (h) =>
+              (
+                h as WorkOrderDetail["helpers"][number] & {
+                  mechanic_id?: string;
+                }
+              ).mechanic_id !== vars.mechanicId && h.id !== vars.mechanicId,
+          ),
+        }),
       ),
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: (_err, vars, context) => {
+      rollbackMechanicOnError(queryClient, branchId, orgId, vars.woId, context);
       toast.error("Failed to remove helper");
     },
     onSuccess: () => {

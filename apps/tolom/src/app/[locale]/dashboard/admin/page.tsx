@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,259 +106,262 @@ export default function AdminPage() {
   const trialOrgs = orgs.filter((o) => o.subscription?.trial).length;
 
   return (
-    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={
+          <span className="flex items-center gap-2">
             <Shield className="size-6" />
             {t("admin.dashboardTitle")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {t("admin.dashboardDesc")}
-          </Typography.Muted>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            {role}
-          </Badge>
-          {isSuperAdmin && (
+          </span>
+        }
+        description={t("admin.dashboardDesc")}
+        headerAction={
+          <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {loading ? (
-                <Skeleton className="h-4 w-16 inline-block" />
-              ) : (
-                <>
-                  {orgs.length} org{orgs.length === 1 ? "" : "s"}
-                </>
-              )}
+              {role}
             </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Navigation */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/admin/sellers">
-          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users className="size-4" />
-                Seller Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Typography.Muted className="text-xs">
-                Manage sellers and organization assignments
-              </Typography.Muted>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/admin/marketing">
-          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Megaphone className="size-4" />
-                Marketing Campaigns
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Typography.Muted className="text-xs">
-                Create and manage email, SMS, and push campaigns
-              </Typography.Muted>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Stats (super admin only) */}
-      {isSuperAdmin && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Orgs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{orgs.length}</div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold text-emerald-600">
-                  {activeOrgs}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">On Trial</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold text-cyan-600">
-                  {trialOrgs}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">
-            {t("admin.organizations")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_230px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              <span>{t("admin.organization")}</span>
-              <span>{t("admin.plan")}</span>
-              <span>{t("admin.status")}</span>
-              <span className="text-right">{t("admin.actions")}</span>
-            </div>
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={`loading-org-${i}`}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
-                >
-                  <div className="min-w-0 flex flex-col gap-1.5">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-14" />
-                  <div className="flex items-center justify-end gap-1.5">
-                    <Skeleton className="h-7 w-[42px]" />
-                    <Skeleton className="h-7 w-[42px]" />
-                    <Skeleton className="h-7 w-[42px]" />
-                    <Skeleton className="h-7 w-[66px]" />
-                    <Skeleton className="h-7 w-10" />
-                  </div>
-                </div>
-              ))
-            ) : orgs.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-                {t("admin.noOrgs")}
-              </div>
-            ) : (
-              orgs.map((org) => (
-                <div
-                  key={org.id}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
-                >
-                  <div className="min-w-0">
-                    <Typography.Text className="text-sm font-medium truncate">
-                      {org.name}
-                    </Typography.Text>
-                    <Typography.Muted className="text-xs text-muted-foreground truncate">
-                      {org.slug}
-                    </Typography.Muted>
-                  </div>
-
-                  <div>
-                    {org.subscription ? (
-                      <Badge
-                        className={
-                          PLAN_COLORS[org.subscription.plan_type] ?? "bg-muted"
-                        }
-                        variant="secondary"
-                      >
-                        {org.subscription.plan_type}
-                        {org.subscription.trial && (
-                          <span className="ml-1 text-[10px]">
-                            ({t("admin.trial")})
-                          </span>
-                        )}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {t("admin.noPlan")}
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    {org.subscription ? (
-                      <Badge
-                        className={
-                          STATUS_COLORS[org.subscription.status] ?? "bg-muted"
-                        }
-                        variant="secondary"
-                      >
-                        {org.subscription.status}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">–</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-1.5">
-                    {PLAN_OPTIONS.map((plan) => (
-                      <Button
-                        key={plan}
-                        size="sm"
-                        variant={
-                          org.subscription?.plan_type === plan
-                            ? "default"
-                            : "outline"
-                        }
-                        disabled={
-                          updatePlan.isPending ||
-                          org.subscription?.plan_type === plan
-                        }
-                        onClick={() => handlePlanChange(org.id, plan)}
-                        className="h-7 text-[11px] px-2 capitalize"
-                      >
-                        {updatePlan.isPending ? (
-                          <Loader2 className="size-3 animate-spin" />
-                        ) : org.subscription?.plan_type === plan ? (
-                          <Check className="size-3" />
-                        ) : (
-                          plan
-                        )}
-                      </Button>
-                    ))}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={extendTrial.isPending}
-                      onClick={() => handleExtendTrial(org.id)}
-                      className="h-7 text-[11px] px-2"
-                      title={t("admin.resetTrial")}
-                    >
-                      {extendTrial.isPending ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : (
-                        <RefreshCw className="size-3" />
-                      )}
-                      Trial
-                    </Button>
-                  </div>
-                </div>
-              ))
+            {isSuperAdmin && (
+              <Badge variant="outline" className="text-xs">
+                {loading ? (
+                  <Skeleton className="h-4 w-16 inline-block" />
+                ) : (
+                  <>
+                    {orgs.length} org{orgs.length === 1 ? "" : "s"}
+                  </>
+                )}
+              </Badge>
             )}
           </div>
-        </CardContent>
-      </Card>
+        }
+      >
+        {/* Quick Navigation */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Link href="/admin/sellers">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Users className="size-4" />
+                  Seller Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Typography.Muted className="text-xs">
+                  Manage sellers and organization assignments
+                </Typography.Muted>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/admin/marketing">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Megaphone className="size-4" />
+                  Marketing Campaigns
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Typography.Muted className="text-xs">
+                  Create and manage email, SMS, and push campaigns
+                </Typography.Muted>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
-      <Typography.Muted className="text-xs text-muted-foreground">
-        Changes take effect immediately. The subscription plan limits are not
-        enforced yet; this only updates the plan type in the database.
-      </Typography.Muted>
+        {/* Stats (super admin only) */}
+        {isSuperAdmin && (
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Orgs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold">{orgs.length}</div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Active</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-emerald-600">
+                    {activeOrgs}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">On Trial</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-cyan-600">
+                    {trialOrgs}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">
+              {t("admin.organizations")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_230px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <span>{t("admin.organization")}</span>
+                <span>{t("admin.plan")}</span>
+                <span>{t("admin.status")}</span>
+                <span className="text-right">{t("admin.actions")}</span>
+              </div>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={`loading-org-${i}`}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
+                  >
+                    <div className="min-w-0 flex flex-col gap-1.5">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-14" />
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Skeleton className="h-7 w-[42px]" />
+                      <Skeleton className="h-7 w-[42px]" />
+                      <Skeleton className="h-7 w-[42px]" />
+                      <Skeleton className="h-7 w-[66px]" />
+                      <Skeleton className="h-7 w-10" />
+                    </div>
+                  </div>
+                ))
+              ) : orgs.length === 0 ? (
+                <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+                  {t("admin.noOrgs")}
+                </div>
+              ) : (
+                orgs.map((org) => (
+                  <div
+                    key={org.id}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
+                  >
+                    <div className="min-w-0">
+                      <Typography.Text className="text-sm font-medium truncate">
+                        {org.name}
+                      </Typography.Text>
+                      <Typography.Muted className="text-xs text-muted-foreground truncate">
+                        {org.slug}
+                      </Typography.Muted>
+                    </div>
+
+                    <div>
+                      {org.subscription ? (
+                        <Badge
+                          className={
+                            PLAN_COLORS[org.subscription.plan_type] ??
+                            "bg-muted"
+                          }
+                          variant="secondary"
+                        >
+                          {org.subscription.plan_type}
+                          {org.subscription.trial && (
+                            <span className="ml-1 text-[10px]">
+                              ({t("admin.trial")})
+                            </span>
+                          )}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {t("admin.noPlan")}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      {org.subscription ? (
+                        <Badge
+                          className={
+                            STATUS_COLORS[org.subscription.status] ?? "bg-muted"
+                          }
+                          variant="secondary"
+                        >
+                          {org.subscription.status}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">–</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5">
+                      {PLAN_OPTIONS.map((plan) => (
+                        <Button
+                          key={plan}
+                          size="sm"
+                          variant={
+                            org.subscription?.plan_type === plan
+                              ? "default"
+                              : "outline"
+                          }
+                          disabled={
+                            updatePlan.isPending ||
+                            org.subscription?.plan_type === plan
+                          }
+                          onClick={() => handlePlanChange(org.id, plan)}
+                          className="h-7 text-[11px] px-2 capitalize"
+                        >
+                          {updatePlan.isPending ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : org.subscription?.plan_type === plan ? (
+                            <Check className="size-3" />
+                          ) : (
+                            plan
+                          )}
+                        </Button>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={extendTrial.isPending}
+                        onClick={() => handleExtendTrial(org.id)}
+                        className="h-7 text-[11px] px-2"
+                        title={t("admin.resetTrial")}
+                      >
+                        {extendTrial.isPending ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-3" />
+                        )}
+                        Trial
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Typography.Muted className="text-xs text-muted-foreground">
+          Changes take effect immediately. The subscription plan limits are not
+          enforced yet; this only updates the plan type in the database.
+        </Typography.Muted>
+      </ListPageShell>
     </div>
   );
 }

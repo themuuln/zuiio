@@ -1,12 +1,13 @@
 "use client";
 
 import { formatMNT, generateUUID } from "@zuiio/core";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -108,19 +109,10 @@ export default function NewPurchaseOrderPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 max-w-3xl">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => back()}
-          aria-label={t("back")}
-        >
-          <ArrowLeft className="size-5" />
-        </Button>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("newPurchaseOrder")}
-        </Typography.H1>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/inventory/purchase-orders"
+        title={t("newPurchaseOrder")}
+      />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>

@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { prefetchDrawerDataMany } from "@/lib/queries/use-drawer-queries";
 import type { BayViewData } from "@/lib/services/bay-view-service";
 import { render } from "@/test/test-utils";
 import { BayViewV2Client } from "../bay-view-v2-client";
@@ -19,6 +20,8 @@ vi.mock("@dnd-kit/core", () => ({
   KeyboardSensor: vi.fn(),
   PointerSensor: vi.fn(),
   TouchSensor: vi.fn(),
+  MeasuringStrategy: { Always: "Always", WhileDragging: "WhileDragging" },
+  pointerWithin: () => [],
   useSensor: (s: unknown) => s,
   useSensors: (...s: unknown[]) => s,
   useDraggable: () => ({
@@ -29,6 +32,10 @@ vi.mock("@dnd-kit/core", () => ({
     isDragging: false,
   }),
   useDroppable: () => ({ setNodeRef: vi.fn(), isOver: false }),
+}));
+
+vi.mock("@dnd-kit/modifiers", () => ({
+  restrictToWindowEdges: () => [],
 }));
 
 // ── Hooks ──────────────────────────────────────────────────────
@@ -63,6 +70,7 @@ vi.mock("@/components/bay-view-v2/_payment-fees", () => ({
 
 vi.mock("@/lib/queries/use-drawer-queries", () => ({
   prefetchDrawerCatalogs: vi.fn(),
+  prefetchDrawerDataMany: vi.fn(),
 }));
 
 vi.mock("@/components/bay-view-v2/_use-bay-view-data", () => ({
@@ -249,6 +257,23 @@ describe("BayViewV2Client", () => {
     expect(screen.getByText("50%")).toBeTruthy();
     // Queue rail renders queued vehicle
     expect(screen.getByText("9999 УБА")).toBeTruthy();
+  });
+
+  it("idle-prefetches drawer details for visible work orders", async () => {
+    const prefetchMany = vi.mocked(prefetchDrawerDataMany);
+    mocks.useBayViewData.mockReturnValue(dataHookResult());
+    mocks.useBayViewMutations.mockReturnValue(mutationsResult());
+    mocks.useBayCountMutation.mockReturnValue(bayCountResult());
+    render(<BayViewV2Client />);
+    await waitFor(() => expect(screen.getByText("BAY 01")).toBeTruthy());
+
+    // Occupied bay (wo-1) first, then the waiting queue (wo-q-1).
+    expect(prefetchMany).toHaveBeenCalledWith(
+      expect.anything(),
+      "org-1",
+      ["wo-1", "wo-q-1"],
+      { concurrency: 3 },
+    );
   });
 
   it("shows the access denied banner and retries", async () => {

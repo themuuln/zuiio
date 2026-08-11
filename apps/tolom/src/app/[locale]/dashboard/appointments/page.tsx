@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { AppointmentCreateDrawer } from "@/components/appointments/create-drawer";
 import { DispatchCalendar } from "@/components/dispatch-calendar";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
@@ -48,6 +49,10 @@ export default function AppointmentsPage() {
     key: string,
     values?: Record<string, string | number>,
   ) => string;
+  const navT = useTranslations("nav") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
@@ -87,8 +92,16 @@ export default function AppointmentsPage() {
   );
 
   return (
-    <div className="flex flex-col gap-y-6 px-4 pt-4 pb-6 md:px-6">
-      <div className="flex items-center justify-between">
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={navT("appointments")}
+        headerAction={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            {t("newAppointment")}
+          </Button>
+        }
+      >
         <div className="flex items-center gap-2">
           <Select
             value={statusFilter}
@@ -142,148 +155,143 @@ export default function AppointmentsPage() {
           </div>
         </div>
 
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
-          {t("newAppointment")}
-        </Button>
-      </div>
-
-      {/* Calendar View */}
-      {viewMode === "calendar" ? (
-        <DispatchCalendar
-          appointments={appointments}
-          onAppointmentClick={(_apt) => {
-            // appointment detail drawer — not yet wired
-          }}
-          isLoading={isPending}
-          className="h-[calc(100vh-200px)] min-h-[500px]"
-        />
-      ) : isPending ? (
-        <div className="flex flex-col gap-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Calendar className="size-10 text-muted-foreground" />
-            </EmptyMedia>
-            <EmptyTitle>{t("noAppointments")}</EmptyTitle>
-            <EmptyDescription>
-              {statusFilter !== "all"
-                ? t("noAppointmentsWithStatus", {
-                    status: t(`status_${statusFilter}`),
-                  })
-                : t("scheduleFirst")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : (
-        <div className="flex flex-col gap-y-2">
-          {filtered.map((appointment) => (
-            <div
-              key={appointment.id}
-              className="flex items-center gap-4 p-3 rounded-xl border border-border/50 bg-card hover:bg-accent/30 hover:border-border transition-[color,background-color,border-color] duration-200 cursor-pointer group"
-            >
-              {/* Time */}
-              <div className="flex flex-col items-center min-w-[60px] text-center">
-                <span className="text-sm font-semibold tabular-nums">
-                  {formatTime(appointment.scheduled_at)}
-                </span>
-                {appointment.end_at && (
-                  <span className="text-[10px] text-muted-foreground">
-                    to {formatTime(appointment.end_at)}
-                  </span>
-                )}
-              </div>
-
-              {/* Status dot */}
+        {/* Calendar View */}
+        {viewMode === "calendar" ? (
+          <DispatchCalendar
+            appointments={appointments}
+            onAppointmentClick={(_apt) => {
+              // appointment detail drawer — not yet wired
+            }}
+            isLoading={isPending}
+            className="h-[calc(100vh-200px)] min-h-[500px]"
+          />
+        ) : isPending ? (
+          <div className="flex flex-col gap-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Calendar className="size-10 text-muted-foreground" />
+              </EmptyMedia>
+              <EmptyTitle>{t("noAppointments")}</EmptyTitle>
+              <EmptyDescription>
+                {statusFilter !== "all"
+                  ? t("noAppointmentsWithStatus", {
+                      status: t(`status_${statusFilter}`),
+                    })
+                  : t("scheduleFirst")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <div className="flex flex-col gap-y-2">
+            {filtered.map((appointment) => (
               <div
-                className={cn(
-                  "size-2.5 rounded-full shrink-0",
-                  appointment.status === "scheduled" && "bg-info",
-                  appointment.status === "in-progress" && "bg-success",
-                  appointment.status === "completed" &&
-                    "bg-muted-foreground/50",
-                  appointment.status === "cancelled" && "bg-destructive/50",
-                )}
-              />
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {appointment.title}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {[
-                    appointment.customer?.first_name,
-                    appointment.customer?.last_name,
-                  ]
-                    .filter(Boolean)
-                    .join(" ") || t("noCustomer")}
-                  {appointment.vehicle?.plate_number && (
-                    <span className="ml-2 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">
-                      {appointment.vehicle.plate_number}
+                key={appointment.id}
+                className="flex items-center gap-4 p-3 rounded-xl border border-border/50 bg-card hover:bg-accent/30 hover:border-border transition-[color,background-color,border-color] duration-200 cursor-pointer group"
+              >
+                {/* Time */}
+                <div className="flex flex-col items-center min-w-[60px] text-center">
+                  <span className="text-sm font-semibold tabular-nums">
+                    {formatTime(appointment.scheduled_at)}
+                  </span>
+                  {appointment.end_at && (
+                    <span className="text-[10px] text-muted-foreground">
+                      to {formatTime(appointment.end_at)}
                     </span>
                   )}
-                </p>
+                </div>
+
+                {/* Status dot */}
+                <div
+                  className={cn(
+                    "size-2.5 rounded-full shrink-0",
+                    appointment.status === "scheduled" && "bg-info",
+                    appointment.status === "in-progress" && "bg-success",
+                    appointment.status === "completed" &&
+                      "bg-muted-foreground/50",
+                    appointment.status === "cancelled" && "bg-destructive/50",
+                  )}
+                />
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {appointment.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {[
+                      appointment.customer?.first_name,
+                      appointment.customer?.last_name,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || t("noCustomer")}
+                    {appointment.vehicle?.plate_number && (
+                      <span className="ml-2 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                        {appointment.vehicle.plate_number}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Status select */}
+                <Select
+                  value={appointment.status}
+                  onValueChange={(v) =>
+                    statusMutation.mutate({
+                      id: appointment.id,
+                      status: (v ?? "scheduled") as AppointmentStatus,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-[120px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(STATUS_LABELS).length === 0 &&
+                      Object.keys({
+                        scheduled: "",
+                        checked_in: "",
+                        in_progress: "",
+                        completed: "",
+                        cancelled: "",
+                        no_show: "",
+                        requested: "",
+                      }).map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {t(`status_${value}`)}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Cancel button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => deleteMutation.mutate({ id: appointment.id })}
+                >
+                  {t("commonCancel")}
+                </Button>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Status select */}
-              <Select
-                value={appointment.status}
-                onValueChange={(v) =>
-                  statusMutation.mutate({
-                    id: appointment.id,
-                    status: (v ?? "scheduled") as AppointmentStatus,
-                  })
-                }
-              >
-                <SelectTrigger className="w-[120px] h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(STATUS_LABELS).length === 0 &&
-                    Object.keys({
-                      scheduled: "",
-                      checked_in: "",
-                      in_progress: "",
-                      completed: "",
-                      cancelled: "",
-                      no_show: "",
-                      requested: "",
-                    }).map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {t(`status_${value}`)}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-
-              {/* Cancel button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => deleteMutation.mutate({ id: appointment.id })}
-              >
-                {t("commonCancel")}
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <AppointmentCreateDrawer
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        orgId={orgId}
-        onCreated={() => {
-          setCreateOpen(false);
-        }}
-      />
+        <AppointmentCreateDrawer
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          orgId={orgId}
+          onCreated={() => {
+            setCreateOpen(false);
+          }}
+        />
+      </ListPageShell>
     </div>
   );
 }

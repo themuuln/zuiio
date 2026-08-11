@@ -72,6 +72,7 @@ interface DetailDrawerRootProps {
     | "5xl"
     | "7xl"
     | "1/2"
+    | "detail"
     | "full";
 }
 
@@ -89,6 +90,8 @@ const SIZE_VALUE: Record<string, string> = {
   "5xl": "64rem",
   "7xl": "80rem",
   "1/2": "50vw",
+  /** Fluid width: near-full-screen on mobile, capped at 56rem on desktop */
+  detail: "min(100vw - 1.5rem, 56rem)",
   full: "100vw",
 };
 export function DetailDrawer({

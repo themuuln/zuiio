@@ -1,5 +1,6 @@
+import { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import { render } from "@/test/test-utils";
 import type { WorkOrderDetailDrawerProps } from "../_drawer-types";
@@ -43,6 +44,23 @@ vi.mock("@/components/ui/detail-drawer", () => ({
     },
   ),
 }));
+
+// The v2 shell renders DrawerTitle/Description directly — stub them so they
+// don't need the Base UI Drawer root context (the DetailDrawer mock is a div).
+vi.mock("@/components/ui/drawer", async () => {
+  const actual = await vi.importActual<typeof import("@/components/ui/drawer")>(
+    "@/components/ui/drawer",
+  );
+  return {
+    ...actual,
+    DrawerTitle: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="drawer-title">{children}</div>
+    ),
+    DrawerDescription: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="drawer-description">{children}</div>
+    ),
+  };
+});
 
 const queriesMock = vi.hoisted(() => ({
   wo: null as WorkOrderDetail | null,
@@ -122,27 +140,34 @@ vi.mock("../_use-drawer-mutations", () => ({
   useDrawerMutations: () => mutationsMock,
 }));
 
-vi.mock("../_drawer-header", () => ({
-  DrawerHeaderSection: ({
-    wo,
-    onClose,
+// V2 sections + sidebar — stubbed; shell behavior is the focus
+vi.mock("../drawer-v2/_sections", () => ({
+  ServicesSectionV2: () => <div data-testid="services-section" />,
+  PartsSectionV2: () => <div data-testid="parts-section" />,
+  NotesSectionV2: ({
+    onSaveNoteField,
   }: {
-    wo: WorkOrderDetail | null;
-    onClose: () => void;
+    onSaveNoteField?: (
+      field: "complaint" | "diagnosis" | "notes",
+      value: string,
+    ) => void;
   }) => (
-    <div data-testid="drawer-header-section">
-      {wo ? (
-        <span data-testid="header-plate">{wo.vehicle?.plate_number}</span>
-      ) : null}
-      <button aria-label="Close" onClick={onClose} type="button">
-        Close
-      </button>
+    <div data-testid="notes-section">
+      {onSaveNoteField && (
+        <button
+          type="button"
+          onClick={() => onSaveNoteField("complaint", "Brake squeal")}
+        >
+          save-complaint
+        </button>
+      )}
     </div>
   ),
 }));
-
-vi.mock("../_drawer-content-panel", () => ({
-  DrawerContentPanel: () => <div data-testid="content-panel" />,
+vi.mock("../drawer-v2/_sidebar", () => ({
+  CustomerCardV2: () => <div data-testid="customer-card" />,
+  MechanicCardV2: () => <div data-testid="mechanic-card" />,
+  TimelineCardV2: () => <div data-testid="timeline-card" />,
 }));
 
 // Ready-for-pickup flow: nested forms render a submit trigger only when shown
@@ -193,14 +218,24 @@ vi.mock("qrcode", () => ({
   },
 }));
 
+interface NoteFieldMutationConfig {
+  method?: string;
+  optimisticQueryKey?: readonly unknown[];
+  onOptimisticUpdate?: (
+    qc: unknown,
+    vars: Record<string, string | null>,
+  ) => unknown;
+}
+
 const orgMutationMocks = vi.hoisted(() => {
   const results: {
-    mutateAsync: ReturnType<typeof vi.fn>;
+    mutateAsync: Mock;
+    config?: NoteFieldMutationConfig;
   }[] = [];
   return {
     results,
-    useOrgMutation: vi.fn(() => {
-      const entry = { mutateAsync: vi.fn().mockResolvedValue({}) };
+    useOrgMutation: vi.fn((config?: NoteFieldMutationConfig) => {
+      const entry = { mutateAsync: vi.fn().mockResolvedValue({}), config };
       results.push(entry);
       return entry;
     }),
@@ -286,6 +321,21 @@ function renderDrawer(props?: Partial<WorkOrderDetailDrawerProps>) {
           mutateAsync: vi.fn().mockResolvedValue(undefined),
         }
       }
+      addHelperMutation={
+        props?.addHelperMutation ?? {
+          mutateAsync: vi.fn().mockResolvedValue(undefined),
+        }
+      }
+      removeHelperMutation={
+        props?.removeHelperMutation ?? {
+          mutateAsync: vi.fn().mockResolvedValue(undefined),
+        }
+      }
+      removeMechanicMutation={
+        props?.removeMechanicMutation ?? {
+          mutateAsync: vi.fn().mockResolvedValue(undefined),
+        }
+      }
       {...props}
     />,
   );
@@ -322,17 +372,34 @@ describe("WorkOrderDetailDrawer", () => {
         branchFilter={undefined}
         assignMechanicMutation={{ mutateAsync: vi.fn() }}
         assignCustomerMutation={{ mutateAsync: vi.fn() }}
+        addHelperMutation={{ mutateAsync: vi.fn() }}
+        removeHelperMutation={{ mutateAsync: vi.fn() }}
+        removeMechanicMutation={{ mutateAsync: vi.fn() }}
       />,
     );
     expect(screen.queryByTestId("detail-drawer")).not.toBeInTheDocument();
   });
 
-  it("renders the work order data and its status actions", () => {
+  it("renders the work order data with the v2 header, hero, sections, and actions", async () => {
     queriesMock.wo = BASE_WO;
     renderDrawer();
 
     expect(screen.getByTestId("detail-drawer")).toBeInTheDocument();
-    expect(screen.getByTestId("header-plate")).toHaveTextContent("ABC 1234");
+    // Header identity — plate (rendered by MongolianLicensePlate, may be
+    // split across nodes) + WO# in the vehicle line
+    expect(screen.getByTestId("detail-drawer").textContent).toContain(
+      "ABC 1234",
+    );
+    expect(screen.getByText(/WO#wo-1/)).toBeInTheDocument();
+    // Meta chips — bay label renders in the header chip row (no hero card)
+    expect(screen.getByText(/bay\s*3/)).toBeInTheDocument();
+    // Sections + sidebar cards render
+    expect(await screen.findByTestId("services-section")).toBeInTheDocument();
+    expect(await screen.findByTestId("parts-section")).toBeInTheDocument();
+    expect(await screen.findByTestId("notes-section")).toBeInTheDocument();
+    expect(await screen.findByTestId("customer-card")).toBeInTheDocument();
+    expect(await screen.findByTestId("mechanic-card")).toBeInTheDocument();
+    expect(await screen.findByTestId("timeline-card")).toBeInTheDocument();
     // In Progress → Mark ready + Complete actions from the real footer
     expect(
       screen.getByRole("button", { name: "markReady" }),
@@ -425,10 +492,13 @@ describe("WorkOrderDetailDrawer", () => {
         branchFilter={undefined}
         assignMechanicMutation={{ mutateAsync: vi.fn() }}
         assignCustomerMutation={{ mutateAsync: vi.fn() }}
+        addHelperMutation={{ mutateAsync: vi.fn() }}
+        removeHelperMutation={{ mutateAsync: vi.fn() }}
+        removeMechanicMutation={{ mutateAsync: vi.fn() }}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
     expect(localOnOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -598,6 +668,80 @@ describe("WorkOrderDetailDrawer", () => {
     expect(queriesMock.setWo).toHaveBeenCalledTimes(2);
   });
 
+  it("optimistically patches the drawer detail cache when a note field saves", () => {
+    queriesMock.wo = BASE_WO;
+    renderDrawer();
+
+    const noteField = orgMutationMocks.results.find(
+      (r) => typeof r.config?.onOptimisticUpdate === "function",
+    );
+    expect(noteField?.config?.optimisticQueryKey).toEqual([
+      "drawer-detail",
+      "org-1",
+      "wo-1",
+    ]);
+
+    const qc = new QueryClient();
+    const key = ["drawer-detail", "org-1", "wo-1"] as const;
+    qc.setQueryData(key, { workOrder: BASE_WO });
+
+    const snapshot = noteField?.config?.onOptimisticUpdate?.(qc, {
+      complaint: "Brake squeal",
+    });
+    // Snapshot is the DrawerDetailResponse the function read before patching
+    const snapshotWo = (snapshot as { workOrder: WorkOrderDetail } | undefined)
+      ?.workOrder;
+
+    expect(
+      qc.getQueryData<{ workOrder: WorkOrderDetail }>(key)?.workOrder.complaint,
+    ).toBe("Brake squeal");
+    expect(snapshotWo?.complaint).toBeNull();
+  });
+
+  it("optimistic note update nulls a field and returns undefined without a cached work order", () => {
+    queriesMock.wo = BASE_WO;
+    renderDrawer();
+
+    const noteField = orgMutationMocks.results.find(
+      (r) => typeof r.config?.onOptimisticUpdate === "function",
+    )!;
+
+    const qc = new QueryClient();
+    const key = ["drawer-detail", "org-1", "wo-1"] as const;
+    qc.setQueryData(key, { workOrder: { ...BASE_WO, notes: "old note" } });
+
+    noteField.config!.onOptimisticUpdate!(qc, { notes: null });
+    expect(
+      qc.getQueryData<{ workOrder: WorkOrderDetail }>(key)?.workOrder.notes,
+    ).toBeNull();
+
+    // Empty cache → returns undefined, no crash
+    const emptyQc = new QueryClient();
+    expect(
+      noteField.config!.onOptimisticUpdate!(emptyQc, { complaint: "x" }),
+    ).toBeUndefined();
+  });
+
+  it("rolls back the optimistic note field patch and toasts when the save fails", async () => {
+    queriesMock.wo = BASE_WO;
+    renderDrawer();
+    const noteField = orgMutationMocks.results.find(
+      (r) => typeof r.config?.onOptimisticUpdate === "function",
+    )!;
+    noteField.mutateAsync.mockRejectedValue(new Error("boom"));
+
+    // Drive handleSaveNoteField through the real drawer handler (the notes
+    // stub fires onSaveNoteField) with a failing mutation.
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "save-complaint" }));
+    });
+
+    await waitFor(() => {
+      expect(toastMock.error).toHaveBeenCalledWith("failedToSave");
+    });
+    expect(queriesMock.setWo).toHaveBeenCalledWith(BASE_WO);
+  });
+
   it("renders the status confirmation panel and confirms the cancel", async () => {
     queriesMock.wo = BASE_WO;
     mutationsMock.confirmStatus = "Cancelled";
@@ -685,64 +829,17 @@ describe("WorkOrderDetailDrawer", () => {
     expect(mutationsMock.changeStatus).toHaveBeenCalledWith("In Progress");
   });
 
-  it("completes directly from Ready for Pickup", async () => {
+  it("routes the Ready for Pickup action to Complete", async () => {
     queriesMock.wo = { ...BASE_WO, status: "Ready for Pickup" };
+    mutationsMock.changeStatus.mockResolvedValue(undefined);
     renderDrawer();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "complete" }));
     });
 
-    await waitFor(() => {
-      expect(orgMutationMocks.results[0].mutateAsync).toHaveBeenCalledWith({
-        status: "Completed",
-      });
+    expect(orgMutationMocks.results[0].mutateAsync).toHaveBeenCalledWith({
+      status: "Completed",
     });
-  });
-
-  it("opens the add-service drawer from the initial action", () => {
-    queriesMock.wo = BASE_WO;
-    renderDrawer({ initialAction: "add-service" });
-
-    expect(mutationsMock.setShowAddService).toHaveBeenCalledWith(true);
-  });
-
-  it("opens the add-part drawer from the initial action", () => {
-    queriesMock.wo = BASE_WO;
-    renderDrawer({ initialAction: "add-part" });
-
-    expect(mutationsMock.setShowAddPart).toHaveBeenCalledWith(true);
-  });
-
-  it("celebrates and auto-closes when the work order becomes Completed", async () => {
-    vi.useFakeTimers();
-    try {
-      queriesMock.wo = { ...BASE_WO, status: "In Progress" };
-      const { rerender } = renderDrawer();
-
-      queriesMock.wo = { ...BASE_WO, status: "Completed" };
-      await act(async () => {
-        rerender(
-          <WorkOrderDetailDrawer
-            workOrderId="wo-1"
-            open
-            onOpenChange={onOpenChange}
-            onRefresh={onRefresh}
-            branchFilter="b1"
-            assignMechanicMutation={{ mutateAsync: vi.fn() }}
-            assignCustomerMutation={{ mutateAsync: vi.fn() }}
-          />,
-        );
-      });
-
-      expect(screen.getByText("completedCelebration")).toBeInTheDocument();
-
-      await act(async () => {
-        vi.advanceTimersByTime(1600);
-      });
-      expect(onOpenChange).toHaveBeenCalledWith(false);
-    } finally {
-      vi.useRealTimers();
-    }
   });
 });

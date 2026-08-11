@@ -12,9 +12,10 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExportButton } from "@/components/export-button";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTablePage } from "@/components/ui/data-table-page";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
@@ -24,9 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
@@ -39,60 +38,6 @@ import { useSelectedBranchId } from "@/lib/stores";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
-
-// ── Inline KPI Card ──
-
-function KpiCard({
-  label,
-  value,
-  icon: Icon,
-  loading,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  loading?: boolean;
-  tone?: "default" | "success" | "warning" | "danger";
-}) {
-  const toneClasses = {
-    default: "bg-muted/60 text-muted-foreground",
-    success:
-      "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400",
-    warning:
-      "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
-    danger: "bg-destructive/10 text-destructive",
-  } as const;
-
-  return (
-    <Card className="border-border/70 ">
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
-        <Typography.Muted className="text-xs font-medium text-muted-foreground">
-          {label}
-        </Typography.Muted>
-        <span
-          className={cn(
-            "inline-flex size-8 items-center justify-center rounded-lg",
-            toneClasses[tone],
-          )}
-        >
-          <Icon className="size-4" />
-        </span>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-end gap-2">
-          {loading ? (
-            <Skeleton className="h-8 w-24" />
-          ) : (
-            <Typography.Text className="text-2xl font-semibold tabular-nums">
-              {value}
-            </Typography.Text>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ── Page Component ──
 
@@ -227,43 +172,47 @@ export default function ExpensesPage() {
   // ── KPI cards ──
 
   const kpiCards = (
-    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-      <KpiCard
+    <StatCards className="sm:grid-cols-3">
+      <StatCard
         label={t("expenses.totalExpenses")}
         value={stats ? String(stats.totalExpenses) : "\u2014"}
         icon={Wallet}
         loading={statsLoading}
-        tone="default"
+        iconPosition="end"
       />
-      <KpiCard
+      <StatCard
         label={t("expenses.totalAmount")}
         value={stats ? formatMNT(stats.totalAmount) : "\u2014"}
         icon={DollarSign}
         loading={statsLoading}
-        tone="success"
+        iconPosition="end"
+        accent="success"
       />
-      <KpiCard
+      <StatCard
         label={t("expenses.thisMonth")}
         value={stats ? formatMNT(stats.thisMonth) : "\u2014"}
         icon={TrendingUp}
         loading={statsLoading}
-        tone="warning"
+        iconPosition="end"
+        accent="warning"
       />
-      <KpiCard
+      <StatCard
         label={t("sidebar.overdue")}
         value={stats ? String(stats.overdueCount) : "\u2014"}
         icon={AlertCircle}
         loading={statsLoading}
-        tone="danger"
+        iconPosition="end"
+        accent="danger"
       />
-      <KpiCard
+      <StatCard
         label={t("expenses.unpaid")}
         value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
         icon={Clock}
         loading={statsLoading}
-        tone="warning"
+        iconPosition="end"
+        accent="warning"
       />
-    </div>
+    </StatCards>
   );
 
   // ── Badge bar ──

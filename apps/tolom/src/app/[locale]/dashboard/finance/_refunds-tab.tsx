@@ -1,5 +1,6 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { useFuzzySearch } from "@zuiio/hooks";
 import {
   ArrowUpRight,
@@ -10,12 +11,14 @@ import {
   XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -23,15 +26,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   useCancelRefund,
   useRefundList,
@@ -40,7 +34,6 @@ import {
 import { reportServerError } from "@/lib/sentry-report-server";
 import { formatMNT } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { KpiCard } from "./_kpi-card";
 
 const refundStatusConfig: Record<
   string,
@@ -110,15 +103,18 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
     minQueryLength: 1,
   });
 
-  const handleCancel = async (refundId: string) => {
-    if (!confirm(t("refund.confirmCancel"))) return;
-    try {
-      await cancelRefund.mutateAsync(refundId);
-    } catch (error) {
-      reportServerError("Unexpected error", error);
-      // Error handled by mutation
-    }
-  };
+  const handleCancel = useCallback(
+    async (refundId: string) => {
+      if (!confirm(t("refund.confirmCancel"))) return;
+      try {
+        await cancelRefund.mutateAsync(refundId);
+      } catch (error) {
+        reportServerError("Unexpected error", error);
+        // Error handled by mutation
+      }
+    },
+    [t, cancelRefund],
+  );
 
   const exportColumns = [
     { key: "invoice_number", label: "Invoice #" },
@@ -129,29 +125,128 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
     { key: "refunded_at", label: "Date", format: "date" as const },
   ];
 
+  const columns = useMemo<ColumnDef<(typeof refundList)[number]>[]>(
+    () => [
+      {
+        accessorKey: "invoice_number",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={t("common.invoiceNumber")}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-medium">
+            <HighlightText
+              text={row.original.invoice_number || "—"}
+              query={search}
+            />
+          </span>
+        ),
+      },
+      {
+        accessorKey: "customer_name",
+        header: t("common.customer"),
+        cell: ({ row }) => row.original.customer_name ?? "—",
+      },
+      {
+        accessorKey: "amount",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("common.amount")} />
+        ),
+        meta: { align: "right" },
+        cell: ({ row }) => (
+          <span className="font-medium tabular-nums text-destructive">
+            -{formatMNT(Number(row.original.amount))}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "method",
+        header: t("invoice.refundMethod"),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground capitalize">
+            {row.original.method.replace("_", " ")}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "reason",
+        header: t("invoice.refundReason"),
+        cell: ({ row }) => (
+          <span className="block max-w-[200px] truncate text-muted-foreground">
+            <HighlightText text={row.original.reason ?? "—"} query={search} />
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: t("common.status"),
+        cell: ({ row }) => <RefundStatusBadge status={row.original.status} />,
+      },
+      {
+        accessorKey: "refunded_at",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title={t("common.date")} />
+        ),
+        meta: { align: "right" },
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {new Date(row.original.refunded_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: t("common.actions"),
+        meta: { align: "right" },
+        cell: ({ row }) =>
+          row.original.status === "pending" ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCancel(row.original.id)}
+              disabled={cancelRefund.isPending}
+            >
+              {cancelRefund.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <XCircle className="size-3.5" />
+              )}
+              {t("common.cancel")}
+            </Button>
+          ) : null,
+      },
+    ],
+    [t, search, handleCancel, cancelRefund.isPending],
+  );
+
   return (
     <div className="flex flex-col gap-6">
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("refund.totalRefunds")}
           value={isPending ? "—" : String(stats?.refundCount ?? 0)}
           icon={RotateCcw}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.totalRefunded")}
           value={isPending ? "—" : formatMNT(stats?.totalRefunded ?? 0)}
           icon={RotateCcw}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.pendingAmount")}
           value={isPending ? "—" : formatMNT(stats?.pendingAmount ?? 0)}
           icon={Clock}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.avgRefund")}
           value={
             isPending
@@ -162,8 +257,9 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
           }
           icon={ArrowUpRight}
           loading={isPending}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
 
       {/* Toolbar */}
       <ListToolbar
@@ -203,117 +299,29 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("common.invoiceNumber")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("common.customer")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("common.amount")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("invoice.refundMethod")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("invoice.refundReason")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-center font-medium text-muted-foreground">
-                    {t("common.status")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("common.date")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("common.actions")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isPending ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="px-5 py-16">
-                      <Skeleton className="h-8 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="px-5 py-16">
-                      <Empty>
-                        <EmptyHeader>
-                          <EmptyMedia variant="icon">
-                            <RotateCcw />
-                          </EmptyMedia>
-                          <EmptyTitle>{t("refund.noRefunds")}</EmptyTitle>
-                        </EmptyHeader>
-                        <EmptyContent>
-                          <p className="text-sm text-muted-foreground">
-                            {t("refund.noRefundsDesc")}
-                          </p>
-                        </EmptyContent>
-                      </Empty>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((refund) => (
-                    <TableRow
-                      key={refund.id}
-                      className="border-b border-border transition-colors hover:bg-muted/30"
-                    >
-                      <TableCell className="px-5 py-3.5 font-mono text-xs font-medium">
-                        <HighlightText
-                          text={refund.invoice_number || "—"}
-                          query={search}
-                        />
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5">
-                        {refund.customer_name ?? "—"}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums text-destructive">
-                        -{formatMNT(Number(refund.amount))}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-muted-foreground capitalize">
-                        {refund.method.replace("_", " ")}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-muted-foreground max-w-[200px] truncate">
-                        <HighlightText
-                          text={refund.reason ?? "—"}
-                          query={search}
-                        />
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-center">
-                        <RefundStatusBadge status={refund.status} />
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
-                        {new Date(refund.refunded_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right">
-                        {refund.status === "pending" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancel(refund.id)}
-                            disabled={cancelRefund.isPending}
-                          >
-                            {cancelRefund.isPending ? (
-                              <Loader2 className="size-3.5 animate-spin" />
-                            ) : (
-                              <XCircle className="size-3.5" />
-                            )}
-                            {t("common.cancel")}
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={filtered}
+            getRowId={(row) => row.id}
+            pageSize={20}
+            loading={isPending}
+            insideCard
+            emptyState={
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <RotateCcw />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("refund.noRefunds")}</EmptyTitle>
+                </EmptyHeader>
+                <EmptyContent>
+                  <p className="text-sm text-muted-foreground">
+                    {t("refund.noRefundsDesc")}
+                  </p>
+                </EmptyContent>
+              </Empty>
+            }
+          />
         </CardContent>
       </Card>
     </div>

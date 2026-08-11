@@ -635,6 +635,36 @@ describe("useBayViewMutations", () => {
       expect(window.location.search).toContain("woId=wo-1");
     });
 
+    it("seeds the drawer cache from the waiting queue", () => {
+      const openDetail = vi.fn();
+      const { result } = renderBayView(
+        makeParams({
+          data: makeData({
+            waitingQueue: [
+              {
+                id: "wo-q-1",
+                bay_number: null,
+                mechanic_id: null,
+                status: "New",
+                queue_order: 0,
+                vehicle: { id: "veh-q", plate_number: "9999АБВ" },
+              } as unknown as BayViewData["waitingQueue"][number],
+            ],
+          }),
+          dialogs: makeDialogs({ openDetail }),
+        }),
+      );
+
+      act(() => result.current.handleOpenDetail("wo-q-1"));
+
+      expect(
+        queryClient.getQueryData(drawerDetailKeys.all("org-1", "wo-q-1")),
+      ).toEqual({
+        workOrder: expect.objectContaining({ id: "wo-q-1" }),
+      });
+      expect(openDetail).toHaveBeenCalledWith("wo-q-1", undefined);
+    });
+
     it("passes the initial action through", () => {
       const openDetail = vi.fn();
       const { result } = renderBayView(

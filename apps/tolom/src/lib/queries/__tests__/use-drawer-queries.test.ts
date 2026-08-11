@@ -7,6 +7,7 @@ import {
   drawerDetailOptions,
   prefetchDrawerCatalogs,
   prefetchDrawerData,
+  prefetchDrawerDataMany,
 } from "../use-drawer-queries";
 
 describe("drawerDetailOptions", () => {
@@ -137,6 +138,110 @@ describe("prefetchDrawerData", () => {
     const ensureSpy = vi.spyOn(queryClient, "ensureQueryData");
 
     await prefetchDrawerData(queryClient, undefined, "wo-1");
+    expect(ensureSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("prefetchDrawerDataMany", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("warms the detail cache for every id", async () => {
+    const queryClient = new QueryClient();
+    const ensureSpy = vi
+      .spyOn(queryClient, "ensureQueryData")
+      .mockResolvedValue({ workOrder: { id: "x" } } as never);
+
+    await prefetchDrawerDataMany(queryClient, "org-1", [
+      "wo-1",
+      "wo-2",
+      "wo-3",
+    ]);
+
+    expect(ensureSpy).toHaveBeenCalledTimes(3);
+    const keys = ensureSpy.mock.calls.map(([options]) => {
+      const opts = options as object;
+      return opts && "queryKey" in opts ? opts.queryKey : undefined;
+    });
+    expect(keys).toEqual([
+      drawerDetailKeys.all("org-1", "wo-1"),
+      drawerDetailKeys.all("org-1", "wo-2"),
+      drawerDetailKeys.all("org-1", "wo-3"),
+    ]);
+  });
+
+  it("limits concurrent fetches to the concurrency option", async () => {
+    const queryClient = new QueryClient();
+    const inFlight = { count: 0, max: 0 };
+    const releases: Array<() => void> = [];
+    const ensureSpy = vi
+      .spyOn(queryClient, "ensureQueryData")
+      .mockImplementation(() => {
+        inFlight.count += 1;
+        inFlight.max = Math.max(inFlight.max, inFlight.count);
+        const { promise, resolve } = Promise.withResolvers<void>();
+        releases.push(resolve);
+        return promise.then(() => {
+          inFlight.count -= 1;
+          return { workOrder: { id: "x" } } as never;
+        });
+      });
+
+    const batch = prefetchDrawerDataMany(
+      queryClient,
+      "org-1",
+      ["wo-1", "wo-2", "wo-3", "wo-4"],
+      { concurrency: 2 },
+    );
+
+    // Both workers start immediately (the pool never exceeds concurrency).
+    expect(inFlight.count).toBe(2);
+    // Drain the gates round by round (4 ids at concurrency 2 = 2 rounds).
+    for (let i = 0; i < 4; i++) {
+      const round = releases.splice(0);
+      for (const release of round) release();
+      await Promise.resolve();
+      await Promise.resolve();
+    }
+    await batch;
+
+    expect(ensureSpy).toHaveBeenCalledTimes(4);
+    expect(inFlight.max).toBeLessThanOrEqual(2);
+  });
+
+  it("does not reject the batch when a single prefetch fails", async () => {
+    const queryClient = new QueryClient();
+    vi.spyOn(queryClient, "ensureQueryData").mockRejectedValue(
+      new Error("boom"),
+    );
+
+    await expect(
+      prefetchDrawerDataMany(queryClient, "org-1", ["wo-1", "wo-2"]),
+    ).resolves.toBeUndefined();
+  });
+
+  it("returns early when orgId is null", async () => {
+    const queryClient = new QueryClient();
+    const ensureSpy = vi.spyOn(queryClient, "ensureQueryData");
+
+    await prefetchDrawerDataMany(queryClient, null, ["wo-1"]);
+    expect(ensureSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns early when orgId is undefined", async () => {
+    const queryClient = new QueryClient();
+    const ensureSpy = vi.spyOn(queryClient, "ensureQueryData");
+
+    await prefetchDrawerDataMany(queryClient, undefined, ["wo-1"]);
+    expect(ensureSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns early when the id list is empty", async () => {
+    const queryClient = new QueryClient();
+    const ensureSpy = vi.spyOn(queryClient, "ensureQueryData");
+
+    await prefetchDrawerDataMany(queryClient, "org-1", []);
     expect(ensureSpy).not.toHaveBeenCalled();
   });
 });

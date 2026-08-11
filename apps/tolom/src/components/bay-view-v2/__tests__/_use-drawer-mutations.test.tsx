@@ -4,7 +4,7 @@ import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
-import type { WorkOrderDetail } from "@/lib/types";
+import type { Customer, WorkOrderDetail } from "@/lib/types";
 import { DEFAULT_PAYMENT_METHOD_FEES } from "../_payment-fees";
 import { useDrawerMutations } from "../_use-drawer-mutations";
 
@@ -399,6 +399,36 @@ describe("useDrawerMutations", () => {
         prev: WorkOrderDetail | null,
       ) => WorkOrderDetail | null;
       expect(updater(wo)).toMatchObject({ customer: existingCustomer });
+    });
+
+    it("optimistically shows the selected customer's name instead of unknown", async () => {
+      const wo = makeWo(); // work order without a customer
+      const setWo = vi.fn();
+      const assignCustomerMutation = {
+        mutateAsync: vi.fn().mockResolvedValue(undefined),
+      };
+      const { result } = renderDrawer({ wo, setWo, assignCustomerMutation });
+
+      await act(async () => {
+        await result.current.assignCustomer("cust-9", "Sara", {
+          id: "cust-9",
+          first_name: "Sara",
+          last_name: null,
+          phone: "88112233",
+        } as Customer);
+      });
+
+      const updater = setWo.mock.calls[0][0] as (
+        prev: WorkOrderDetail | null,
+      ) => WorkOrderDetail | null;
+      expect(updater(wo)).toMatchObject({
+        customer_id: "cust-9",
+        customer: expect.objectContaining({
+          id: "cust-9",
+          first_name: "Sara",
+          phone: "88112233",
+        }),
+      });
     });
 
     it("clears the customer without a success toast when id is null", async () => {

@@ -1,7 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Car, X } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
@@ -15,6 +18,8 @@ interface QueueRailProps {
   onToggle: () => void;
   onItemClick: (wo: QueueItem) => void;
   onAssignToBay: (woId: string) => void;
+  /** orgId used to warm the drawer detail cache on hover/focus. */
+  orgId?: string | null;
   t: (key: string) => string;
 }
 
@@ -24,8 +29,30 @@ export function QueueRail({
   onToggle,
   onItemClick,
   onAssignToBay,
+  orgId,
   t,
 }: QueueRailProps) {
+  const queryClient = useQueryClient();
+  const prefetchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Warm the drawer detail cache on hover/focus — same 200ms debounce
+  // pattern as the list view rows.
+  const handleHover = useCallback(
+    (woId: string) => {
+      if (woId && orgId) {
+        clearTimeout(prefetchTimerRef.current);
+        prefetchTimerRef.current = setTimeout(() => {
+          prefetchDrawerData(queryClient, orgId, woId);
+        }, 200);
+      }
+    },
+    [orgId, queryClient],
+  );
+
+  useEffect(() => {
+    return () => clearTimeout(prefetchTimerRef.current);
+  }, []);
+
   if (items.length === 0) return null;
 
   return (
@@ -68,6 +95,8 @@ export function QueueRail({
                 key={wo.id}
                 type="button"
                 onClick={() => onItemClick(wo)}
+                onMouseEnter={() => handleHover(wo.id)}
+                onFocus={() => handleHover(wo.id)}
                 className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted/60 cursor-pointer group w-full"
               >
                 <div className="flex flex-col min-w-0 flex-1">

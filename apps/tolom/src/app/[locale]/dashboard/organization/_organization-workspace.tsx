@@ -18,6 +18,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { ListPageShell } from "@/components/list-page-shell";
 import { PushNotificationSettings } from "@/components/push-notification-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -454,108 +455,104 @@ export function OrganizationWorkspace({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 md:px-6 md:py-6">
-      <header className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {orgT("organization")}
-          </Typography.H1>
-          <Typography.Muted className="mt-1 max-w-2xl text-sm">
-            {pageT("manageYourOrg")}
-          </Typography.Muted>
-        </div>
-        {loading ? (
-          <Skeleton className="h-6 w-40" />
-        ) : (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span>{organization?.name ?? "—"}</span>
-            <span aria-hidden="true">•</span>
-            <span className="font-mono">{organization?.slug ?? "—"}</span>
-            {subscription && (
-              <>
-                <span aria-hidden="true">•</span>
-                <Badge variant="secondary" className="capitalize">
-                  {subscription.status}
-                </Badge>
-              </>
-            )}
-          </div>
-        )}
-      </header>
-
-      <section
-        className="grid gap-5 lg:grid-cols-12"
-        aria-label={pageT("workspaceDetails")}
+      <ListPageShell
+        title={orgT("organization")}
+        description={pageT("manageYourOrg")}
+        headerAction={
+          loading ? (
+            <Skeleton className="h-6 w-40" />
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span>{organization?.name ?? "—"}</span>
+              <span aria-hidden="true">•</span>
+              <span className="font-mono">{organization?.slug ?? "—"}</span>
+              {subscription && (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <Badge variant="secondary" className="capitalize">
+                    {subscription.status}
+                  </Badge>
+                </>
+              )}
+            </div>
+          )
+        }
       >
-        <div className="lg:col-span-7">
-          <OrganizationIdentityPanel
-            editing={editing}
-            form={form}
-            loading={loading}
-            onCancel={onCancel}
-            onEdit={onEdit}
-            onSave={onSave}
-            organization={organization}
-            pageT={pageT}
-            saving={saving}
-            t={t}
-          />
-        </div>
-        <div className="lg:col-span-5">
-          <SubscriptionPanel
-            loading={subscriptionLoading}
-            orgT={orgT}
-            subscription={subscription}
-            t={t}
-          />
-        </div>
-      </section>
+        <section
+          className="grid gap-5 lg:grid-cols-12"
+          aria-label={pageT("workspaceDetails")}
+        >
+          <div className="lg:col-span-7">
+            <OrganizationIdentityPanel
+              editing={editing}
+              form={form}
+              loading={loading}
+              onCancel={onCancel}
+              onEdit={onEdit}
+              onSave={onSave}
+              organization={organization}
+              pageT={pageT}
+              saving={saving}
+              t={t}
+            />
+          </div>
+          <div className="lg:col-span-5">
+            <SubscriptionPanel
+              loading={subscriptionLoading}
+              orgT={orgT}
+              subscription={subscription}
+              t={t}
+            />
+          </div>
+        </section>
 
-      <section
-        className="flex flex-col gap-y-4"
-        aria-labelledby="workspace-controls-heading"
-      >
-        <div>
-          <Typography.H2 id="workspace-controls-heading" className="text-lg">
-            {orgT("settings")}
-          </Typography.H2>
-          <Typography.Muted className="mt-1 text-sm">
-            {orgT("businessDefaultsAndRules")}
-          </Typography.Muted>
-        </div>
-        <div className="grid gap-5 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <DestinationPanel
-              icon={Users}
-              items={people}
-              title={orgT("teamManagement")}
-            />
+        <section
+          className="flex flex-col gap-y-4"
+          aria-labelledby="workspace-controls-heading"
+        >
+          <div>
+            <Typography.H2 id="workspace-controls-heading" className="text-lg">
+              {orgT("settings")}
+            </Typography.H2>
+            <Typography.Muted className="mt-1 text-sm">
+              {orgT("businessDefaultsAndRules")}
+            </Typography.Muted>
           </div>
-          <div className="lg:col-span-3">
-            <DestinationPanel
-              icon={Palette}
-              items={appearance}
-              title={orgT("theme")}
-            />
+          <div className="grid gap-5 lg:grid-cols-12">
+            <div className="lg:col-span-6">
+              <DestinationPanel
+                icon={Users}
+                items={people}
+                title={orgT("teamManagement")}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <DestinationPanel
+                icon={Palette}
+                items={appearance}
+                title={orgT("theme")}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <DestinationPanel
+                icon={Smartphone}
+                items={devices}
+                title={orgT("devices")}
+              />
+            </div>
+            <div className="lg:col-span-6">
+              <DestinationPanel
+                icon={Building2}
+                items={operations}
+                title={orgT("businessDefaultsAndRules")}
+              />
+            </div>
+            <div className="lg:col-span-6">
+              <PushNotificationSettings />
+            </div>
           </div>
-          <div className="lg:col-span-3">
-            <DestinationPanel
-              icon={Smartphone}
-              items={devices}
-              title={orgT("devices")}
-            />
-          </div>
-          <div className="lg:col-span-6">
-            <DestinationPanel
-              icon={Building2}
-              items={operations}
-              title={orgT("businessDefaultsAndRules")}
-            />
-          </div>
-          <div className="lg:col-span-6">
-            <PushNotificationSettings />
-          </div>
-        </div>
-      </section>
+        </section>
+      </ListPageShell>
     </main>
   );
 }

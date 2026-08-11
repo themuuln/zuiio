@@ -204,6 +204,15 @@ function renderManager(
       assignCustomerMutation={{
         mutateAsync: vi.fn().mockResolvedValue(undefined),
       }}
+      addHelperMutation={{
+        mutateAsync: vi.fn().mockResolvedValue(undefined),
+      }}
+      removeHelperMutation={{
+        mutateAsync: vi.fn().mockResolvedValue(undefined),
+      }}
+      removeMechanicMutation={{
+        mutateAsync: vi.fn().mockResolvedValue(undefined),
+      }}
     />,
   );
 }

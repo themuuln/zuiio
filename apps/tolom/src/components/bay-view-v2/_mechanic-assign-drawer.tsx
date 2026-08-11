@@ -2,10 +2,18 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { MechanicPickerDrawer } from "@/components/mechanic-picker-drawer";
 import type { HelperRef, MechanicPickerOption } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 import { buildSelectedMechanics } from "./_mechanic-helpers";
+
+/** Order-insensitive id signature of an ordered mechanic list. */
+const idsOf = (list: MechanicPickerOption[]) =>
+  list
+    .map((m) => m.id)
+    .sort()
+    .join(",");
 
 interface MechanicAssignSheetProps {
   trigger: React.ReactNode;
@@ -39,113 +47,156 @@ export function MechanicAssignDrawer({
     [leadMechanicId, helpers, mechanics],
   );
 
-  // Local optimistic state: applied immediately on toggle, cleared once
+  // Local optimistic state: applied immediately on every toggle, cleared once
   // the server value catches up.
   const [localValue, setLocalValue] = useState<MechanicPickerOption[] | null>(
     null,
   );
   const value = localValue ?? serverValue;
 
-  // Sync: when server catches up to local state, drop the optimistic override.
-  const serverIdsRef = useRef<string>("");
+  // Latest-value refs so toggles and flushes compose without stale closures
+  // (state closures go stale between renders).
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const serverValueRef = useRef(serverValue);
+  serverValueRef.current = serverValue;
+
+  const flushInFlightRef = useRef(false);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Net-diff flush: transform the server value into the desired value with
+  // the minimal mutation set. Redundant ops are no-ops server-side, so a
+  // re-flush computed against a slightly stale server value is always safe.
+  const runFlush = useCallback(async () => {
+    if (flushInFlightRef.current) return;
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    const desired = valueRef.current;
+    if (!desired) return;
+    const server = serverValueRef.current;
+
+    const serverIds = server.map((m) => m.id);
+    const serverLeadId = serverIds[0] ?? null;
+    const serverHelperIds = new Set(serverIds.slice(1));
+    const desiredIds = new Set(desired.map((m) => m.id));
+    const desiredLeadId = desired[0]?.id ?? null;
+
+    // Helper removals: server helpers no longer wanted (the new lead is
+    // cleared from helpers by assignLead itself, so skip it here).
+    const removals: string[] = [];
+    for (const id of serverHelperIds) {
+      if (id !== desiredLeadId && !desiredIds.has(id)) removals.push(id);
+    }
+    // Helper adds: wanted helpers not currently on the server as helpers
+    // (the old lead becomes a helper when a promotion happens).
+    const adds: string[] = [];
+    for (const m of desired.slice(1)) {
+      if (!serverHelperIds.has(m.id)) adds.push(m.id);
+    }
+    const leadChanged = desiredLeadId !== serverLeadId;
+    if (removals.length === 0 && adds.length === 0 && !leadChanged) return;
+
+    flushInFlightRef.current = true;
+    try {
+      // Removals first (so clearing the lead never promotes a leftover
+      // helper), then the lead change, then adds.
+      for (const id of removals) {
+        await onUnassign?.(id);
+      }
+      if (leadChanged) {
+        if (desiredLeadId) {
+          await onAssignLead?.(desiredLeadId);
+        } else {
+          await onUnassign?.(serverLeadId ?? "");
+        }
+      }
+      for (const id of adds) {
+        await onAssignHelper?.(id);
+      }
+    } catch {
+      // Roll back to the server truth — the settle refetch restores it.
+      setLocalValue(null);
+      toast.error("Failed to update mechanics");
+    } finally {
+      flushInFlightRef.current = false;
+      // If the user toggled during the flush, the reconcile effect below
+      // schedules a re-flush once the server value catches up.
+    }
+  }, [onAssignLead, onAssignHelper, onUnassign]);
+
+  // Debounced flush trigger: coalesces rapid toggles into one server sync.
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      flushTimerRef.current = null;
+      void runFlush();
+    }, 350);
+  }, [runFlush]);
+
+  // Reconcile: drop the optimistic overlay once the server catches up;
+  // re-diff when the server value changes (the settle-triggered refetch)
+  // while the desired state still differs.
   useEffect(() => {
     if (!localValue) return;
-    const s = serverValue
-      .map((m) => m.id)
-      .sort()
-      .join(",");
-    if (serverIdsRef.current === "") {
-      serverIdsRef.current = s;
+    if (idsOf(localValue) === idsOf(serverValue)) {
+      setLocalValue(null);
       return;
     }
-    const l = localValue
-      .map((m) => m.id)
-      .sort()
-      .join(",");
-    if (l === s) {
-      setLocalValue(null);
-      serverIdsRef.current = "";
-    }
-  }, [localValue, serverValue]);
+    if (flushInFlightRef.current || flushTimerRef.current) return;
+    scheduleFlush();
+  }, [serverValue, localValue, scheduleFlush]);
 
-  // Reset local state when the sheet closes.
+  // Flush pending changes when the sheet closes (the drawer may close before
+  // the debounce fires). Keep the optimistic overlay until the server catches
+  // up so the reconcile effect can re-flush a toggle made mid-flush.
   useEffect(() => {
-    if (!open) {
-      setLocalValue(null);
-      serverIdsRef.current = "";
+    if (open) return;
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
     }
-  }, [open]);
+    if (idsOf(valueRef.current) === idsOf(serverValueRef.current)) {
+      setLocalValue(null);
+      return;
+    }
+    void runFlush();
+  }, [open, runFlush]);
 
   const selectedIds = useMemo(() => value.map((m) => m.id), [value]);
 
-  // ── Mutation logic (with optimistic guard) ───────────────
-
-  const mutatingRef = useRef(false);
+  // ── Mutation logic (fully optimistic, debounced server sync) ──
 
   const handleToggle = useCallback(
     (mechanicId: string) => {
-      if (mutatingRef.current) return;
-      mutatingRef.current = true;
-
       const candidate = mechanics.find((m) => m.id === mechanicId);
-      if (!candidate) {
-        mutatingRef.current = false;
-        return;
-      }
+      if (!candidate) return;
+      const current = valueRef.current;
+      const isAssigned = current.some((m) => m.id === mechanicId);
+      const next = isAssigned
+        ? current.filter((m) => m.id !== mechanicId)
+        : [...current, candidate];
 
-      const isAssigned = selectedIds.includes(mechanicId);
-
-      // Apply optimistic local state
-      if (isAssigned) {
-        setLocalValue(value.filter((m) => m.id !== mechanicId));
-      } else {
-        setLocalValue([...value, candidate]);
-      }
-
-      // Build and run the mutation promise chain
-      const run = () => {
-        if (isAssigned) {
-          if (mechanicId === leadMechanicId) {
-            const nextLead = value.find((v) => v.id !== mechanicId);
-            return nextLead
-              ? Promise.resolve(onAssignLead?.(nextLead.id)).then(() =>
-                  onUnassign?.(mechanicId),
-                )
-              : (onUnassign?.(mechanicId) ?? Promise.resolve());
-          }
-          return onUnassign?.(mechanicId) ?? Promise.resolve();
-        }
-        if (selectedIds.length === 0) {
-          return onAssignLead?.(mechanicId) ?? Promise.resolve();
-        }
-        return onAssignHelper?.(mechanicId) ?? Promise.resolve();
-      };
-
-      run().then(
-        () => {
-          mutatingRef.current = false;
-        },
-        () => {
-          mutatingRef.current = false;
-        },
-      );
+      // Flip the picker instantly — no dropping, no waiting on the server.
+      valueRef.current = next;
+      setLocalValue(next);
+      scheduleFlush();
     },
-    [
-      selectedIds,
-      value,
-      leadMechanicId,
-      mechanics,
-      onAssignLead,
-      onAssignHelper,
-      onUnassign,
-    ],
+    [mechanics, scheduleFlush],
   );
 
   const handleSetLead = useCallback(
     (mechanicId: string) => {
-      onAssignLead?.(mechanicId);
+      const current = valueRef.current;
+      const candidate = current.find((m) => m.id === mechanicId);
+      if (!candidate) return;
+      const next = [candidate, ...current.filter((m) => m.id !== mechanicId)];
+      valueRef.current = next;
+      setLocalValue(next);
+      scheduleFlush();
     },
-    [onAssignLead],
+    [scheduleFlush],
   );
 
   const headerText = leadMechanicId ? t("changeMechanic") : t("assignMechanic");

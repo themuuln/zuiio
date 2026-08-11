@@ -30,7 +30,8 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { useReminderLogs } from "@/lib/queries/use-service-reminders";
 import { ChannelBadge, StatusBadge } from "./_badges";
-import { formatDate, formatVehicleLabel } from "./_utils";
+import { SortableHeader, type SortDir } from "./_sortable-header";
+import { formatDate, formatVehicleLabel, getLogSortValue } from "./_utils";
 
 interface ReminderLogsTabProps {
   orgId: string | undefined;
@@ -76,6 +77,33 @@ export function ReminderLogsTab({ orgId, branchFilter }: ReminderLogsTabProps) {
     search ||
     (statusFilter && statusFilter !== "all") ||
     (channelFilter && channelFilter !== "all");
+
+  // Sorting
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedLogs = useMemo(() => {
+    if (!sortKey) return filteredLogs;
+    const arr = [...filteredLogs];
+    const dir = sortDir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      const av = getLogSortValue(a, sortKey);
+      const bv = getLogSortValue(b, sortKey);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+    return arr;
+  }, [filteredLogs, sortKey, sortDir]);
 
   if (isPending) {
     return (
@@ -224,17 +252,73 @@ export function ReminderLogsTab({ orgId, branchFilter }: ReminderLogsTabProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("serviceReminders.vehicle")}</TableHead>
-                  <TableHead>{t("serviceReminders.serviceName")}</TableHead>
-                  <TableHead>{t("serviceReminders.type")}</TableHead>
-                  <TableHead>{t("serviceReminders.channel")}</TableHead>
-                  <TableHead>{t("serviceReminders.status")}</TableHead>
-                  <TableHead>{t("serviceReminders.scheduled")}</TableHead>
-                  <TableHead>{t("serviceReminders.sentAt")}</TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.vehicle")}
+                      sortKey="vehicle"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.serviceName")}
+                      sortKey="service"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.type")}
+                      sortKey="type"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.channel")}
+                      sortKey="channel"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.status")}
+                      sortKey="status"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.scheduled")}
+                      sortKey="scheduled"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label={t("serviceReminders.sentAt")}
+                      sortKey="sent"
+                      currentSortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.map((log) => (
+                {sortedLogs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="font-medium">
                       {formatVehicleLabel(log.vehicle)}

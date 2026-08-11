@@ -1,8 +1,13 @@
 import { fireEvent, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { render } from "@/test/test-utils";
 import { QueueRail } from "../_queue-rail";
+
+vi.mock("@/lib/queries/use-drawer-queries", () => ({
+  prefetchDrawerData: vi.fn(),
+}));
 
 const t = (key: string) => key;
 
@@ -22,6 +27,10 @@ const item = {
 } as unknown as BayViewWorkOrder & { vehicle: BayViewWorkOrder["vehicle"] };
 
 describe("QueueRail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders nothing for an empty queue", () => {
     const { container } = render(
       <QueueRail
@@ -100,5 +109,52 @@ describe("QueueRail", () => {
       />,
     );
     expect(container.querySelector(".w-\\[260px\\]")).toBeTruthy();
+  });
+
+  it("prefetches the drawer detail on hover after the debounce", () => {
+    vi.useFakeTimers();
+    render(
+      <QueueRail
+        items={[item]}
+        open
+        onToggle={vi.fn()}
+        onItemClick={vi.fn()}
+        onAssignToBay={vi.fn()}
+        orgId="org-1"
+        t={t}
+      />,
+    );
+
+    fireEvent.mouseEnter(screen.getByText("1234 УБА"));
+    expect(prefetchDrawerData).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(200);
+    expect(prefetchDrawerData).toHaveBeenCalledWith(
+      expect.anything(),
+      "org-1",
+      "wo-q-1",
+    );
+  });
+
+  it("skips prefetch without an orgId", () => {
+    vi.useFakeTimers();
+    render(
+      <QueueRail
+        items={[item]}
+        open
+        onToggle={vi.fn()}
+        onItemClick={vi.fn()}
+        onAssignToBay={vi.fn()}
+        t={t}
+      />,
+    );
+
+    fireEvent.mouseEnter(screen.getByText("1234 УБА"));
+    vi.advanceTimersByTime(200);
+    expect(prefetchDrawerData).not.toHaveBeenCalled();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 });

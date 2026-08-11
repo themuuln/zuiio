@@ -100,7 +100,7 @@ export function BayCardFooter({
           size="icon"
           variant="ghost"
           disabled={isPending}
-          className="rounded-md text-blue-600/70 bg-blue-500/5 hover:bg-blue-500/15 dark:text-blue-400/80 dark:bg-blue-950/10 dark:hover:bg-blue-950/25"
+          className="rounded-md text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(workOrder.id, "add-service");
@@ -115,7 +115,7 @@ export function BayCardFooter({
           size="icon"
           variant="ghost"
           disabled={isPending}
-          className="rounded-md text-amber-600/70 bg-amber-500/5 hover:bg-amber-500/15 dark:text-amber-400/80 dark:bg-amber-950/10 dark:hover:bg-amber-950/25"
+          className="rounded-md text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(workOrder.id, "add-part");
@@ -130,7 +130,7 @@ export function BayCardFooter({
           size="icon"
           variant="ghost"
           disabled={isPending}
-          className="rounded-md text-emerald-600/70 bg-emerald-500/5 hover:bg-emerald-500/15 dark:text-emerald-400/80 dark:bg-emerald-950/10 dark:hover:bg-emerald-950/25"
+          className="rounded-md text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(workOrder.id);
@@ -145,7 +145,7 @@ export function BayCardFooter({
           size="icon"
           variant="ghost"
           disabled={isPending}
-          className="rounded-md text-violet-600/70 bg-violet-500/5 hover:bg-violet-500/15 dark:text-violet-400/80 dark:bg-violet-950/10 dark:hover:bg-violet-950/25"
+          className="rounded-md text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(workOrder.id);

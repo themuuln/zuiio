@@ -22,26 +22,24 @@ export function ActionButtons({
     values?: Record<string, string | number>,
   ) => string;
 
-  const syncMutation = useOrgMutation<{ data: { synced: number } }, void>({
+  const syncMutation = useOrgMutation<{ synced: number }, void>({
     endpoint: `/api/organizations/${orgId}/service-reminders/sync-history`,
     method: "POST",
     queryKey: ["organizations", orgId, "service-reminders"],
     onSuccess: (data) => {
       toast.dismiss();
-      toast.success(t("serviceReminders.synced", { count: data.data.synced }));
+      toast.success(t("serviceReminders.synced", { count: data.synced }));
       onSyncComplete?.();
     },
   });
 
-  const sendMutation = useOrgMutation<{ data: { sent: number } }, void>({
+  const sendMutation = useOrgMutation<{ sent: number }, void>({
     endpoint: `/api/organizations/${orgId}/service-reminders/send-pending`,
     method: "POST",
     queryKey: ["organizations", orgId, "service-reminders"],
     onSuccess: (data) => {
       toast.dismiss();
-      toast.success(
-        t("serviceReminders.sentReminders", { count: data.data.sent }),
-      );
+      toast.success(t("serviceReminders.sentReminders", { count: data.sent }));
       onSendComplete?.();
     },
   });

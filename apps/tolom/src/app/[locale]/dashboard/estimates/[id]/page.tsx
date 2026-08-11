@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Copy,
@@ -18,6 +17,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
@@ -326,11 +326,15 @@ export default function EstimateDetailPage() {
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex flex-col gap-y-3">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="size-4" />
-              {commonT("back")}
-            </Button>
-
+            <CreatePageHeader
+              backHref="/dashboard/estimates"
+              title={showSkeleton ? "" : renderEstimate.estimate_number}
+              subtitle={
+                showSkeleton
+                  ? undefined
+                  : `${t("created")} ${new Date(renderEstimate.created_at).toLocaleDateString()}${getCustomerName(renderEstimate) !== "—" ? ` · ${getCustomerName(renderEstimate)}` : ""}`
+              }
+            />
             {showSkeleton ? (
               <Skeleton className="h-6 w-24 rounded-full" />
             ) : (
@@ -361,26 +365,6 @@ export default function EstimateDetailPage() {
                     {t("convertedToWorkOrder")}
                   </Badge>
                 )}
-              </div>
-            )}
-
-            {showSkeleton ? (
-              <div className="flex flex-col gap-y-2">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-4 w-64" />
-              </div>
-            ) : (
-              <div>
-                <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                  {renderEstimate.estimate_number}
-                </Typography.H1>
-                <Typography.Muted className="mt-1 text-sm">
-                  {t("created")}{" "}
-                  {new Date(renderEstimate.created_at).toLocaleDateString()}
-                  {getCustomerName(renderEstimate) !== "—"
-                    ? ` · ${getCustomerName(renderEstimate)}`
-                    : ""}
-                </Typography.Muted>
               </div>
             )}
           </div>

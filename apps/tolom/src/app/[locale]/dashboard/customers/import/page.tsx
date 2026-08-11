@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle2,
   Download,
   FileText,
@@ -17,6 +16,7 @@ import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -361,24 +361,11 @@ export default function ImportCustomersPage() {
         ]}
       />
 
-      <div className="flex items-center gap-3">
-        <Button
-          render={<Link href="/dashboard/customers" />}
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Back"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            Import Customers
-          </Typography.H1>
-          <Typography.Muted className="text-sm text-muted-foreground">
-            Upload a CSV file to create customers in bulk
-          </Typography.Muted>
-        </div>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/customers"
+        title="Import Customers"
+        subtitle="Upload a CSV file to create customers in bulk"
+      />
 
       {state.status === "idle" && (
         <>

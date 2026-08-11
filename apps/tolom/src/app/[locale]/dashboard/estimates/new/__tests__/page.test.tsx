@@ -47,6 +47,18 @@ vi.mock("@/lib/stores", () => ({
 
 vi.mock("@/lib/i18n/navigation", () => ({
   useRouter: () => ({ push: mocks.push, back: mocks.back }),
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children?: React.ReactNode;
+  }) => (
+    <a href={String(href)} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/lib/queries/use-service-search", () => ({

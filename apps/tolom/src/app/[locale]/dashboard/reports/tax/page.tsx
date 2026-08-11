@@ -1,16 +1,17 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileText } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Typography } from "@/components/ui/typography";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { reportKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -126,24 +127,11 @@ export default function TaxReportPage() {
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 pb-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          render={<Link href="/dashboard/reports" />}
-        >
-          <ArrowLeft className="size-4" />
-          {commonT("back")}
-        </Button>
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("taxReport")}
-          </Typography.H1>
-          <Typography.Muted className="text-sm">
-            {t("taxReportDesc")}
-          </Typography.Muted>
-        </div>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/reports"
+        title={t("taxReport")}
+        subtitle={t("taxReportDesc")}
+      />
 
       {/* Date Range */}
       <Card>

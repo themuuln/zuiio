@@ -18,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LowStockCard } from "@/app/[locale]/dashboard/_low-stock-card";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -75,49 +76,6 @@ function formatDate(iso: string, locale: string): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  href,
-  accent,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  sub?: string;
-  href?: string;
-  accent?: string;
-}) {
-  const inner = (
-    <Card
-      className={`transition-shadow print:border-border print: ${
-        href ? "hover:shadow-sm" : ""
-      }`}
-    >
-      <CardContent className="flex flex-col gap-1.5 p-4">
-        <div className="flex items-center gap-2">
-          <Icon className={`size-4 ${accent ?? "text-muted-foreground"}`} />
-          <Typography.Muted className="text-xs">{label}</Typography.Muted>
-        </div>
-        <Typography.H3 className="m-0 text-2xl font-semibold tracking-tight">
-          {value}
-        </Typography.H3>
-        {sub ? (
-          <Typography.Muted className="text-xs">{sub}</Typography.Muted>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-
-  if (href) {
-    return <Link href={href}>{inner}</Link>;
-  }
-
-  return inner;
 }
 
 function PaymentMiniCard({
@@ -403,12 +361,12 @@ export default function EodClosePage() {
 
         <Separator className="print:hidden" />
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <StatCards>
           <StatCard
             icon={DollarSign}
             label={t("eodClose.revenue")}
             value={formatCurrency(eod?.total_revenue ?? 0)}
-            accent="text-emerald-500"
+            accent="success"
           />
           <StatCard
             icon={CheckCircle2}
@@ -418,7 +376,7 @@ export default function EodClosePage() {
               (eod?.total_revenue ?? 0) /
                 Math.max(eod?.total_work_orders ?? 0, 1),
             )}
-            accent="text-blue-500"
+            accent="info"
           />
           <StatCard
             icon={Clock}
@@ -430,7 +388,7 @@ export default function EodClosePage() {
                 : undefined
             }
             href="/dashboard/work-orders"
-            accent={openCount > 0 ? "text-amber-500" : "text-muted-foreground"}
+            accent={openCount > 0 ? "warning" : "default"}
           />
           <StatCard
             icon={Receipt}
@@ -442,11 +400,9 @@ export default function EodClosePage() {
                 : undefined
             }
             href="/dashboard/finance"
-            accent={
-              unpaidInvoiceCount > 0 ? "text-red-500" : "text-muted-foreground"
-            }
+            accent={unpaidInvoiceCount > 0 ? "danger" : "default"}
           />
-        </div>
+        </StatCards>
 
         {/* Cash Register Status */}
         <Card className="print:border-border print:">

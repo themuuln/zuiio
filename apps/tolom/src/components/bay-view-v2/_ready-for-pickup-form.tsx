@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { TransferBankPicker } from "@/components/banks/transfer-bank-picker";
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
+import { FieldLabel } from "@/components/ui/field";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
@@ -164,71 +164,92 @@ export function ReadyForPickupForm({
   });
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-        <h3 className="text-sm font-semibold">{t("markReady")}</h3>
-        <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
+    <div className="flex h-full flex-col">
+      {/* Header — title + subtitle + plate */}
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/70 bg-card px-4 py-3 sm:px-5">
+        <div className="min-w-0">
+          <h3 className="text-base font-bold text-foreground">
+            {t("markReady")}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("readyForPickupSubtitle")}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground/70">
           {vehiclePlate}
         </span>
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col flex-1 min-h-0">
+      <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
         {/* Scrollable content */}
-        <div className="flex flex-col gap-4 px-4 pb-4 overflow-y-auto flex-1">
-          {/* Odometer */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <Gauge className="size-4" />
-              {t("postServiceOdometer")}
-            </FieldLabel>
-            <FieldContent>
-              <div className="relative max-w-full">
-                <NumericInput
-                  value={odometerValue}
-                  placeholder={t("postServiceOdometerPlaceholder")}
-                  className="h-10 pr-10"
-                  min={0}
-                  autoFocus
-                  onChange={(val) =>
-                    form.setValue("odometer", val?.toString() ?? "", {
-                      shouldValidate: true,
-                    })
-                  }
-                  onBlur={() => form.trigger("odometer")}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none select-none">
-                  км
-                </span>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+          <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+            {/* Total due summary */}
+            <section className="flex items-center justify-between overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+              <span className="flex items-center gap-2 text-sm font-medium text-foreground/80">
+                <Wallet className="size-4 text-muted-foreground/60" />
+                {t("total")}
+              </span>
+              <span className="text-lg font-bold tabular-nums text-primary">
+                {formatMNT(totalDue)}
+              </span>
+            </section>
+
+            {/* Form card */}
+            <section className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+              {/* Odometer */}
+              <div className="flex items-center justify-between gap-3 border-b border-border/50 px-4 py-3">
+                <FieldLabel
+                  htmlFor="rfp-odometer"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground/80"
+                >
+                  <Gauge className="size-4 text-muted-foreground/60" />
+                  {t("postServiceOdometer")}
+                </FieldLabel>
+                <div className="flex items-center gap-1.5">
+                  <NumericInput
+                    value={odometerValue}
+                    placeholder={t("postServiceOdometerPlaceholder")}
+                    className="h-9 w-32 rounded-lg border border-border bg-background px-2.5 text-right text-sm font-semibold tabular-nums text-foreground"
+                    min={0}
+                    autoFocus
+                    onChange={(val) =>
+                      form.setValue("odometer", val?.toString() ?? "", {
+                        shouldValidate: true,
+                      })
+                    }
+                    onBlur={() => form.trigger("odometer")}
+                  />
+                  <span className="text-xs text-muted-foreground/70">км</span>
+                </div>
               </div>
-            </FieldContent>
-          </Field>
 
-          {/* Mechanic notes */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <MessageSquare className="size-4" />
-              {t("mechanicNotesLabel")}
-            </FieldLabel>
-            <FieldContent>
-              <Textarea
-                placeholder={t("notePlaceholder")}
-                rows={3}
-                className="min-h-[72px] resize-none"
-                {...form.register("mechanicNotes")}
-              />
-            </FieldContent>
-          </Field>
+              {/* Mechanic notes */}
+              <div className="border-b border-border/50 px-4 py-3">
+                <FieldLabel
+                  htmlFor="rfp-notes"
+                  className="mb-1.5 flex items-center gap-2 text-sm font-medium text-foreground/80"
+                >
+                  <MessageSquare className="size-4 text-muted-foreground/60" />
+                  {t("mechanicNotesLabel")}
+                </FieldLabel>
+                <Textarea
+                  id="rfp-notes"
+                  placeholder={t("notePlaceholder")}
+                  rows={2}
+                  className="min-h-[60px] resize-none rounded-lg border-border bg-background"
+                  {...form.register("mechanicNotes")}
+                />
+              </div>
 
-          {/* Payment method */}
-          <div className="flex flex-col gap-3">
-            <Field>
-              <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <Wallet className="size-4" />
-                {t("paymentMethod")}
-              </FieldLabel>
-              <FieldContent>
-                <div className="flex items-center gap-px rounded-lg border border-border/50 bg-muted/40 p-0.5">
+              {/* Payment method */}
+              <div className="px-4 py-3">
+                <FieldLabel className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground/80">
+                  <Wallet className="size-4 text-muted-foreground/60" />
+                  {t("paymentMethod")}
+                </FieldLabel>
+
+                <div className="flex flex-wrap items-center gap-px rounded-lg border border-border/50 bg-muted/40 p-0.5">
                   {PAYMENT_METHODS.map((method) => {
                     const methodFee = paymentMethodFees[method] ?? 0;
                     const isActive = watchedPaymentMethod === method;
@@ -238,9 +259,9 @@ export function ReadyForPickupForm({
                         type="button"
                         onClick={() => form.setValue("paymentMethod", method)}
                         className={cn(
-                          "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color] duration-200 cursor-pointer",
+                          "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-semibold transition-[color,background-color] duration-200 cursor-pointer sm:flex-none",
                           isActive
-                            ? "bg-background text-foreground border border-border/30 "
+                            ? "bg-background text-foreground border border-border/30 shadow-sm"
                             : "text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/80",
                         )}
                       >
@@ -289,27 +310,31 @@ export function ReadyForPickupForm({
                     {t("paymentNoFeeOnZero")}
                   </Typography.Muted>
                 )}
-              </FieldContent>
-            </Field>
 
-            {watchedPaymentMethod === "bank_transfer" && (
-              <TransferBankPicker
-                banks={transferBanks}
-                value={transferBankId ?? null}
-                onChange={(bankId) => form.setValue("transferBankId", bankId)}
-              />
+                {watchedPaymentMethod === "bank_transfer" && (
+                  <div className="mt-3">
+                    <TransferBankPicker
+                      banks={transferBanks}
+                      value={transferBankId ?? null}
+                      onChange={(bankId) =>
+                        form.setValue("transferBankId", bankId)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Error */}
+            {error && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
+                <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
+                <Typography.Text className="text-xs text-red-700 dark:text-red-400">
+                  {error}
+                </Typography.Text>
+              </div>
             )}
           </div>
-
-          {/* Error */}
-          {error && (
-            <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
-              <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
-              <Typography.Text className="text-xs text-red-700 dark:text-red-400">
-                {error}
-              </Typography.Text>
-            </div>
-          )}
         </div>
 
         {/* Sticky actions at bottom */}

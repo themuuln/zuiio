@@ -38,6 +38,18 @@ vi.mock("next-intl", async () => {
 
 vi.mock("@/lib/i18n/navigation", () => ({
   useRouter: () => ({ push: mocks.push, back: mocks.back }),
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children?: React.ReactNode;
+  }) => (
+    <a href={String(href)} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/hooks/use-is-first-load", () => ({

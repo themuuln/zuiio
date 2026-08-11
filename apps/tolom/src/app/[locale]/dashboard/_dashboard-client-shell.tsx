@@ -69,7 +69,7 @@ export default function DashboardClientShell({
             onOpenChange={setAiChatOpen}
             showFloatingButton
           />
-          <div className="flex flex-1 min-h-0">
+          <div className="flex flex-1 min-h-0 min-w-0">
             <AppSidebar />
             <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
               <DashboardHeader />

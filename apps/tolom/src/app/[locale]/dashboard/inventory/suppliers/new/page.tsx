@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Typography } from "@/components/ui/typography";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
@@ -61,19 +60,10 @@ export default function NewSupplierPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => back()}
-          aria-label={t("back")}
-        >
-          <ArrowLeft className="size-5" />
-        </Button>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("newSupplier")}
-        </Typography.H1>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/inventory/suppliers"
+        title={t("newSupplier")}
+      />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>

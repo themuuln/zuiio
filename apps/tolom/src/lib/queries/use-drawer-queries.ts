@@ -2,6 +2,7 @@
 
 import {
   keepPreviousData,
+  type QueryClient,
   queryOptions,
   useQuery,
   useQueryClient,
@@ -272,6 +273,42 @@ export async function prefetchDrawerCatalogs(
 ): Promise<void> {
   if (!orgId) return;
   await queryClient.ensureQueryData(drawerCatalogsOptions(orgId));
+}
+
+// ── Prefetch: batch of work order details (idle warm-up) ───────
+
+/**
+ * Warm the detail cache for many work orders without flooding the API.
+ * Runs a worker pool with a small concurrency cap; a failure in one
+ * prefetch is non-fatal (the drawer refetches on open anyway).
+ * React Query dedupes in-flight fetches per query key, so overlapping
+ * calls for the same id only issue one request.
+ */
+export async function prefetchDrawerDataMany(
+  queryClient: QueryClient,
+  orgId: string | null | undefined,
+  woIds: string[],
+  options?: { concurrency?: number },
+): Promise<void> {
+  if (!orgId || woIds.length === 0) return;
+  const concurrency = Math.max(1, options?.concurrency ?? 3);
+  let cursor = 0;
+  const workers = Array.from(
+    { length: Math.min(concurrency, woIds.length) },
+    async () => {
+      while (cursor < woIds.length) {
+        const woId = woIds[cursor];
+        cursor += 1;
+        if (!woId) continue;
+        try {
+          await prefetchDrawerData(queryClient, orgId, woId);
+        } catch {
+          // Warm-up failures are non-fatal — the drawer refetches on open.
+        }
+      }
+    },
+  );
+  await Promise.all(workers);
 }
 
 // ── Drawer work order detail hook ──────────────────────────────

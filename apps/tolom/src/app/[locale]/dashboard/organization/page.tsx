@@ -5,6 +5,7 @@ import { useOrgMutation } from "@zuiio/query";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
@@ -101,32 +102,29 @@ export default function OrganizationPage() {
   if (error && !organizationQuery.data) {
     return (
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 md:px-6 md:py-6">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {orgT("organization")}
-          </Typography.H1>
-          <Typography.Muted className="mt-1 text-sm">
-            {pageT("manageYourOrg")}
-          </Typography.Muted>
-        </div>
-        <Card className="border-destructive/50 bg-destructive/5 ">
-          <CardContent className="flex flex-col items-start gap-4 py-6">
-            <Typography.Text className="text-destructive">
-              {error}
-            </Typography.Text>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                void currentOrg.refetch();
-                void organizationQuery.refetch();
-                void subscriptionQuery.refetch();
-              }}
-            >
-              {t("common.retry")}
-            </Button>
-          </CardContent>
-        </Card>
+        <ListPageShell
+          title={orgT("organization")}
+          description={pageT("manageYourOrg")}
+        >
+          <Card className="border-destructive/50 bg-destructive/5 ">
+            <CardContent className="flex flex-col items-start gap-4 py-6">
+              <Typography.Text className="text-destructive">
+                {error}
+              </Typography.Text>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void currentOrg.refetch();
+                  void organizationQuery.refetch();
+                  void subscriptionQuery.refetch();
+                }}
+              >
+                {t("common.retry")}
+              </Button>
+            </CardContent>
+          </Card>
+        </ListPageShell>
       </main>
     );
   }

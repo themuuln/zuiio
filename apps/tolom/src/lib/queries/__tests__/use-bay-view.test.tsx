@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { WorkOrderDetail } from "@/lib/types";
 import { bayViewKeys } from "../keys";
 import {
   useAddHelperToWorkOrder,
@@ -16,6 +17,10 @@ import {
   useUpdateBayCount,
   useUpdateBayViewStatus,
 } from "../use-bay-view";
+import {
+  type DrawerDetailResponse,
+  drawerDetailKeys,
+} from "../use-drawer-queries";
 
 // Mock the dynamic import target so mutationFn works synchronously in tests
 vi.mock("@/lib/services/bay-view-service.actions", () => ({
@@ -380,5 +385,171 @@ describe("bayViewKeys", () => {
       "shift-report",
       "branch-1",
     ]);
+  });
+});
+
+// ── Drawer detail optimistic updates ─────────────────────────
+// The open WorkOrderDetailDrawer renders from the drawer detail cache
+// (`drawerDetailKeys`), so mechanic/helper mutations must update it in
+// onMutate — otherwise the change only appears after the post-mutation
+// refetch settles (1-2s).
+
+function makeDrawerWorkOrder(
+  overrides: Partial<WorkOrderDetail> = {},
+): WorkOrderDetail {
+  return {
+    id: "wo-1",
+    organization_id: "org-1",
+    branch_id: null,
+    customer_id: null,
+    vehicle_id: null,
+    mechanic_id: null,
+    status: "New",
+    complaint: null,
+    diagnosis: null,
+    description: null,
+    notes: null,
+    mechanic_notes: null,
+    diagnosis_label_id: null,
+    bay_number: 1,
+    queue_order: 1,
+    odometer_at_service: null,
+    discount_amount: 0,
+    discount_percentage: 0,
+    discount_total: 0,
+    subtotal: 0,
+    total: 0,
+    completed_at: null,
+    started_at: null,
+    created_at: "2026-08-09T09:00:00Z",
+    updated_at: "2026-08-09T09:00:00Z",
+    created_by: null,
+    updated_by: null,
+    deleted_at: null,
+    customer: null,
+    vehicle: null,
+    mechanic: null,
+    helpers: [],
+    services: [],
+    parts: [],
+    status_history: [],
+    service_history: [],
+    ...overrides,
+  };
+}
+
+function seedDrawerDetail(overrides: Partial<WorkOrderDetail> = {}) {
+  queryClient.setQueryData<DrawerDetailResponse>(
+    drawerDetailKeys.all("org-1", "wo-1"),
+    { workOrder: makeDrawerWorkOrder(overrides) },
+  );
+}
+
+function readDrawerDetail(): WorkOrderDetail | null {
+  const cached = queryClient.getQueryData<DrawerDetailResponse>(
+    drawerDetailKeys.all("org-1", "wo-1"),
+  );
+  return cached?.workOrder ?? null;
+}
+
+describe("mechanic mutations update the open drawer detail optimistically", () => {
+  beforeEach(() => {
+    queryClient.clear();
+    vi.clearAllMocks();
+  });
+
+  it("assign mechanic: drawer cache shows the mechanic", async () => {
+    seedDrawerDetail();
+    const { result } = renderHook(
+      () => useAssignMechanicToWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.mutateAsync({ woId: "wo-1", mechanicId: "mech-1" });
+
+    expect(readDrawerDetail()?.mechanic).toEqual({
+      id: "mech-1",
+      full_name: null,
+    });
+    expect(readDrawerDetail()?.mechanic_id).toBe("mech-1");
+    expect(readDrawerDetail()?.status).toBe("In Progress");
+  });
+
+  it("remove mechanic: drawer cache clears the mechanic", async () => {
+    seedDrawerDetail({
+      mechanic: { id: "mech-1", full_name: "Бат" },
+      mechanic_id: "mech-1",
+    });
+    const { result } = renderHook(
+      () => useRemoveMechanicFromWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.mutateAsync({ woId: "wo-1" });
+
+    expect(readDrawerDetail()?.mechanic).toBeNull();
+    expect(readDrawerDetail()?.mechanic_id).toBeNull();
+  });
+
+  it("add helper: drawer cache gains the helper", async () => {
+    seedDrawerDetail();
+    const { result } = renderHook(
+      () => useAddHelperToWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.mutateAsync({ woId: "wo-1", mechanicId: "mech-2" });
+
+    expect(readDrawerDetail()?.helpers).toEqual([
+      expect.objectContaining({ id: "mech-2", mechanic_id: "mech-2" }),
+    ]);
+  });
+
+  it("add helper: no-op when the mechanic is already a helper or lead", async () => {
+    seedDrawerDetail({
+      mechanic: { id: "mech-1", full_name: "Бат" },
+      mechanic_id: "mech-1",
+      helpers: [{ id: "h-1", mechanic_id: "mech-2", full_name: "Цэцэг" }],
+    });
+    const { result } = renderHook(
+      () => useAddHelperToWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.mutateAsync({ woId: "wo-1", mechanicId: "mech-1" });
+
+    expect(readDrawerDetail()?.helpers).toHaveLength(1);
+  });
+
+  it("remove helper: drawer cache drops the helper", async () => {
+    seedDrawerDetail({
+      helpers: [{ id: "h-1", mechanic_id: "mech-2", full_name: "Цэцэг" }],
+    });
+    const { result } = renderHook(
+      () => useRemoveHelperFromWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.mutateAsync({ woId: "wo-1", mechanicId: "mech-2" });
+
+    expect(readDrawerDetail()?.helpers).toEqual([]);
+  });
+
+  it("rolls the drawer cache back when the API call fails", async () => {
+    seedDrawerDetail();
+    const { removeHelperFromWorkOrder } = await import(
+      "@/lib/services/bay-view-service.actions"
+    );
+    vi.mocked(removeHelperFromWorkOrder).mockRejectedValue(new Error("boom"));
+    const { result } = renderHook(
+      () => useRemoveHelperFromWorkOrder("branch-1", "org-1"),
+      { wrapper: createWrapper() },
+    );
+
+    await expect(
+      result.current.mutateAsync({ woId: "wo-1", mechanicId: "mech-2" }),
+    ).rejects.toThrow("boom");
+
+    expect(readDrawerDetail()?.helpers).toEqual([]);
   });
 });

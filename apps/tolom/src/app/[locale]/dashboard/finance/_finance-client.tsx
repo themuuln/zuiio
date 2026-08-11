@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { BranchSelect } from "@/components/branch-select";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -184,132 +185,125 @@ export default function FinancePage() {
 
   if (error && !data) {
     return (
-      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("nav.finance")}
-          </Typography.H1>
-          <Typography.Muted className="mt-1 text-muted-foreground">
-            {t("finance.subtitle")}
-          </Typography.Muted>
-        </div>
-        <Card className="py-12">
-          <CardContent className="flex flex-col items-center gap-4">
-            <Typography.Muted className="text-muted-foreground">
-              {error}
-            </Typography.Muted>
-            <Button onClick={() => window.location.reload()}>
-              {t("finance.retry")}
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="px-4 pt-4 pb-6 md:px-6">
+        <ListPageShell
+          title={t("nav.finance")}
+          description={t("finance.subtitle")}
+        >
+          <Card className="py-12">
+            <CardContent className="flex flex-col items-center gap-4">
+              <Typography.Muted className="text-muted-foreground">
+                {error}
+              </Typography.Muted>
+              <Button onClick={() => window.location.reload()}>
+                {t("finance.retry")}
+              </Button>
+            </CardContent>
+          </Card>
+        </ListPageShell>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("nav.finance")}
-          </Typography.H1>
-          <Typography.Muted className="mt-1 text-muted-foreground">
-            {t("finance.subtitle")}
-          </Typography.Muted>
-        </div>
-        <div className="flex flex-col items-end gap-3">
-          {financeSeparate && hasMultipleBranches(branches) && (
-            <BranchSelect
-              value={selectedBranchId}
-              onChange={setSelectedBranchId}
-              branches={branches}
-              placeholder={t("dashboard.branch")}
-              allLabel={t("dashboard.allBranches")}
-              className="min-w-44"
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("nav.finance")}
+        description={t("finance.subtitle")}
+        headerAction={
+          <div className="flex flex-col items-end gap-3">
+            {financeSeparate && hasMultipleBranches(branches) && (
+              <BranchSelect
+                value={selectedBranchId}
+                onChange={setSelectedBranchId}
+                branches={branches}
+                placeholder={t("dashboard.branch")}
+                allLabel={t("dashboard.allBranches")}
+                className="min-w-44"
+              />
+            )}
+            <DateRangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              className="w-full sm:w-[260px]"
+              align="end"
             />
-          )}
-          <DateRangePicker
-            value={dateRange}
-            onChange={setDateRange}
-            className="w-full sm:w-[260px]"
-            align="end"
-          />
-          <TabBar value={tab} onChange={setTab} />
-        </div>
-      </div>
+            <TabBar value={tab} onChange={setTab} />
+          </div>
+        }
+      >
+        {!dateRange?.from && !dateRange?.to && (
+          <Alert>
+            <AlertCircle className="size-4" />
+            <AlertTitle>{t("finance.largeDataset")}</AlertTitle>
+            <AlertDescription>{t("finance.largeDatasetDesc")}</AlertDescription>
+          </Alert>
+        )}
 
-      {!dateRange?.from && !dateRange?.to && (
-        <Alert>
-          <AlertCircle className="size-4" />
-          <AlertTitle>{t("finance.largeDataset")}</AlertTitle>
-          <AlertDescription>{t("finance.largeDatasetDesc")}</AlertDescription>
-        </Alert>
-      )}
+        {tab === "overview" && (
+          <div
+            id="finance-panel-overview"
+            role="tabpanel"
+            aria-labelledby="finance-tab-overview"
+          >
+            <OverviewTab
+              hasAnyData={hasAnyData}
+              hasRevenue={hasRevenue}
+              summary={summary ?? null}
+              insightLine={insightLine}
+              loading={loading}
+              topServices={data?.topServices}
+              revenueTrend={data?.revenueTrend ?? []}
+            />
+          </div>
+        )}
 
-      {tab === "overview" && (
-        <div
-          id="finance-panel-overview"
-          role="tabpanel"
-          aria-labelledby="finance-tab-overview"
-        >
-          <OverviewTab
-            hasAnyData={hasAnyData}
-            hasRevenue={hasRevenue}
-            summary={summary ?? null}
-            insightLine={insightLine}
-            loading={loading}
-            topServices={data?.topServices}
-            revenueTrend={data?.revenueTrend ?? []}
-          />
-        </div>
-      )}
+        {tab === "transactions" && (
+          <div
+            id="finance-panel-transactions"
+            role="tabpanel"
+            aria-labelledby="finance-tab-transactions"
+          >
+            <TransactionsTab
+              hasAnyData={hasAnyData}
+              search={search}
+              onSearchChange={setSearch}
+              filteredWorkOrders={filteredWorkOrders}
+              data={data ?? null}
+            />
+          </div>
+        )}
 
-      {tab === "transactions" && (
-        <div
-          id="finance-panel-transactions"
-          role="tabpanel"
-          aria-labelledby="finance-tab-transactions"
-        >
-          <TransactionsTab
-            hasAnyData={hasAnyData}
-            search={search}
-            onSearchChange={setSearch}
-            filteredWorkOrders={filteredWorkOrders}
-            data={data ?? null}
-          />
-        </div>
-      )}
+        {tab === "invoices" && (
+          <div
+            id="finance-panel-invoices"
+            role="tabpanel"
+            aria-labelledby="finance-tab-invoices"
+          >
+            <InvoicesTab orgId={orgId} />
+          </div>
+        )}
 
-      {tab === "invoices" && (
-        <div
-          id="finance-panel-invoices"
-          role="tabpanel"
-          aria-labelledby="finance-tab-invoices"
-        >
-          <InvoicesTab orgId={orgId} />
-        </div>
-      )}
+        {tab === "expenses" && (
+          <div
+            id="finance-panel-expenses"
+            role="tabpanel"
+            aria-labelledby="finance-tab-expenses"
+          >
+            <ExpensesTab orgId={orgId} />
+          </div>
+        )}
 
-      {tab === "expenses" && (
-        <div
-          id="finance-panel-expenses"
-          role="tabpanel"
-          aria-labelledby="finance-tab-expenses"
-        >
-          <ExpensesTab orgId={orgId} />
-        </div>
-      )}
-
-      {tab === "refunds" && orgId && (
-        <div
-          id="finance-panel-refunds"
-          role="tabpanel"
-          aria-labelledby="finance-tab-refunds"
-        >
-          <RefundsTab orgId={orgId} />
-        </div>
-      )}
+        {tab === "refunds" && orgId && (
+          <div
+            id="finance-panel-refunds"
+            role="tabpanel"
+            aria-labelledby="finance-tab-refunds"
+          >
+            <RefundsTab orgId={orgId} />
+          </div>
+        )}
+      </ListPageShell>
     </div>
   );
 }

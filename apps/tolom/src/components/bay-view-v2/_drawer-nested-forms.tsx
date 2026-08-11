@@ -54,6 +54,7 @@ export function DrawerNestedForms({
         onOpenChange={(next) => {
           if (!next) onReadyFormClose();
         }}
+        size="lg"
         backdropForceRender
       >
         <ReadyForPickupForm

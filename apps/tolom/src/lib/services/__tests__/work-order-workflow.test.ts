@@ -274,7 +274,11 @@ describe("updateWorkOrderStatus", () => {
     // Status history was recorded
     expect(db.from).toHaveBeenCalledWith("work_order_status_history");
     // Schedule sync was triggered (fire-and-forget)
-    expect(mockSyncWorkOrderToSchedules).toHaveBeenCalledWith(db, WO_ID);
+    expect(mockSyncWorkOrderToSchedules).toHaveBeenCalledWith(
+      db,
+      WO_ID,
+      "test-user-id",
+    );
     // Inventory movements were created
     expect(db.from).toHaveBeenCalledWith("inventory_movements");
     // Inventory-specific cache tags revalidated
@@ -358,7 +362,11 @@ describe("updateWorkOrderStatus", () => {
     await updateWorkOrderStatus(db, WO_ID, ORG_ID, newStatus);
 
     // Schedule sync was still triggered
-    expect(mockSyncWorkOrderToSchedules).toHaveBeenCalledWith(db, WO_ID);
+    expect(mockSyncWorkOrderToSchedules).toHaveBeenCalledWith(
+      db,
+      WO_ID,
+      "test-user-id",
+    );
     // No inventory movements created
     expect(db.from).not.toHaveBeenCalledWith("inventory_movements");
     // Still revalidated inventory cache tags

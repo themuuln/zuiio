@@ -89,7 +89,8 @@ describe("ReadyForPickupForm", () => {
     render(<ReadyForPickupForm {...props} />);
 
     await user.click(screen.getByRole("button", { name: /^card/ }));
-    expect(screen.getByText("₮ 121,200")).toBeInTheDocument();
+    // Summary card + fee breakdown both show the fee-adjusted total
+    expect(screen.getAllByText("₮ 121,200").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: /markReady/ }));
 

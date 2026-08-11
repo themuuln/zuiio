@@ -159,10 +159,15 @@ describe("BayCard", () => {
 });
 
 describe("BayCardDragPreview", () => {
-  it("renders vehicle data in the drag preview", () => {
+  it("renders the full card: vehicle, mechanic, customer and next action", () => {
     render(<BayCardDragPreview bay={makeOccupiedBay()} />);
     expect(screen.getByText("1234")).toBeTruthy();
     expect(screen.getByText("Toyota Prius · 2020")).toBeTruthy();
+    // Mechanic row
+    expect(screen.getByTestId("mechanic-avatar")).toBeTruthy();
+    // Customer + next status action make the preview a complete card
+    expect(screen.getByText("Дорж")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Start" })).toBeTruthy();
   });
 
   it("renders nothing for an empty bay", () => {

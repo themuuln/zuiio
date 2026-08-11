@@ -267,7 +267,7 @@ export function ReportsPage() {
 
   // ── Render ───────────────────────────────────────────
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
+    <div className="px-4 pt-4 pb-6 md:px-6">
       <ReportsHeader
         title={t("title")}
         subtitle={periodTitle(
@@ -295,114 +295,114 @@ export function ReportsPage() {
         }}
         refreshing={loading}
         t={t}
-      />
-
-      {/* Tabs + Filter */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <ReportsTabBar
-          tabs={tabs}
-          activeTab={reportType}
-          onTabChange={setReportType}
-          t={t}
-        />
-        <ReportsFilters
-          branches={branches}
-          selectedBranchId={selectedBranchId}
-          onBranchChange={setSelectedBranchId}
-          mechanics={mechanics}
-          mechanicFilter={mechanicFilter}
-          onMechanicFilterChange={setMechanicFilter}
-          t={t}
-        />
-      </div>
-
-      {/* Date pickers */}
-      <ReportsDatePicker
-        reportType={reportType}
-        date={date}
-        weekStart={weekStart}
-        month={month}
-        customRange={customRange}
-        onDateChange={setDate}
-        onWeekStartChange={setWeekStart}
-        onMonthChange={setMonth}
-        onCustomRangeChange={setCustomRange}
-      />
-
-      {/* Error */}
-      {reportQ.isError && (
-        <Card className="border-red-200 bg-red-50/30 dark:border-red-800/30 dark:bg-red-950/10">
-          <CardContent className="py-4">
-            <Typography.Text className="text-sm text-red-600 dark:text-red-400">
-              {t("errorLoading")}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Loading */}
-      {loading && <ReportsSkeleton />}
-
-      {/* ═══ EOD ═════════════════════════════════════════ */}
-      {!loading && isEod && eodReport && (
-        <div
-          id="reports-panel-eod"
-          role="tabpanel"
-          aria-labelledby="reports-tab-eod"
-        >
-          <EodView data={eodReport} t={t} />
+      >
+        {/* Tabs + Filter */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <ReportsTabBar
+            tabs={tabs}
+            activeTab={reportType}
+            onTabChange={setReportType}
+            t={t}
+          />
+          <ReportsFilters
+            branches={branches}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={setSelectedBranchId}
+            mechanics={mechanics}
+            mechanicFilter={mechanicFilter}
+            onMechanicFilterChange={setMechanicFilter}
+            t={t}
+          />
         </div>
-      )}
 
-      {/* ═══ DAILY / WEEKLY / MONTHLY ════════════════════ */}
-      {!loading && !isEod && reportType !== "finance" && report && (
-        <OverviewTab
+        {/* Date pickers */}
+        <ReportsDatePicker
           reportType={reportType}
-          report={report}
-          loading={erpLoading}
-          insights={insightsQ.data ?? []}
-          forecast={forecastQ.data ?? null}
-          targets={targetsQ.data ?? []}
-          retention={retentionQ.data ?? null}
-          pnl={pnlQ.data ?? null}
-          serviceBreakdown={serviceBdQ.data ?? []}
-          dailyBreakdown={dailyBreakdown}
-          monthlyBreakdown={monthlyBreakdown}
-          mechExportCols={mechExportCols}
-          dateParam={dateParam}
-          mechanicFilter={mechanicFilter}
-          t={t}
+          date={date}
+          weekStart={weekStart}
+          month={month}
+          customRange={customRange}
+          onDateChange={setDate}
+          onWeekStartChange={setWeekStart}
+          onMonthChange={setMonth}
+          onCustomRangeChange={setCustomRange}
         />
-      )}
 
-      {/* ═══ FINANCE PANEL ═══════════════════════════════ */}
-      {reportType === "finance" && (
-        <FinanceTab
-          financePeriod={financePeriod}
-          onPeriodChange={setFinancePeriod}
-          financeQ={{ data: financeSummary, isPending: financeQ.isPending }}
-          t={t}
-        />
-      )}
+        {/* Error */}
+        {reportQ.isError && (
+          <Card className="border-red-200 bg-red-50/30 dark:border-red-800/30 dark:bg-red-950/10">
+            <CardContent className="py-4">
+              <Typography.Text className="text-sm text-red-600 dark:text-red-400">
+                {t("errorLoading")}
+              </Typography.Text>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Empty state */}
-      {!loading && !report && !reportQ.isError && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-16">
-            <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-              <BarChart3 className="size-7 text-muted-foreground" />
-            </div>
-            <div className="text-center">
-              <Typography.H3 className="text-sm font-semibold">
-                {t("title")}
-              </Typography.H3>
-              <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                {t("subtitle")}
-              </Typography.Muted>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {/* Loading */}
+        {loading && <ReportsSkeleton />}
+
+        {/* ═══ EOD ═════════════════════════════════════════ */}
+        {!loading && isEod && eodReport && (
+          <div
+            id="reports-panel-eod"
+            role="tabpanel"
+            aria-labelledby="reports-tab-eod"
+          >
+            <EodView data={eodReport} t={t} />
+          </div>
+        )}
+
+        {/* ═══ DAILY / WEEKLY / MONTHLY ════════════════════ */}
+        {!loading && !isEod && reportType !== "finance" && report && (
+          <OverviewTab
+            reportType={reportType}
+            report={report}
+            loading={erpLoading}
+            insights={insightsQ.data ?? []}
+            forecast={forecastQ.data ?? null}
+            targets={targetsQ.data ?? []}
+            retention={retentionQ.data ?? null}
+            pnl={pnlQ.data ?? null}
+            serviceBreakdown={serviceBdQ.data ?? []}
+            dailyBreakdown={dailyBreakdown}
+            monthlyBreakdown={monthlyBreakdown}
+            mechExportCols={mechExportCols}
+            dateParam={dateParam}
+            mechanicFilter={mechanicFilter}
+            t={t}
+          />
+        )}
+
+        {/* ═══ FINANCE PANEL ═══════════════════════════════ */}
+        {reportType === "finance" && (
+          <FinanceTab
+            financePeriod={financePeriod}
+            onPeriodChange={setFinancePeriod}
+            financeQ={{ data: financeSummary, isPending: financeQ.isPending }}
+            t={t}
+          />
+        )}
+
+        {/* Empty state */}
+        {!loading && !report && !reportQ.isError && (
+          <Card>
+            <CardContent className="flex flex-col items-center gap-4 py-16">
+              <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+                <BarChart3 className="size-7 text-muted-foreground" />
+              </div>
+              <div className="text-center">
+                <Typography.H3 className="text-sm font-semibold">
+                  {t("title")}
+                </Typography.H3>
+                <Typography.Muted className="mt-1 text-xs text-muted-foreground">
+                  {t("subtitle")}
+                </Typography.Muted>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </ReportsHeader>
     </div>
   );
 }

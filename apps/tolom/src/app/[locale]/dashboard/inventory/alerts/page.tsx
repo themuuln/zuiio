@@ -3,6 +3,7 @@
 import { AlertTriangle, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -57,74 +58,67 @@ export default function AlertsPage() {
   const isPending = balancesLoading || thresholdsLoading;
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("alertsTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("alertsSubtitle")}
-        </Typography.Muted>
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          {isPending ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-20" />
-                </div>
-              ))}
-            </div>
-          ) : alerts.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <AlertTriangle />
-                </EmptyMedia>
-                <EmptyTitle>{t("noAlerts")}</EmptyTitle>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className="divide-y divide-border">
-              {alerts.map((a) => (
-                <div
-                  key={a.part_id}
-                  className="flex items-center gap-4 p-4 min-h-[64px]"
-                >
-                  <AlertTriangle className="size-5 text-destructive shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <Typography.Text className="font-medium text-sm truncate">
-                      {a.part_name}
-                    </Typography.Text>
-                    <Typography.Muted className="text-xs text-muted-foreground">
-                      {a.category ?? "—"} · {a.part_number ?? "—"}
-                    </Typography.Muted>
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell title={t("alertsTitle")} description={t("alertsSubtitle")}>
+        <Card>
+          <CardContent className="p-0">
+            {isPending ? (
+              <div className="divide-y divide-border">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="flex items-center gap-4 p-4">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-20" />
                   </div>
-                  <span className="text-sm tabular-nums">
-                    {a.quantity_on_hand} / {a.min} {a.unit}
-                  </span>
-                  <span className="text-sm font-semibold text-destructive tabular-nums shrink-0">
-                    -{a.shortage}
-                  </span>
-                  <Link
-                    href="/dashboard/inventory/purchase-orders/new"
-                    className="shrink-0"
+                ))}
+              </div>
+            ) : alerts.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <AlertTriangle />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("noAlerts")}</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div className="divide-y divide-border">
+                {alerts.map((a) => (
+                  <div
+                    key={a.part_id}
+                    className="flex items-center gap-4 p-4 min-h-[64px]"
                   >
-                    <Button size="sm" variant="outline">
-                      <Plus className="size-3" /> {t("createPO")}
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    <AlertTriangle className="size-5 text-destructive shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <Typography.Text className="font-medium text-sm truncate">
+                        {a.part_name}
+                      </Typography.Text>
+                      <Typography.Muted className="text-xs text-muted-foreground">
+                        {a.category ?? "—"} · {a.part_number ?? "—"}
+                      </Typography.Muted>
+                    </div>
+                    <span className="text-sm tabular-nums">
+                      {a.quantity_on_hand} / {a.min} {a.unit}
+                    </span>
+                    <span className="text-sm font-semibold text-destructive tabular-nums shrink-0">
+                      -{a.shortage}
+                    </span>
+                    <Link
+                      href="/dashboard/inventory/purchase-orders/new"
+                      className="shrink-0"
+                    >
+                      <Button size="sm" variant="outline">
+                        <Plus className="size-3" /> {t("createPO")}
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </ListPageShell>
     </div>
   );
 }
