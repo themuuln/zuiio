@@ -16,6 +16,19 @@ vi.mock("@/components/storefront/cart-context", () => ({
   useStorefrontCart: () => ({ count: 3 }),
 }));
 
+const mockWishlistToggle = vi.fn();
+vi.mock("@/components/storefront/wishlist-context", () => ({
+  WishlistProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  useWishlist: () => ({
+    items: [],
+    count: 0,
+    isWishlisted: () => false,
+    toggle: mockWishlistToggle,
+  }),
+}));
+
 vi.mock("sonner", () => ({
   toast: { success: vi.fn() },
 }));
@@ -52,6 +65,9 @@ function makeProducts(count: number): PublicProduct[] {
     attribute_count: 0,
     images: null,
     current_stock: null,
+    review_count: 0,
+    review_average: null,
+    promo: null,
   }));
 }
 
@@ -62,11 +78,15 @@ function renderProducts(
     organization: ORG,
     products: makeProducts(3),
     categories: CATEGORIES,
+    promotions: [],
     total: 3,
     page: 1,
     pageSize: 24,
     search: "",
     categoryId: "",
+    minPrice: "",
+    maxPrice: "",
+    sort: "newest",
   };
   return render(<ProductsPageClient {...defaults} {...props} />);
 }
@@ -77,6 +97,9 @@ describe("ProductsPageClient", () => {
     urlSearchParams.delete("q");
     urlSearchParams.delete("category");
     urlSearchParams.delete("page");
+    urlSearchParams.delete("min_price");
+    urlSearchParams.delete("max_price");
+    urlSearchParams.delete("sort");
   });
 
   it("renders the org name, product count and product cards", () => {
@@ -234,5 +257,177 @@ describe("ProductsPageClient", () => {
     renderProducts();
     expect(screen.queryByText("Дууссан")).toBeNull();
     expect(screen.queryByText(/Нөөцөд байна/)).toBeNull();
+  });
+
+  it("renders price inputs and the sort select in the sidebar", () => {
+    renderProducts();
+    expect(screen.getByPlaceholderText("Хамгийн бага үнэ")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Хамгийн их үнэ")).toBeInTheDocument();
+    const sort = screen.getByRole("combobox", { name: "Эрэмбэлэх" });
+    expect(sort).toHaveValue("newest");
+    expect(screen.getByRole("option", { name: "Шинэ" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Үнэ өсөх" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Үнэ буурах" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Нэр" })).toBeInTheDocument();
+  });
+
+  it("seeds the price inputs from the min_price/max_price params", () => {
+    renderProducts({ minPrice: "1000", maxPrice: "5000" });
+    expect(
+      (screen.getByPlaceholderText("Хамгийн бага үнэ") as HTMLInputElement)
+        .value,
+    ).toBe("1000");
+    expect(
+      (screen.getByPlaceholderText("Хамгийн их үнэ") as HTMLInputElement).value,
+    ).toBe("5000");
+  });
+
+  it("debounces the min price input into a min_price param and resets the page", async () => {
+    urlSearchParams.set("page", "2");
+    renderProducts({ page: 2, total: 30, products: makeProducts(3) });
+
+    fireEvent.change(screen.getByPlaceholderText("Хамгийн бага үнэ"), {
+      target: { value: "1000" },
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalled();
+    });
+    const [url] = mockReplace.mock.calls.at(-1) as [
+      string,
+      { scroll: boolean },
+    ];
+    expect(url).toContain("min_price=1000");
+    expect(url).not.toContain("page=");
+  });
+
+  it("debounces the max price input into a max_price param", async () => {
+    renderProducts();
+
+    fireEvent.change(screen.getByPlaceholderText("Хамгийн их үнэ"), {
+      target: { value: "9999" },
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalled();
+    });
+    const [url] = mockReplace.mock.calls.at(-1) as [
+      string,
+      { scroll: boolean },
+    ];
+    expect(url).toContain("max_price=9999");
+  });
+
+  it("pushes the sort param on select change", () => {
+    renderProducts();
+    fireEvent.change(screen.getByRole("combobox", { name: "Эрэмбэлэх" }), {
+      target: { value: "price_asc" },
+    });
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/storefront-e2e-test/products?sort=price_asc",
+      { scroll: false },
+    );
+  });
+
+  it("selecting the default sort (Шинэ) drops the sort param", () => {
+    renderProducts({ sort: "price_desc" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Эрэмбэлэх" }), {
+      target: { value: "newest" },
+    });
+    expect(mockReplace).toHaveBeenCalledWith("/storefront-e2e-test/products", {
+      scroll: false,
+    });
+  });
+
+  it("clear filters resets price inputs and the sort param", () => {
+    renderProducts({
+      search: "Цамц",
+      minPrice: "1000",
+      maxPrice: "5000",
+      sort: "price_asc",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Цэвэрлэх" }));
+    expect(mockReplace).toHaveBeenCalledWith("/storefront-e2e-test/products", {
+      scroll: false,
+    });
+    expect(
+      (screen.getByPlaceholderText("Хамгийн бага үнэ") as HTMLInputElement)
+        .value,
+    ).toBe("");
+    expect(
+      (screen.getByPlaceholderText("Хамгийн их үнэ") as HTMLInputElement).value,
+    ).toBe("");
+  });
+
+  it("renders the promo banner strip when promotions exist", () => {
+    renderProducts({
+      promotions: [
+        {
+          id: "promo-1",
+          title: "Зуны хямдрал",
+          description: "Бүх бүтээгдэхүүнд 20% хямдрал",
+          reward_label: "20%",
+          valid_from: null,
+          valid_until: null,
+          type: "discount",
+        },
+      ],
+    });
+    expect(screen.getByText("Зуны хямдрал")).toBeInTheDocument();
+    expect(screen.getByText("20%")).toBeInTheDocument();
+    expect(
+      screen.getByText("Бүх бүтээгдэхүүнд 20% хямдрал"),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the promo banner strip without promotions", () => {
+    renderProducts();
+    expect(screen.queryByText("Зуны хямдрал")).toBeNull();
+  });
+
+  it("shows a promo badge on cards with an active promo", () => {
+    const products = makeProducts(1).map((p) => ({
+      ...p,
+      promo: {
+        id: "promo-1",
+        title: "Зуны хямдрал",
+        reward_label: "1+1",
+      },
+    }));
+    renderProducts({ products, total: 1 });
+    expect(screen.getByText("1+1")).toBeInTheDocument();
+  });
+
+  it("shows review stats on cards when review_count > 0", () => {
+    const products = makeProducts(1).map((p) => ({
+      ...p,
+      review_count: 7,
+      review_average: 4.5,
+    }));
+    renderProducts({ products, total: 1 });
+    expect(screen.getByText("4.5")).toBeInTheDocument();
+    expect(screen.getByText("(7)")).toBeInTheDocument();
+  });
+
+  it("hides review stats on cards without reviews", () => {
+    renderProducts();
+    expect(screen.queryByText("(0)")).toBeNull();
+  });
+
+  it("renders a wishlist link in the header with the saved count", () => {
+    renderProducts();
+    expect(screen.getByRole("link", { name: "Хадгалсан (0)" })).toHaveAttribute(
+      "href",
+      "/storefront-e2e-test/wishlist",
+    );
+  });
+
+  it("renders a wishlist heart on every card", () => {
+    renderProducts();
+    expect(screen.getAllByRole("button", { name: "Хадгалах" })).toHaveLength(3);
   });
 });

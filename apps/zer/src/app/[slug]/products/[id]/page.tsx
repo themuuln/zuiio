@@ -3,6 +3,8 @@ import {
   Info,
   Package,
   Scroll,
+  Star,
+  Tag,
 } from "@phosphor-icons/react/dist/ssr";
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
@@ -12,11 +14,16 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ProductReviews } from "@/components/shop/product-reviews";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
+import { WishlistButton } from "@/components/storefront/wishlist-button";
+import { WishlistProvider } from "@/components/storefront/wishlist-context";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import type { PublicProduct } from "../page";
+import { ProductDetailDrawer } from "../product-detail-drawer";
+import { ProductCard } from "../products-page-client";
 import { BuyPanel } from "./buy-panel";
 import { ProductGallery } from "./product-gallery";
 
@@ -57,6 +64,24 @@ export type PublicProductDetail = {
   // Only populated when the org opts in to public stock (show_stock=true),
   // otherwise NULL — privacy default preserved.
   current_stock: number | null;
+  // Review stats + active promo (backend migration 2026-08-11).
+  review_count: number | null;
+  review_average: number | null;
+  promo: {
+    id: string;
+    title: string;
+    reward_label: string | null;
+  } | null;
+  // Same-category products (≤4) for the related section.
+  related: PublicRelatedProduct[] | null;
+};
+
+export type PublicRelatedProduct = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  image_url: string | null;
+  category_name: string | null;
 };
 
 export type PublicProductDetailData = {
@@ -192,196 +217,259 @@ async function ProductDetailDataFetcher({
 
     return (
       <StorefrontCartProvider>
-        <div className="min-h-dvh bg-background">
-          {/* Product structured data */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Product",
-                name: product.name,
-                image: product.image_url,
-                description: product.description,
-                offers: {
-                  "@type": "Offer",
-                  price: Number(product.sale_price ?? 0),
-                  priceCurrency: organization.currency,
-                  availability: "https://schema.org/InStock",
-                },
-              }),
-            }}
-          />
+        <WishlistProvider slug={slug}>
+          <div className="min-h-dvh bg-background">
+            {/* Product structured data */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "Product",
+                  name: product.name,
+                  image: product.image_url,
+                  description: product.description,
+                  offers: {
+                    "@type": "Offer",
+                    price: Number(product.sale_price ?? 0),
+                    priceCurrency: organization.currency,
+                    availability: "https://schema.org/InStock",
+                  },
+                }),
+              }}
+            />
 
-          {/* Sticky header */}
-          <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
-            <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
-              <Link
-                href={`/${slug}/products`}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="size-4" /> Буцах
-              </Link>
-              <span className="text-muted-foreground">/</span>
-              <span className="truncate text-sm font-medium">
-                {product.name}
-              </span>
-            </div>
-          </div>
-
-          <div className="mx-auto max-w-4xl space-y-0 p-4 sm:p-6 lg:p-8">
-            {/* Product image(s) */}
-            {hasGallery ? (
-              <div className="mb-8">
-                <ProductGallery images={galleryImages} alt={product.name} />
+            {/* Sticky header */}
+            <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
+              <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
+                <Link
+                  href={`/${slug}/products`}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="size-4" /> Буцах
+                </Link>
+                <span className="text-muted-foreground">/</span>
+                <span className="truncate text-sm font-medium">
+                  {product.name}
+                </span>
               </div>
-            ) : product.image_url ? (
+            </div>
+
+            <div className="mx-auto max-w-4xl space-y-0 p-4 sm:p-6 lg:p-8">
+              {/* Product image(s) */}
+              {hasGallery ? (
+                <div className="mb-8">
+                  <ProductGallery images={galleryImages} alt={product.name} />
+                </div>
+              ) : product.image_url ? (
+                <div className="mb-8">
+                  <OptimizedImage
+                    src={product.image_url}
+                    alt={product.name}
+                    className="aspect-[4/3] w-full rounded-2xl"
+                    width={800}
+                    priority
+                  />
+                </div>
+              ) : (
+                <div className="mb-8 flex aspect-[4/3] items-center justify-center rounded-2xl bg-muted/50">
+                  <Package className="size-16 text-muted-foreground/15" />
+                </div>
+              )}
+
+              {/* Title + org info */}
+              <div className="space-y-2 mb-6">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  {getCompanyTypeLabel(organization.company_type)} &middot;{" "}
+                  {organization.name}
+                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                    {product.name}
+                  </h1>
+                  <WishlistButton productId={product.id} className="shrink-0" />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {product.category_name && (
+                    <Badge variant="secondary">{product.category_name}</Badge>
+                  )}
+                  {hasAttributes && (
+                    <Badge variant="outline" className="gap-1">
+                      <Info className="size-3" />
+                      {attributes.length} шинж чанар
+                    </Badge>
+                  )}
+                  {/* Review stats — only when the product has reviews */}
+                  {product.review_count !== null &&
+                    product.review_count > 0 && (
+                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="size-4 text-amber-500" weight="fill" />
+                        <span className="font-medium text-foreground tabular-nums">
+                          {Number(product.review_average ?? 0).toFixed(1)}
+                        </span>
+                        <span>({product.review_count})</span>
+                      </span>
+                    )}
+                </div>
+              </div>
+
+              {/* Promo badge line — shown when the product has an active promo */}
+              {product.promo && (
+                <div className="mb-8 flex flex-wrap items-center gap-2">
+                  <Badge variant="default" className="gap-1">
+                    <Tag className="size-3" weight="fill" />
+                    {product.promo.reward_label ?? product.promo.title}
+                  </Badge>
+                  {product.promo.reward_label &&
+                    product.promo.reward_label !== product.promo.title && (
+                      <span className="text-sm font-medium">
+                        {product.promo.title}
+                      </span>
+                    )}
+                </div>
+              )}
+
+              {/* Stock status — only shown when the org exposes stock */}
+              {currentStock !== null && (
+                <div className="mb-8">
+                  {soldOut ? (
+                    <Badge variant="destructive" className="gap-1">
+                      <Package className="size-3" />
+                      Дууссан
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="gap-1">
+                      <Package className="size-3" />
+                      Нөөцөд байна — {currentStock}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* Price + variants + add to cart */}
               <div className="mb-8">
-                <OptimizedImage
-                  src={product.image_url}
-                  alt={product.name}
-                  className="aspect-[4/3] w-full rounded-2xl"
-                  width={800}
-                  priority
+                <BuyPanel
+                  slug={slug}
+                  productId={product.id}
+                  productName={product.name}
+                  basePrice={Number(product.sale_price ?? 0)}
+                  unit={product.unit}
+                  currency={organization.currency}
+                  variants={variants}
+                  soldOut={soldOut}
+                  messengerPageHandle={messengerPageHandle}
                 />
               </div>
-            ) : (
-              <div className="mb-8 flex aspect-[4/3] items-center justify-center rounded-2xl bg-muted/50">
-                <Package className="size-16 text-muted-foreground/15" />
-              </div>
-            )}
 
-            {/* Title + org info */}
-            <div className="space-y-2 mb-6">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                {getCompanyTypeLabel(organization.company_type)} &middot;{" "}
-                {organization.name}
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {product.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                {product.category_name && (
-                  <Badge variant="secondary">{product.category_name}</Badge>
-                )}
-                {hasAttributes && (
-                  <Badge variant="outline" className="gap-1">
-                    <Info className="size-3" />
-                    {attributes.length} шинж чанар
-                  </Badge>
-                )}
-              </div>
-            </div>
+              {/* Attributes section */}
+              {hasAttributes && (
+                <div className="mb-8 rounded-xl border border-border/80 bg-card p-5 shadow-sm">
+                  <h2 className="mb-4 flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                    <Info className="size-4" />
+                    Шинж чанар
+                  </h2>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
+                    {attributes.map((attr) => (
+                      <AttributeRow key={attr.name} attribute={attr} />
+                    ))}
+                  </dl>
+                </div>
+              )}
 
-            {/* Stock status — only shown when the org exposes stock */}
-            {currentStock !== null && (
-              <div className="mb-8">
-                {soldOut ? (
-                  <Badge variant="destructive" className="gap-1">
-                    <Package className="size-3" />
-                    Дууссан
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-1">
-                    <Package className="size-3" />
-                    Нөөцөд байна — {currentStock}
-                  </Badge>
-                )}
-              </div>
-            )}
+              {/* Description */}
+              {product.description && (
+                <div className="mb-8">
+                  <Section
+                    icon={<Scroll className="size-4" />}
+                    title="Тайлбар"
+                    content={product.description}
+                  />
+                </div>
+              )}
 
-            {/* Price + variants + add to cart */}
-            <div className="mb-8">
-              <BuyPanel
-                slug={slug}
-                productId={product.id}
-                productName={product.name}
-                basePrice={Number(product.sale_price ?? 0)}
-                unit={product.unit}
-                currency={organization.currency}
-                variants={variants}
-                soldOut={soldOut}
-                messengerPageHandle={messengerPageHandle}
-              />
-            </div>
-
-            {/* Attributes section */}
-            {hasAttributes && (
+              {/* Basic details */}
               <div className="mb-8 rounded-xl border border-border/80 bg-card p-5 shadow-sm">
-                <h2 className="mb-4 flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                  <Info className="size-4" />
-                  Шинж чанар
+                <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Мэдээлэл
                 </h2>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-                  {attributes.map((attr) => (
-                    <AttributeRow key={attr.name} attribute={attr} />
-                  ))}
+                  {product.sku && (
+                    <>
+                      <dt className="text-muted-foreground">SKU</dt>
+                      <dd className="font-medium">{product.sku}</dd>
+                    </>
+                  )}
+                  {product.barcode && (
+                    <>
+                      <dt className="text-muted-foreground">Barcode</dt>
+                      <dd className="font-medium font-mono">
+                        {product.barcode}
+                      </dd>
+                    </>
+                  )}
+                  {product.unit && (
+                    <>
+                      <dt className="text-muted-foreground">Нэгж</dt>
+                      <dd className="font-medium">{product.unit}</dd>
+                    </>
+                  )}
+                  {product.category_name && (
+                    <>
+                      <dt className="text-muted-foreground">Ангилал</dt>
+                      <dd className="font-medium">{product.category_name}</dd>
+                    </>
+                  )}
+                  {product.created_at && (
+                    <>
+                      <dt className="text-muted-foreground">Бүртгэсэн</dt>
+                      <dd className="font-medium">
+                        {formatDate(product.created_at)}
+                      </dd>
+                    </>
+                  )}
                 </dl>
               </div>
-            )}
 
-            {/* Description */}
-            {product.description && (
-              <div className="mb-8">
-                <Section
-                  icon={<Scroll className="size-4" />}
-                  title="Тайлбар"
-                  content={product.description}
-                />
-              </div>
-            )}
+              {/* Related products — same-category, same card style */}
+              {(product.related ?? []).length > 0 && (
+                <div className="mb-8">
+                  <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                    Холбоотой бүтээгдэхүүнүүд
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {(product.related ?? []).map((relatedProduct) => (
+                      <div key={relatedProduct.id} className="group">
+                        <ProductDetailDrawer
+                          product={toCardProduct(relatedProduct)}
+                          organization={{
+                            name: organization.name,
+                            slug,
+                            currency: organization.currency,
+                            companyType: organization.company_type,
+                          }}
+                        >
+                          <ProductCard
+                            product={toCardProduct(relatedProduct)}
+                            currency={organization.currency}
+                          />
+                        </ProductDetailDrawer>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {/* Basic details */}
-            <div className="mb-8 rounded-xl border border-border/80 bg-card p-5 shadow-sm">
-              <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Мэдээлэл
-              </h2>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-                {product.sku && (
-                  <>
-                    <dt className="text-muted-foreground">SKU</dt>
-                    <dd className="font-medium">{product.sku}</dd>
-                  </>
-                )}
-                {product.barcode && (
-                  <>
-                    <dt className="text-muted-foreground">Barcode</dt>
-                    <dd className="font-medium font-mono">{product.barcode}</dd>
-                  </>
-                )}
-                {product.unit && (
-                  <>
-                    <dt className="text-muted-foreground">Нэгж</dt>
-                    <dd className="font-medium">{product.unit}</dd>
-                  </>
-                )}
-                {product.category_name && (
-                  <>
-                    <dt className="text-muted-foreground">Ангилал</dt>
-                    <dd className="font-medium">{product.category_name}</dd>
-                  </>
-                )}
-                {product.created_at && (
-                  <>
-                    <dt className="text-muted-foreground">Бүртгэсэн</dt>
-                    <dd className="font-medium">
-                      {formatDate(product.created_at)}
-                    </dd>
-                  </>
-                )}
-              </dl>
+            {/* Reviews */}
+            <ProductReviews slug={slug} productId={id} />
+
+            {/* Footer */}
+            <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
+              <p>{organization.name} &middot; Нээлттэй мэдээлэл</p>
+              <p className="mt-0.5">Zer ERP дэмждэг</p>
             </div>
           </div>
-
-          {/* Reviews */}
-          <ProductReviews slug={slug} productId={id} />
-
-          {/* Footer */}
-          <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
-            <p>{organization.name} &middot; Нээлттэй мэдээлэл</p>
-            <p className="mt-0.5">Zer ERP дэмждэг</p>
-          </div>
-        </div>
+        </WishlistProvider>
       </StorefrontCartProvider>
     );
   } catch (err) {
@@ -444,6 +532,30 @@ function AttributeRow({ attribute }: { attribute: PublicAttribute }) {
       <dd className="font-medium">{attribute.value || "—"}</dd>
     </>
   );
+}
+
+/**
+ * Map a related product (slim RPC shape) onto the full PublicProduct card
+ * shape. The RPC intentionally exposes no description/stock/promo for
+ * related rows — cards render without them.
+ */
+function toCardProduct(related: PublicRelatedProduct): PublicProduct {
+  return {
+    id: related.id,
+    name: related.name,
+    unit: null,
+    sale_price: related.sale_price,
+    category_name: related.category_name,
+    category_id: null,
+    image_url: related.image_url,
+    description: null,
+    attribute_count: 0,
+    images: null,
+    current_stock: null,
+    review_count: null,
+    review_average: null,
+    promo: null,
+  };
 }
 
 function Section({

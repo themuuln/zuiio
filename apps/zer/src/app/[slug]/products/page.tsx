@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
-import { getPublicCatalog, getPublicCategories } from "@/lib/public-catalog";
+import { WishlistProvider } from "@/components/storefront/wishlist-context";
+import {
+  getPublicCatalog,
+  getPublicCategories,
+  getPublicPromotions,
+  type PublicProductSort,
+} from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
@@ -22,6 +28,14 @@ export type PublicProduct = {
   // Only populated when the org opts in to public stock (show_stock=true),
   // otherwise NULL — privacy default preserved.
   current_stock: number | null;
+  // Review stats + active promo (backend migration 2026-08-11).
+  review_count: number | null;
+  review_average: number | null;
+  promo: {
+    id: string;
+    title: string;
+    reward_label: string | null;
+  } | null;
 };
 
 export type OrgMeta = {
@@ -37,14 +51,43 @@ export type PublicCategory = {
   product_count: number;
 };
 
+export type Promotion = {
+  id: string;
+  title: string;
+  description: string | null;
+  reward_label: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  type: string | null;
+};
+
 const PAGE_SIZE = 24;
+
+function parseSort(value: string | undefined): PublicProductSort | undefined {
+  switch (value) {
+    case "price_asc":
+    case "price_desc":
+    case "newest":
+    case "name":
+      return value;
+    default:
+      return undefined;
+  }
+}
 
 export default function PublicProductsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; q?: string; category?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    category?: string;
+    min_price?: string;
+    max_price?: string;
+    sort?: string;
+  }>;
 }) {
   return (
     <Suspense fallback={<ProductsSkeleton />}>
@@ -80,7 +123,14 @@ async function ProductsDataFetcher({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; q?: string; category?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    category?: string;
+    min_price?: string;
+    max_price?: string;
+    sort?: string;
+  }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -89,16 +139,32 @@ async function ProductsDataFetcher({
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const search = sp.q?.trim() || undefined;
   const categoryId = sp.category || undefined;
+  // Price filters: only forward well-formed non-negative numbers.
+  const minPriceRaw = sp.min_price?.trim();
+  const maxPriceRaw = sp.max_price?.trim();
+  const minPrice =
+    minPriceRaw && Number.isFinite(Number(minPriceRaw))
+      ? Math.max(0, Number(minPriceRaw))
+      : undefined;
+  const maxPrice =
+    maxPriceRaw && Number.isFinite(Number(maxPriceRaw))
+      ? Math.max(0, Number(maxPriceRaw))
+      : undefined;
+  const sort = parseSort(sp.sort) ?? "newest";
 
   try {
-    const [catalog, categories] = await Promise.all([
+    const [catalog, categories, promotions] = await Promise.all([
       getPublicCatalog(supabase, slug, {
         page,
         pageSize: PAGE_SIZE,
         search,
         categoryId,
+        minPrice,
+        maxPrice,
+        sort,
       }),
       getPublicCategories(supabase, slug),
+      getPublicPromotions(supabase, slug),
     ]);
 
     if (!catalog?.organization) {
@@ -106,21 +172,27 @@ async function ProductsDataFetcher({
     }
 
     return (
-      <ProductsPageClient
-        organization={{
-          name: catalog.organization?.name,
-          slug: catalog.organization?.slug,
-          currency: catalog.organization?.currency,
-          companyType: catalog.organization?.company_type,
-        }}
-        products={catalog.products}
-        categories={categories}
-        total={catalog.total}
-        page={page}
-        pageSize={catalog.pageSize}
-        search={search ?? ""}
-        categoryId={categoryId ?? ""}
-      />
+      <WishlistProvider slug={slug}>
+        <ProductsPageClient
+          organization={{
+            name: catalog.organization?.name,
+            slug: catalog.organization?.slug,
+            currency: catalog.organization?.currency,
+            companyType: catalog.organization?.company_type,
+          }}
+          products={catalog.products}
+          categories={categories}
+          promotions={promotions}
+          total={catalog.total}
+          page={page}
+          pageSize={catalog.pageSize}
+          search={search ?? ""}
+          categoryId={categoryId ?? ""}
+          minPrice={minPriceRaw ?? ""}
+          maxPrice={maxPriceRaw ?? ""}
+          sort={sort}
+        />
+      </WishlistProvider>
     );
   } catch {
     notFound();

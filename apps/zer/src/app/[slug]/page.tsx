@@ -17,6 +17,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
+import { WishlistProvider } from "@/components/storefront/wishlist-context";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getPublicCatalog } from "@/lib/public-catalog";
@@ -429,21 +430,23 @@ async function OrgProfileDataFetcher({
                 </span>
               </div>
               <StorefrontCartProvider>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {products.map((product) => (
-                    <div key={product.id} className="group">
-                      <ProductDetailDrawer
-                        product={product}
-                        organization={orgMeta}
-                      >
-                        <ProductCard
+                <WishlistProvider slug={slug}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {products.map((product) => (
+                      <div key={product.id} className="group">
+                        <ProductDetailDrawer
                           product={product}
-                          currency={orgMeta.currency}
-                        />
-                      </ProductDetailDrawer>
-                    </div>
-                  ))}
-                </div>
+                          organization={orgMeta}
+                        >
+                          <ProductCard
+                            product={product}
+                            currency={orgMeta.currency}
+                          />
+                        </ProductDetailDrawer>
+                      </div>
+                    ))}
+                  </div>
+                </WishlistProvider>
               </StorefrontCartProvider>
             </div>
           )}

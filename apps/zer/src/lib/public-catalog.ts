@@ -32,6 +32,34 @@ export type PublicProduct = {
   // Only populated when the org opts in to public stock (show_stock=true),
   // otherwise NULL — privacy default preserved.
   current_stock: number | null;
+  // Review stats + active promo (backend migration 2026-08-11).
+  review_count: number | null;
+  review_average: number | null;
+  promo: {
+    id: string;
+    title: string;
+    reward_label: string | null;
+  } | null;
+};
+
+export type PublicProductSort = "price_asc" | "price_desc" | "newest" | "name";
+
+export type PublicPromotion = {
+  id: string;
+  title: string;
+  description: string | null;
+  reward_label: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  type: string | null;
+};
+
+export type PublicRelatedProduct = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  image_url: string | null;
+  category_name: string | null;
 };
 
 export type PublicProductDetail = PublicProduct & {
@@ -49,6 +77,8 @@ export type PublicProductDetail = PublicProduct & {
     name: string;
     value: string;
   }> | null;
+  // Same-category products (≤4) for the detail page's related section.
+  related: PublicRelatedProduct[] | null;
 };
 
 export type PublicOrgMeta = {
@@ -76,6 +106,10 @@ export async function getPublicCatalog(
     search?: string;
     page?: number;
     pageSize?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: PublicProductSort;
+    productIds?: string[];
   },
 ): Promise<{
   organization: PublicOrgMeta | null;
@@ -90,6 +124,10 @@ export async function getPublicCatalog(
     p_search: options?.search,
     p_page: options?.page ?? 1,
     p_page_size: options?.pageSize ?? 24,
+    p_min_price: options?.minPrice,
+    p_max_price: options?.maxPrice,
+    p_sort: options?.sort,
+    p_product_ids: options?.productIds,
   });
 
   if (error || !data) return null;
@@ -124,6 +162,21 @@ export async function getPublicCategories(
 
   if (error || !data) return [];
   return (data as PublicCategory[]) ?? [];
+}
+
+/**
+ * Fetch active promotions for an organization's storefront.
+ */
+export async function getPublicPromotions(
+  supabase: SupabaseDb,
+  slug: string,
+): Promise<PublicPromotion[]> {
+  const { data, error } = await supabase.rpc("get_public_promotions", {
+    p_slug: slug,
+  });
+
+  if (error || !data) return [];
+  return (data as PublicPromotion[]) ?? [];
 }
 
 /**

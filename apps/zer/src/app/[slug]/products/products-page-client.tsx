@@ -4,9 +4,11 @@ import {
   ArrowRight,
   BookmarkSimple,
   FunnelSimple,
+  Heart,
   MagnifyingGlass,
   Package,
   ShoppingCart,
+  Star,
   X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -14,40 +16,54 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
 import { useStorefrontCart } from "@/components/storefront/cart-context";
+import { WishlistButton } from "@/components/storefront/wishlist-button";
+import { useWishlist } from "@/components/storefront/wishlist-context";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
+import type { OrgMeta, Promotion, PublicCategory, PublicProduct } from "./page";
 import { ProductDetailDrawer } from "./product-detail-drawer";
 
 export function ProductsPageClient({
   organization,
   products,
   categories,
+  promotions,
   total,
   page,
   pageSize,
   search,
   categoryId,
+  minPrice,
+  maxPrice,
+  sort,
 }: {
   organization: OrgMeta;
   products: PublicProduct[];
   categories: PublicCategory[];
+  promotions: Promotion[];
   total: number;
   page: number;
   pageSize: number;
   search: string;
   categoryId: string;
+  minPrice: string;
+  maxPrice: string;
+  sort: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const urlSearchParams = useSearchParams();
-  const { count } = useStorefrontCart();
+  const { count: cartCount } = useStorefrontCart();
+  const { count: wishlistCount } = useWishlist();
 
-  // Local input state drives the debounced URL update for `q`.
+  // Local input state drives the debounced URL update for `q` and prices.
   const [searchInput, setSearchInput] = useState(search);
+  const [minPriceInput, setMinPriceInput] = useState(minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState(maxPrice);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const updateParams = useCallback(
@@ -79,15 +95,58 @@ export function ProductsPageClient({
     return () => clearTimeout(timeout);
   }, [searchInput, search, updateParams]);
 
+  // Debounced min price — filters reset to page 1.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (minPriceInput !== minPrice) {
+        updateParams({
+          min_price: minPriceInput.trim() || undefined,
+          page: undefined,
+        });
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [minPriceInput, minPrice, updateParams]);
+
+  // Debounced max price — filters reset to page 1.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (maxPriceInput !== maxPrice) {
+        updateParams({
+          max_price: maxPriceInput.trim() || undefined,
+          page: undefined,
+        });
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [maxPriceInput, maxPrice, updateParams]);
+
   const setCategory = (id: string) => {
     updateParams({ category: id || undefined, page: undefined });
   };
 
-  const hasFilters = !!(search || categoryId);
+  const setSort = (value: string) => {
+    // "newest" is the default — drop the param so the URL stays clean.
+    updateParams({
+      sort: value === "newest" ? undefined : value,
+      page: undefined,
+    });
+  };
+
+  const hasFilters = !!(search || categoryId || minPrice || maxPrice);
 
   const clearFilters = () => {
     setSearchInput("");
-    updateParams({ q: undefined, category: undefined, page: undefined });
+    setMinPriceInput("");
+    setMaxPriceInput("");
+    updateParams({
+      q: undefined,
+      category: undefined,
+      min_price: undefined,
+      max_price: undefined,
+      sort: undefined,
+      page: undefined,
+    });
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -127,10 +186,30 @@ export function ProductsPageClient({
                   <span className="size-1.5 rounded-full bg-primary" />
                 )}
               </button>
+              {/* Wishlist link */}
+              <Link
+                href={`/${organization.slug}/wishlist`}
+                aria-label={`Хадгалсан (${wishlistCount})`}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "relative",
+                )}
+              >
+                <Heart
+                  className="size-4"
+                  weight={wishlistCount > 0 ? "fill" : "regular"}
+                />
+                <span className="hidden sm:inline">Хадгалсан</span>
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
               {/* Cart link */}
               <Link
                 href={`/${organization.slug}/cart`}
-                aria-label={`Сагс (${count})`}
+                aria-label={`Сагс (${cartCount})`}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "default" }),
                   "relative",
@@ -138,9 +217,9 @@ export function ProductsPageClient({
               >
                 <ShoppingCart className="size-4" />
                 <span className="hidden sm:inline">Сагс</span>
-                {count > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
-                    {count}
+                    {cartCount}
                   </span>
                 )}
               </Link>
@@ -180,6 +259,12 @@ export function ProductsPageClient({
               setCategoryFilter={setCategory}
               categories={categories}
               total={total}
+              minPrice={minPriceInput}
+              setMinPrice={setMinPriceInput}
+              maxPrice={maxPriceInput}
+              setMaxPrice={setMaxPriceInput}
+              sort={sort}
+              setSort={setSort}
               hasFilters={hasFilters}
               clearFilters={clearFilters}
             />
@@ -199,6 +284,12 @@ export function ProductsPageClient({
               setCategoryFilter={setCategory}
               categories={categories}
               total={total}
+              minPrice={minPriceInput}
+              setMinPrice={setMinPriceInput}
+              maxPrice={maxPriceInput}
+              setMaxPrice={setMaxPriceInput}
+              sort={sort}
+              setSort={setSort}
               hasFilters={hasFilters}
               clearFilters={clearFilters}
             />
@@ -207,6 +298,30 @@ export function ProductsPageClient({
 
         {/* Product grid */}
         <main className="py-6">
+          {/* Promo banner strip — shown when the org has active promotions */}
+          {promotions.length > 0 && (
+            <div className="mb-6 space-y-2">
+              {promotions.map((promo) => (
+                <div
+                  key={promo.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
+                >
+                  {promo.reward_label && (
+                    <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      {promo.reward_label}
+                    </span>
+                  )}
+                  <p className="text-sm font-medium">{promo.title}</p>
+                  {promo.description && (
+                    <p className="w-full text-xs text-muted-foreground">
+                      {promo.description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {hasFilters && (
             <p className="mb-4 text-sm text-muted-foreground">
               {total} бүтээгдэхүүн олдлоо
@@ -300,6 +415,12 @@ function SidebarFilters({
   setCategoryFilter,
   categories,
   total,
+  minPrice,
+  setMinPrice,
+  maxPrice,
+  setMaxPrice,
+  sort,
+  setSort,
   hasFilters,
   clearFilters,
 }: {
@@ -309,6 +430,12 @@ function SidebarFilters({
   setCategoryFilter: (v: string) => void;
   categories: PublicCategory[];
   total: number;
+  minPrice: string;
+  setMinPrice: (v: string) => void;
+  maxPrice: string;
+  setMaxPrice: (v: string) => void;
+  sort: string;
+  setSort: (v: string) => void;
   hasFilters: boolean;
   clearFilters: () => void;
 }) {
@@ -326,6 +453,50 @@ function SidebarFilters({
             className="pl-9"
           />
         </div>
+      </div>
+
+      {/* Price range */}
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+          Үнэ (₮)
+        </p>
+        <div className="space-y-2">
+          <Input
+            type="number"
+            min="0"
+            inputMode="numeric"
+            placeholder="Хамгийн бага үнэ"
+            aria-label="Хамгийн бага үнэ"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
+          <Input
+            type="number"
+            min="0"
+            inputMode="numeric"
+            placeholder="Хамгийн их үнэ"
+            aria-label="Хамгийн их үнэ"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Sort */}
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+          Эрэмбэлэх
+        </p>
+        <NativeSelect
+          aria-label="Эрэмбэлэх"
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="newest">Шинэ</option>
+          <option value="price_asc">Үнэ өсөх</option>
+          <option value="price_desc">Үнэ буурах</option>
+          <option value="name">Нэр</option>
+        </NativeSelect>
       </div>
 
       {/* Categories */}
@@ -391,6 +562,8 @@ export function ProductCard({
   product: PublicProduct;
   currency: string;
 }) {
+  const reviewAverage = Number(product.review_average ?? 0);
+
   return (
     <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30">
       {/* Image area — sold-out overlay is a sibling so it also renders over
@@ -406,7 +579,7 @@ export function ProductCard({
               loading="lazy"
             />
             {product.attribute_count > 0 && (
-              <div className="absolute top-2 right-2">
+              <div className="absolute right-2 bottom-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
                   <BookmarkSimple className="size-3" />
                   Зөвлөмж
@@ -419,12 +592,25 @@ export function ProductCard({
             <Package className="size-10 text-muted-foreground/20" />
           </div>
         )}
-        {/* Sold-out overlay — only when the org exposes stock and it is 0 */}
-        {product.current_stock === 0 && (
-          <div className="absolute top-2 left-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[10px] font-medium text-destructive-foreground backdrop-blur-sm">
-              Дууссан
-            </span>
+        {/* Wishlist heart — z-20 so it sits above the drawer overlay trigger
+            and stays clickable; stops propagation so it never opens it. */}
+        <div className="absolute top-2 right-2 z-20">
+          <WishlistButton productId={product.id} />
+        </div>
+        {/* Corner badges: sold-out + promo stack on the top-left, mirroring
+            the sold-out overlay placement. */}
+        {(product.current_stock === 0 || product.promo) && (
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+            {product.current_stock === 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[10px] font-medium text-destructive-foreground backdrop-blur-sm">
+                Дууссан
+              </span>
+            )}
+            {product.promo && (
+              <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                {product.promo.reward_label ?? product.promo.title}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -443,6 +629,17 @@ export function ProductCard({
             )}
           </div>
         </div>
+
+        {/* Review stats — only when the product has reviews */}
+        {product.review_count !== null && product.review_count > 0 && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Star className="size-3.5 text-amber-500" weight="fill" />
+            <span className="font-medium text-foreground tabular-nums">
+              {reviewAverage.toFixed(1)}
+            </span>
+            <span>({product.review_count})</span>
+          </div>
+        )}
 
         <div className="flex items-end justify-between gap-2">
           <div>
