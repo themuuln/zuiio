@@ -270,11 +270,12 @@ test.describe("Storefront promo checkout (seeded org, anonymous)", () => {
     await page.locator("#checkout-coupon").fill("INVALID-CODE-123");
     await page.getByRole("button", { name: "Худалдан авалт" }).click();
 
-    // The RPC rejects the coupon; the checkout surfaces a Mongolian error
-    // and never reaches the success screen.
-    await expect(page.getByRole("alert").getByText(/алдаа гарлаа/)).toBeVisible(
-      { timeout: 20_000 },
-    );
+    // The RPC rejects the coupon; the checkout surfaces the server's
+    // specific message ("Купон олдсонгүй" — surfaced verbatim since
+    // da00d58d) and never reaches the success screen.
+    await expect(
+      page.getByRole("alert").getByText(/Купон олдсонгүй/),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("Захиалга амжилттай үүслээ")).toHaveCount(0);
     // Cart intact — the line is still there and the submit button is live.
     await expect(page.getByText("Бүтээгдэхүүн 1").first()).toBeVisible();
