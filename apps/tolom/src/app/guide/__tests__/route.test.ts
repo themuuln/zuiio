@@ -1,6 +1,29 @@
-import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as GET_GUIDE_PAGE } from "../[...slug]/route";
 import { GET as GET_GUIDE } from "../route";
+
+const GUIDE_DIR = path.join(process.cwd(), "public", "guide");
+
+beforeAll(() => {
+  // The guide is a VitePress build artifact (public/guide/ is gitignored).
+  // Generate minimal fixtures so the route contract is tested deterministically
+  // without running a full vitepress build.
+  fs.mkdirSync(GUIDE_DIR, { recursive: true });
+  fs.writeFileSync(
+    path.join(GUIDE_DIR, "index.html"),
+    "<html><body>TOLOM — Гарын авлага</body></html>",
+  );
+  fs.writeFileSync(
+    path.join(GUIDE_DIR, "work-orders.html"),
+    "<html><body>work-orders guide page</body></html>",
+  );
+});
+
+afterAll(() => {
+  fs.rmSync(GUIDE_DIR, { recursive: true, force: true });
+});
 
 describe("guide routes", () => {
   it("serves the generated guide index as HTML", async () => {

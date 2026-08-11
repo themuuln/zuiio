@@ -44,6 +44,7 @@ describe("organizations/[id]/service-reminders/sync-history route", () => {
       expect(backfillSchedulesFromHistoryMock).toHaveBeenCalledWith(
         supabase,
         orgId,
+        user.id,
       );
       expect(data.data).toEqual({ synced: 3 });
     });

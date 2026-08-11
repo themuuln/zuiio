@@ -422,7 +422,11 @@ describe("ServiceRemindersPageClient", () => {
   });
 
   it("filters rows by reminder state via the reminder select", async () => {
-    const user = userEvent.setup();
+    // The preceding status-select test leaves its Base UI popup mounted in the
+    // DOM (jsdom never fires the close transition), so its pointer-events:none
+    // overlay intercepts clicks. Disable the jsdom pointer-events check for
+    // this interaction; the real pointer flow still runs.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     setSchedules([
       makeSchedule({
         id: "sched-1",

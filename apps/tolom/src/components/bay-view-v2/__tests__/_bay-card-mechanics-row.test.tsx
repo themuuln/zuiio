@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "@/test/test-utils";
 import { BayCardMechanicsRow } from "../_bay-card-mechanics-row";
@@ -124,7 +124,7 @@ describe("BayCardMechanicsRow", () => {
     expect(onRemoveHelper).toHaveBeenCalledWith("wo-1", "h-1");
   });
 
-  it("opens the assign drawer and assigns the first mechanic as lead", () => {
+  it("opens the assign drawer and assigns the first mechanic as lead", async () => {
     const onAssignMechanic = vi.fn().mockResolvedValue(undefined);
     render(
       <BayCardMechanicsRow
@@ -140,7 +140,11 @@ describe("BayCardMechanicsRow", () => {
     fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
     expect(pickerProps?.open).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "toggle-m-2" }));
-    expect(onAssignMechanic).toHaveBeenCalledWith("wo-1", "m-2");
+    // The assign drawer applies optimistic state and flushes to the server
+    // after a 350ms debounce — wait for the flush to reach onAssignMechanic.
+    await waitFor(() =>
+      expect(onAssignMechanic).toHaveBeenCalledWith("wo-1", "m-2"),
+    );
   });
 
   it("hides the assign drawer when no mechanics are available", () => {
