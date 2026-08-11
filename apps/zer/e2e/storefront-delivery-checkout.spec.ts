@@ -100,10 +100,9 @@ async function addProductToCart(page: Page, slug: string, productId: string) {
   await page.goto(`/${slug}/products/${productId}`, {
     waitUntil: "domcontentloaded",
   });
-  const addButton = page.getByRole("button", {
-    name: "Сагсанд нэмэх",
-    exact: true,
-  });
+  const addButton = page
+    .getByRole("button", { name: "Сагсанд нэмэх", exact: true })
+    .first();
   await expect
     .poll(
       async () => {

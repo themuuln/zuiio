@@ -321,10 +321,9 @@ test.describe("Store buyer account (seeded org)", () => {
       await page.goto(`/${DELIVERY_SLUG}/products/${DELIVERY_PRODUCT}`, {
         waitUntil: "domcontentloaded",
       });
-      const addButton = page.getByRole("button", {
-        name: "Сагсанд нэмэх",
-        exact: true,
-      });
+      const addButton = page
+        .getByRole("button", { name: "Сагсанд нэмэх", exact: true })
+        .first();
       // Poll-and-retry (helpers.ts pattern): the first click can land
       // before hydration and be swallowed; re-click only while the cart is
       // empty so a landed click is never double-added.
