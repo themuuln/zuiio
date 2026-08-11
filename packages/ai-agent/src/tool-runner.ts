@@ -124,7 +124,7 @@ export async function runWithTools(opts: RunWithToolsOpts): Promise<string> {
   const {
     apiKey,
     baseUrl = process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
-    model = process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+    model: explicitModel,
     systemPrompt,
     userMessage,
     images,
@@ -132,6 +132,17 @@ export async function runWithTools(opts: RunWithToolsOpts): Promise<string> {
     maxRounds = 3,
     conversationHistory,
   } = opts;
+
+  // Text calls use DEEPSEEK_MODEL (deepseek-v4-flash); image/vision calls use
+  // DEEPSEEK_IMAGE_MODEL (mimo-v2.5) so image understanding is never sent to a
+  // non-vision model.
+  const hasImages = !!images && images.length > 0;
+  const model =
+    explicitModel ??
+    (hasImages
+      ? (process.env.DEEPSEEK_IMAGE_MODEL ?? process.env.DEEPSEEK_MODEL)
+      : process.env.DEEPSEEK_MODEL) ??
+    "deepseek-chat";
 
   const openAiTools = toolsToOpenAi(tools);
   const toolByName = new Map(tools.map((t) => [t.name, t]));
