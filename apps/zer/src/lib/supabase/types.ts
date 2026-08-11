@@ -3945,8 +3945,13 @@ export type Database = {
           display_name: string | null;
           domain_verified: boolean;
           free_delivery_threshold: number;
+          ga_measurement_id: string | null;
           id: string;
           logo_url: string | null;
+          meta_description: string | null;
+          meta_pixel_id: string | null;
+          meta_title: string | null;
+          og_image_url: string | null;
           organization_id: string;
           payment_account_name: string | null;
           payment_bank_account: string | null;
@@ -3955,6 +3960,7 @@ export type Database = {
           policies: string | null;
           qpay_qr_url: string | null;
           show_stock: boolean;
+          social_links: Json | null;
           updated_at: string | null;
           website_url: string | null;
         };
@@ -3973,8 +3979,13 @@ export type Database = {
           display_name?: string | null;
           domain_verified?: boolean;
           free_delivery_threshold?: number;
+          ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
+          meta_description?: string | null;
+          meta_pixel_id?: string | null;
+          meta_title?: string | null;
+          og_image_url?: string | null;
           organization_id: string;
           payment_account_name?: string | null;
           payment_bank_account?: string | null;
@@ -3983,6 +3994,7 @@ export type Database = {
           policies?: string | null;
           qpay_qr_url?: string | null;
           show_stock?: boolean;
+          social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
         };
@@ -4001,8 +4013,13 @@ export type Database = {
           display_name?: string | null;
           domain_verified?: boolean;
           free_delivery_threshold?: number;
+          ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
+          meta_description?: string | null;
+          meta_pixel_id?: string | null;
+          meta_title?: string | null;
+          og_image_url?: string | null;
           organization_id?: string;
           payment_account_name?: string | null;
           payment_bank_account?: string | null;
@@ -4011,6 +4028,7 @@ export type Database = {
           policies?: string | null;
           qpay_qr_url?: string | null;
           show_stock?: boolean;
+          social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
         };
@@ -7712,7 +7730,10 @@ export type Database = {
         Args: { p_date: string; p_org_id: string; p_tokens: number };
         Returns: undefined;
       };
-      increment_smtp_count: { Args: { config_id: string }; Returns: undefined };
+      increment_smtp_count: {
+        Args: { p_config_id: string };
+        Returns: undefined;
+      };
       issue_production_materials: {
         Args: {
           p_material_ids: string[];
@@ -8129,7 +8150,23 @@ export type Database = {
         | "webhooks.create"
         | "webhooks.read"
         | "webhooks.update"
-        | "webhooks.delete";
+        | "webhooks.delete"
+        | "settings.read"
+        | "settings.update"
+        | "reports.read"
+        | "access"
+        | "inventory.create"
+        | "inventory.read"
+        | "inventory.update"
+        | "inventory.delete"
+        | "hr.create"
+        | "hr.read"
+        | "hr.update"
+        | "hr.delete"
+        | "manufacturing.create"
+        | "manufacturing.read"
+        | "manufacturing.update"
+        | "manufacturing.delete";
       handoff_status:
         | "bot"
         | "pending_human"
@@ -8822,6 +8859,22 @@ export const Constants = {
         "webhooks.read",
         "webhooks.update",
         "webhooks.delete",
+        "settings.read",
+        "settings.update",
+        "reports.read",
+        "access",
+        "inventory.create",
+        "inventory.read",
+        "inventory.update",
+        "inventory.delete",
+        "hr.create",
+        "hr.read",
+        "hr.update",
+        "hr.delete",
+        "manufacturing.create",
+        "manufacturing.read",
+        "manufacturing.update",
+        "manufacturing.delete",
       ],
       handoff_status: [
         "bot",
