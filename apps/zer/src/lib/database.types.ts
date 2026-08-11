@@ -3979,6 +3979,7 @@ export type Database = {
           description: string | null;
           display_name: string | null;
           domain_verified: boolean;
+          estimated_delivery_hours: number | null;
           free_delivery_threshold: number;
           ga_measurement_id: string | null;
           id: string;
@@ -4013,6 +4014,7 @@ export type Database = {
           description?: string | null;
           display_name?: string | null;
           domain_verified?: boolean;
+          estimated_delivery_hours?: number | null;
           free_delivery_threshold?: number;
           ga_measurement_id?: string | null;
           id?: string;
@@ -4047,6 +4049,7 @@ export type Database = {
           description?: string | null;
           display_name?: string | null;
           domain_verified?: boolean;
+          estimated_delivery_hours?: number | null;
           free_delivery_threshold?: number;
           ga_measurement_id?: string | null;
           id?: string;
@@ -6564,6 +6567,7 @@ export type Database = {
           sale_date: string;
           salesperson_id: string | null;
           status: string | null;
+          status_history: Json;
           store_account_id: string | null;
           total_amount: number;
         };
@@ -6601,6 +6605,7 @@ export type Database = {
           sale_date?: string;
           salesperson_id?: string | null;
           status?: string | null;
+          status_history?: Json;
           store_account_id?: string | null;
           total_amount: number;
         };
@@ -6638,6 +6643,7 @@ export type Database = {
           sale_date?: string;
           salesperson_id?: string | null;
           status?: string | null;
+          status_history?: Json;
           store_account_id?: string | null;
           total_amount?: number;
         };
@@ -7015,6 +7021,50 @@ export type Database = {
             columns: ["to_warehouse_id"];
             isOneToOne: false;
             referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      store_account_addresses: {
+        Row: {
+          address: string;
+          address_note: string | null;
+          created_at: string | null;
+          id: string;
+          is_default: boolean;
+          label: string;
+          phone: string | null;
+          store_account_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          address: string;
+          address_note?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_default?: boolean;
+          label?: string;
+          phone?: string | null;
+          store_account_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          address?: string;
+          address_note?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_default?: boolean;
+          label?: string;
+          phone?: string | null;
+          store_account_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_account_addresses_store_account_id_fkey";
+            columns: ["store_account_id"];
+            isOneToOne: false;
+            referencedRelation: "store_accounts";
             referencedColumns: ["id"];
           },
         ];
@@ -7567,9 +7617,20 @@ export type Database = {
     };
     Functions: {
       activate_bom: { Args: { p_bom_id: string }; Returns: undefined };
+      append_sale_status_history: {
+        Args: { p_by: string; p_sale_id: string; p_status: string };
+        Returns: undefined;
+      };
       approve_stock_transfer: {
         Args: { p_transfer_id: string };
         Returns: Json;
+      };
+      cancel_my_order: {
+        Args: { p_order_id: string; p_slug: string };
+        Returns: {
+          order_id: string;
+          status: string;
+        }[];
       };
       check_period_locked: {
         Args: { p_check_date: string; p_org_id: string };
@@ -7690,6 +7751,10 @@ export type Database = {
           total_amount: number;
         }[];
       };
+      get_product_promo: {
+        Args: { p_org_id: string; p_product_id: string };
+        Returns: Json;
+      };
       get_profit_loss: {
         Args: {
           p_branch_id?: string;
@@ -7705,6 +7770,7 @@ export type Database = {
           amount: number;
         }[];
       };
+      get_promo_reward_label: { Args: { p_promo_id: string }; Returns: string };
       get_public_blog_post: {
         Args: { p_post_slug: string; p_slug: string };
         Returns: Json;
@@ -7724,13 +7790,18 @@ export type Database = {
       get_public_products: {
         Args: {
           p_category_id?: string;
+          p_max_price?: number;
+          p_min_price?: number;
           p_page?: number;
           p_page_size?: number;
+          p_product_ids?: string[];
           p_search?: string;
           p_slug: string;
+          p_sort?: string;
         };
         Returns: Json;
       };
+      get_public_promotions: { Args: { p_slug: string }; Returns: Json };
       get_public_receipt: { Args: { p_token: string }; Returns: Json };
       get_public_report_data: { Args: { p_token: string }; Returns: Json };
       get_public_reviews: {
