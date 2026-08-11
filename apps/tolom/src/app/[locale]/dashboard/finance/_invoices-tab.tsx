@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { useTableFilters } from "@/lib/hooks/use-table-filters";
@@ -191,7 +192,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     { key: "issued_at", label: t("date"), format: "date" },
   ];
 
-  const columns = useMemo<ColumnDef<InvoiceListItem>[]>(
+  const columns = useMemo<ColumnDef<TableFeatures, InvoiceListItem>[]>(
     () => [
       {
         accessorKey: "invoice_number",

@@ -5,6 +5,7 @@ import { Car, Hash, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { Vehicle } from "@/lib/types";
 
@@ -15,7 +16,9 @@ interface ColumnCallbacks {
   onDelete: (vehicle: VehicleRow) => void;
 }
 
-export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
+export function createColumns(
+  cb: ColumnCallbacks,
+): ColumnDef<TableFeatures, VehicleRow>[] {
   return [
     {
       id: "plate_number",

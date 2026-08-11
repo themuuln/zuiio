@@ -8,6 +8,7 @@ import { ListPageShell } from "@/components/list-page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   Empty,
   EmptyHeader,
@@ -39,7 +40,9 @@ export default function ReorderPage() {
     [suggestions],
   );
 
-  const columns = useMemo<ColumnDef<(typeof suggestions)[number]>[]>(
+  const columns = useMemo<
+    ColumnDef<TableFeatures, (typeof suggestions)[number]>[]
+  >(
     () => [
       {
         accessorKey: "part_name",

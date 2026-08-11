@@ -1,9 +1,4 @@
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender, useTable } from "@tanstack/react-table";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +8,10 @@ import {
   DraggableRow,
   type schema,
 } from "@/components/_data-table-columns";
+import {
+  dataTableFeatures,
+  type TableFeatures,
+} from "@/components/ui/data-table-features";
 
 vi.mock("sonner", () => ({
   toast: { promise: vi.fn().mockResolvedValue(undefined) },
@@ -65,12 +64,12 @@ const rows: Row[] = [
 
 function TableHarness() {
   const [rowSelection, setRowSelection] = useState({});
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data: rows,
-    columns: columns as ColumnDef<Row>[],
+    columns: columns as ColumnDef<TableFeatures, Row>[],
     state: { rowSelection },
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
     enableRowSelection: true,
   });
 

@@ -8,6 +8,7 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -110,7 +111,7 @@ export function TransactionsTab({
     { key: "created_at", label: financeT("dateColumn"), format: "date" },
   ];
 
-  const columns: ColumnDef<WorkOrderRow>[] = useMemo(
+  const columns: ColumnDef<TableFeatures, WorkOrderRow>[] = useMemo(
     () => [
       {
         accessorKey: "id",

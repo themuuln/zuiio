@@ -10,6 +10,7 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
@@ -79,7 +80,7 @@ export function SuppliersTab({
     [deleteSupplier, t],
   );
 
-  const columns: ColumnDef<Supplier>[] = useMemo(
+  const columns: ColumnDef<TableFeatures, Supplier>[] = useMemo(
     () => [
       {
         accessorKey: "name",

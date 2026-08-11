@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -119,7 +120,7 @@ export function MovementsTab({
     { key: "notes", label: t("notes") },
   ];
 
-  const columns: ColumnDef<MovementRow>[] = useMemo(
+  const columns: ColumnDef<TableFeatures, MovementRow>[] = useMemo(
     () => [
       {
         id: "date",

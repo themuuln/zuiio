@@ -17,6 +17,7 @@ import { StatCard, StatCards } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { RevenueTrendPoint } from "@/lib/types";
 
@@ -301,7 +302,7 @@ function TopServicesTable({ services }: { services: TopService[] }) {
     values?: Record<string, string | number>,
   ) => string;
 
-  const columns: ColumnDef<TopService>[] = useMemo(
+  const columns: ColumnDef<TableFeatures, TopService>[] = useMemo(
     () => [
       {
         accessorKey: "name",

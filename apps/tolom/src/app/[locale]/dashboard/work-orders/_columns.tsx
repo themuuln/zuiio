@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +73,7 @@ interface ColumnCallbacks {
 
 export function createColumns(
   cb: ColumnCallbacks,
-): ColumnDef<WorkOrderListItem>[] {
+): ColumnDef<TableFeatures, WorkOrderListItem>[] {
   return [
     {
       accessorKey: "id",

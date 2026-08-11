@@ -5,6 +5,7 @@ import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
@@ -14,7 +15,7 @@ import { cn, formatMNT } from "@/lib/utils";
 function ExpenseDateHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -26,7 +27,7 @@ function ExpenseDateHeader({
 function ExpenseDescriptionHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -38,7 +39,7 @@ function ExpenseDescriptionHeader({
 function ExpenseCategoryHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -50,7 +51,7 @@ function ExpenseCategoryHeader({
 function ExpenseVendorHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -59,7 +60,11 @@ function ExpenseVendorHeader({
   return <DataTableColumnHeader column={column} title={t("vendor")} />;
 }
 
-function ExpenseDueHeader({ column }: { column: Column<ExpenseWithCategory> }) {
+function ExpenseDueHeader({
+  column,
+}: {
+  column: Column<TableFeatures, ExpenseWithCategory>;
+}) {
   const t = useTranslations("expenses") as (
     key: string,
     values?: Record<string, string | number>,
@@ -70,7 +75,7 @@ function ExpenseDueHeader({ column }: { column: Column<ExpenseWithCategory> }) {
 function ExpenseAmountHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -82,7 +87,7 @@ function ExpenseAmountHeader({
 function ExpenseStatusHeader({
   column,
 }: {
-  column: Column<ExpenseWithCategory>;
+  column: Column<TableFeatures, ExpenseWithCategory>;
 }) {
   const t = useTranslations("expenses") as (
     key: string,
@@ -191,7 +196,7 @@ function isOverdue(expense: ExpenseWithCategory): boolean {
   return due < today;
 }
 
-export const columns: ColumnDef<ExpenseWithCategory>[] = [
+export const columns: ColumnDef<TableFeatures, ExpenseWithCategory>[] = [
   {
     accessorKey: "expense_date",
     header: ({ column }) => <ExpenseDateHeader column={column} />,

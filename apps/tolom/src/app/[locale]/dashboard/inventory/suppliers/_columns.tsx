@@ -5,6 +5,7 @@ import { Building2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import type { Supplier } from "@/lib/types";
 
 interface ColumnCallbacks {
@@ -12,7 +13,9 @@ interface ColumnCallbacks {
   onDelete: (id: string) => void;
 }
 
-export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
+export function createColumns(
+  cb: ColumnCallbacks,
+): ColumnDef<TableFeatures, Supplier>[] {
   return [
     {
       accessorKey: "name",

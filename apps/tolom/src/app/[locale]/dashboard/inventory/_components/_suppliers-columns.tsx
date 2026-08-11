@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import type { Supplier } from "@/lib/types";
 
 interface Callbacks {
@@ -11,7 +12,9 @@ interface Callbacks {
   onDelete: (id: string) => void;
 }
 
-export function createSuppliersColumns(cb: Callbacks): ColumnDef<Supplier>[] {
+export function createSuppliersColumns(
+  cb: Callbacks,
+): ColumnDef<TableFeatures, Supplier>[] {
   return [
     {
       accessorKey: "name",

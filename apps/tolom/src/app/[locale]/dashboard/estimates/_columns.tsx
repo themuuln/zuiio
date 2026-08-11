@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +67,7 @@ interface ColumnCallbacks {
 
 export function createColumns(
   cb: ColumnCallbacks,
-): ColumnDef<EstimateListItem>[] {
+): ColumnDef<TableFeatures, EstimateListItem>[] {
   return [
     {
       accessorKey: "estimate_number",

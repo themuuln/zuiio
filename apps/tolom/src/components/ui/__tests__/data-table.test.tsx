@@ -2,6 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 
 // Mock next-intl's useTranslations for the DataTable component
 vi.mock("next-intl", async () => {
@@ -34,7 +35,7 @@ interface TestData {
   status: string;
 }
 
-const columns: ColumnDef<TestData>[] = [
+const columns: ColumnDef<TableFeatures, TestData>[] = [
   {
     id: "name",
     accessorKey: "name",

@@ -5,6 +5,7 @@ import { Building2, Car, ChevronRight, Clock, Globe, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { Customer } from "@/lib/types";
 
@@ -49,7 +50,7 @@ function formatDate(
   return date.toLocaleDateString();
 }
 
-export const columns: ColumnDef<CustomerRow>[] = [
+export const columns: ColumnDef<TableFeatures, CustomerRow>[] = [
   {
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),
@@ -185,7 +186,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
 ];
 
 /** Columns for shared (cross-org) customers — includes org attribution badge */
-export const sharedColumns: ColumnDef<CustomerRow>[] = [
+export const sharedColumns: ColumnDef<TableFeatures, CustomerRow>[] = [
   {
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),

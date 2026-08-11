@@ -14,6 +14,7 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +65,7 @@ function DragHandle({ id }: { id: number }) {
   );
 }
 
-export const columns: ColumnDef<z.infer<typeof schema>>[] = [
+export const columns: ColumnDef<TableFeatures, z.infer<typeof schema>>[] = [
   {
     id: "drag",
     header: () => null,
@@ -248,7 +249,11 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
 ];
 
-export function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+export function DraggableRow({
+  row,
+}: {
+  row: Row<TableFeatures, z.infer<typeof schema>>;
+}) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });

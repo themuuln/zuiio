@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTablePagination } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   Empty,
   EmptyContent,
@@ -184,7 +185,7 @@ export default function WorkOrdersPage() {
   const [changeStatusCurStatus, setChangeStatusCurStatus] = useState("");
   const [todayStr, setTodayStr] = useState("");
   const [mounted, setMounted] = useState(false);
-  const tableRef = useRef<Table<WorkOrderListItem> | null>(null);
+  const tableRef = useRef<Table<TableFeatures, WorkOrderListItem> | null>(null);
 
   useEffect(() => {
     setTodayStr(new Date().toISOString().split("T")[0]);

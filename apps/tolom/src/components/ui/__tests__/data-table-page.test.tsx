@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { DataTablePage } from "@/components/ui/data-table-page";
 
 vi.mock("next-intl", () => ({
@@ -33,7 +34,7 @@ interface TestData {
   email: string;
 }
 
-const columns: ColumnDef<TestData>[] = [
+const columns: ColumnDef<TableFeatures, TestData>[] = [
   { id: "name", accessorKey: "name", header: "Name" },
   { id: "email", accessorKey: "email", header: "Email" },
 ];

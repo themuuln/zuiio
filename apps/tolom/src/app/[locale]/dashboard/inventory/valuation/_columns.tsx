@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { InventoryBalanceWithAvgCost } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
@@ -12,7 +13,7 @@ export interface ValuationRow extends InventoryBalanceWithAvgCost {
   totalValue: number;
 }
 
-export const columns: ColumnDef<ValuationRow>[] = [
+export const columns: ColumnDef<TableFeatures, ValuationRow>[] = [
   {
     id: "part_name",
     accessorKey: "part_name",

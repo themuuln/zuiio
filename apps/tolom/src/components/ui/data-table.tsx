@@ -3,15 +3,11 @@
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnVisibilityState,
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   type SortingState,
   type Table as TanStackTable,
-  useReactTable,
-  type VisibilityState,
+  useTable,
 } from "@tanstack/react-table";
 import {
   ArrowUpDown,
@@ -27,6 +23,10 @@ import { useTranslations } from "next-intl";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  dataTableFeatures,
+  type TableFeatures,
+} from "@/components/ui/data-table-features";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
 
 export interface DataTableProps<TData, TValue> {
   /** Column definitions (from @tanstack/react-table) */
-  columns: ColumnDef<TData, TValue>[];
+  columns: ColumnDef<TableFeatures, TData, TValue>[];
   /** Row data */
   data: TData[];
   /** Unique row identifier for key extraction (default: row.index) */
@@ -86,7 +86,7 @@ export interface DataTableProps<TData, TValue> {
   /** Map of column id → display name for the column visibility toggle */
   columnLabels?: Record<string, string>;
   /** Initial column visibility state (e.g. `{ id: false }` to hide ID by default) */
-  defaultColumnVisibility?: VisibilityState;
+  defaultColumnVisibility?: ColumnVisibilityState;
   /** Initial sort state (e.g. `[{ id: "shortage", desc: true }]`) */
   defaultSorting?: SortingState;
   /** Enable row selection (default: false) */
@@ -109,7 +109,7 @@ export interface DataTableProps<TData, TValue> {
    */
   renderMobileCard?: (
     row: TData,
-    table: TanStackTable<TData>,
+    table: TanStackTable<TableFeatures, TData>,
   ) => React.ReactNode;
   /**
    * When true, the table container omits its own border and border-radius,
@@ -126,7 +126,7 @@ export interface DataTableProps<TData, TValue> {
    * Called with the TanStack Table instance when it's created.
    * Use to render pagination controls outside the DataTable component.
    */
-  onTableReady?: (table: TanStackTable<TData>) => void;
+  onTableReady?: (table: TanStackTable<TableFeatures, TData>) => void;
 }
 
 // ─── DataTable (self-contained) ────────────────────────────────
@@ -159,7 +159,7 @@ export function DataTable<TData, TValue>({
     [],
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(defaultColumnVisibility ?? {});
+    React.useState<ColumnVisibilityState>(defaultColumnVisibility ?? {});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [mounted, setMounted] = React.useState(false);
@@ -170,7 +170,8 @@ export function DataTable<TData, TValue>({
 
   const paginationEnabled = pageSize > 0 && !noPagination;
 
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data,
     columns,
     getRowId,
@@ -196,22 +197,21 @@ export function DataTable<TData, TValue>({
           globalFilterFn: "includesString",
         }
       : {}),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    ...(paginationEnabled
-      ? {
-          getPaginationRowModel: getPaginationRowModel(),
-        }
-      : {}),
   });
 
   // Notify caller when table instance is ready (for external pagination)
   const tableRef = React.useRef(table);
   tableRef.current = table;
+  // v9 returns a fresh table wrapper object on every render (useTable spreads
+  // the instance), so depending on `table` identity here would fire the
+  // callback on each render and loop with a state-storing parent. Notify once
+  // on mount; consumers read live state through table.store (stable).
+  const onTableReadyRef = React.useRef(onTableReady);
+  onTableReadyRef.current = onTableReady;
   React.useEffect(() => {
-    onTableReady?.(table);
-  }, [table, onTableReady]);
+    onTableReadyRef.current?.(tableRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const t = useTranslations("common");
 
@@ -447,7 +447,7 @@ export function DataTable<TData, TValue>({
 
 interface DataTableColumnHeaderProps<TData>
   extends React.HTMLAttributes<HTMLDivElement> {
-  table?: TanStackTable<TData>;
+  table?: TanStackTable<TableFeatures, TData>;
   column: {
     id: string;
     getIsSorted: () => false | "asc" | "desc";
@@ -490,7 +490,7 @@ export function DataTableColumnHeader<TData>({
 // ─── DataTablePagination ───────────────────────────────────────
 
 interface DataTablePaginationProps<TData> {
-  table: TanStackTable<TData>;
+  table: TanStackTable<TableFeatures, TData>;
   showColumnVisibility?: boolean;
   columnLabels?: Record<string, string>;
 }
@@ -502,6 +502,13 @@ export function DataTablePagination<TData>({
 }: DataTablePaginationProps<TData>) {
   const t = useTranslations("common");
   const pageSizes = [10, 20, 30, 40, 50];
+
+  // v9 recreates the table wrapper each render, but table.store is stable.
+  // Subscribe to it so this external control re-renders with live state.
+  const [, setTick] = React.useState(0);
+  React.useEffect(() => {
+    return table.store.subscribe(() => setTick((x) => x + 1)).unsubscribe;
+  }, [table]);
 
   return (
     <div className="flex items-center justify-between border-t border-border/50 px-2 py-3">
@@ -530,13 +537,15 @@ export function DataTablePagination<TData>({
             {t("rowsPerPage")}
           </Label>
           <Select
-            value={`${table.getState().pagination.pageSize}`}
+            value={`${table.store.state.pagination.pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
             <SelectTrigger size="sm" className="h-8 w-16" id="rows-per-page">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
+              <SelectValue
+                placeholder={table.store.state.pagination.pageSize}
+              />
             </SelectTrigger>
             <SelectContent side="top">
               {pageSizes.map((size) => (
@@ -551,7 +560,7 @@ export function DataTablePagination<TData>({
         {/* Page indicator */}
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
           {t("pageOf", {
-            current: String(table.getState().pagination.pageIndex + 1),
+            current: String(table.store.state.pagination.pageIndex + 1),
             total: String(table.getPageCount()),
           })}
         </div>
@@ -603,7 +612,7 @@ export function DataTablePagination<TData>({
 // ─── DataTableViewOptions ──────────────────────────────────────
 
 interface DataTableViewOptionsProps<TData> {
-  table: TanStackTable<TData>;
+  table: TanStackTable<TableFeatures, TData>;
   columnLabels?: Record<string, string>;
 }
 

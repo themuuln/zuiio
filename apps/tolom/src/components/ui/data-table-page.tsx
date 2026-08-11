@@ -2,14 +2,15 @@
 
 import type {
   ColumnDef,
+  ColumnVisibilityState,
   Table as TanStackTable,
-  VisibilityState,
 } from "@tanstack/react-table";
 import { type ReactNode, useState } from "react";
 import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTablePagination } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   Empty,
   EmptyContent,
@@ -30,7 +31,7 @@ export interface DataTablePageProps<TData, TValue> {
   headerAction?: ReactNode;
 
   // ── DataTable essentials ──
-  columns: ColumnDef<TData, TValue>[];
+  columns: ColumnDef<TableFeatures, TData, TValue>[];
   data: TData[];
   getRowId: (row: TData) => string;
   /** Number of rows per page (default: 20, set to -1 to disable pagination) */
@@ -65,10 +66,13 @@ export interface DataTablePageProps<TData, TValue> {
 
   // ── Table features ──
   onRowClick?: (row: TData) => void;
-  renderMobileCard?: (row: TData, table: TanStackTable<TData>) => ReactNode;
+  renderMobileCard?: (
+    row: TData,
+    table: TanStackTable<TableFeatures, TData>,
+  ) => ReactNode;
   showColumnVisibility?: boolean;
   columnLabels?: Record<string, string>;
-  defaultColumnVisibility?: VisibilityState;
+  defaultColumnVisibility?: ColumnVisibilityState;
   enableRowSelection?: boolean;
 
   // ── Empty state ──
@@ -145,7 +149,10 @@ export function DataTablePage<TData, TValue>({
   className,
 }: DataTablePageProps<TData, TValue>) {
   const isFirstLoad = loading && data.length === 0;
-  const [table, setTable] = useState<TanStackTable<TData> | null>(null);
+  const [table, setTable] = useState<TanStackTable<
+    TableFeatures,
+    TData
+  > | null>(null);
   const paginationEnabled = pageSize === undefined || pageSize > 0;
 
   const resolvedEmptyState: ReactNode =

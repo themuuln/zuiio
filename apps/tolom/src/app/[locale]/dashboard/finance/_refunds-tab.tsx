@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import {
   Empty,
   EmptyContent,
@@ -125,7 +126,9 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
     { key: "refunded_at", label: "Date", format: "date" as const },
   ];
 
-  const columns = useMemo<ColumnDef<(typeof refundList)[number]>[]>(
+  const columns = useMemo<
+    ColumnDef<TableFeatures, (typeof refundList)[number]>[]
+  >(
     () => [
       {
         accessorKey: "invoice_number",

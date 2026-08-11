@@ -3,10 +3,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { CarFront, Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { TableFeatures } from "@/components/ui/data-table-features";
 import { Typography } from "@/components/ui/typography";
 import type { ServiceCatalog } from "@/lib/types/core";
 import { formatMNT } from "@/lib/utils";
@@ -25,7 +25,7 @@ interface ColumnData {
 export function createColumns(
   cb: ColumnCallbacks,
   data: ColumnData,
-): ColumnDef<ServiceCatalog>[] {
+): ColumnDef<TableFeatures, ServiceCatalog>[] {
   return [
     {
       id: "name",
