@@ -19,9 +19,17 @@ export async function register() {
       }
       origConsoleError(...args);
     };
+
+    // Sentry.init for the Node runtime. The SDK no longer auto-loads
+    // sentry.server.config.ts (webpack entry injection was removed in
+    // SDK v10; Turbopack never supported it) — dispatch is required.
+    await import("../sentry.server.config");
   }
-  // sentry.server.config.ts and sentry.edge.config.ts at the project root
-  // are auto-loaded by the Sentry webpack plugin — no manual dispatch needed.
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    // Sentry.init for the Edge runtime (middleware, edge routes).
+    await import("../sentry.edge.config");
+  }
 }
 
 export const onRequestError = Sentry.captureRequestError;

@@ -6,7 +6,8 @@ import { setCaptureHandler } from "@zuiio/capture";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  // Prefer the server-only DSN; fall back to the public one.
+  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Disable PII in production to prevent leaking user data.
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.05 : 1.0,
@@ -16,6 +17,9 @@ Sentry.init({
 
   // Only send PII in non-production environments.
   sendDefaultPii: process.env.NODE_ENV !== "production",
+
+  // Only propagate trace headers to our own origins (never third parties).
+  tracePropagationTargets: [/^\//],
 
   integrations: [
     supabaseIntegration(SupabaseClient, Sentry, {

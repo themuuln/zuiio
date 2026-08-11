@@ -21,6 +21,9 @@ Sentry.init({
   // Only send PII in non-production environments.
   sendDefaultPii: process.env.NODE_ENV !== "production",
 
+  // Only propagate trace headers to our own origins (never third parties).
+  tracePropagationTargets: [/^\//],
+
   integrations: [
     supabaseIntegration(SupabaseClient, Sentry, {
       tracing: true,
@@ -43,3 +46,6 @@ setCaptureHandler((error, ctx) => {
     { extra: ctx },
   );
 });
+
+// Instrument router navigations (Next.js 15.2+, Sentry 9.12+)
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
