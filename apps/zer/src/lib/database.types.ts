@@ -832,6 +832,41 @@ export type Database = {
           },
         ];
       };
+      bot_buyer_sessions: {
+        Row: {
+          channel: string;
+          created_at: string;
+          external_id: string;
+          id: string;
+          last_active_at: string;
+          organization_id: string;
+        };
+        Insert: {
+          channel: string;
+          created_at?: string;
+          external_id: string;
+          id?: string;
+          last_active_at?: string;
+          organization_id: string;
+        };
+        Update: {
+          channel?: string;
+          created_at?: string;
+          external_id?: string;
+          id?: string;
+          last_active_at?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_buyer_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       branches: {
         Row: {
           address: string | null;
