@@ -147,6 +147,7 @@ export function OptimizedImage({
             imgClassName,
           )}
           loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
         />
       )}

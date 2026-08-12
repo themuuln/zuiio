@@ -53,7 +53,7 @@ export function BottomSheet({
     <>
       <DrawerOverlay
         className={cn(
-          "[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7]",
+          "[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.55]",
           "fixed inset-0 min-h-dvh bg-black",
           "opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))]",
           "transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
@@ -75,13 +75,16 @@ export function BottomSheet({
           className={cn(
             // Base
             "[--bleed:3rem] box-border w-full",
+            // Desktop: centered sheet instead of a full-width bar; the
+            // viewport's justify-center handles horizontal centering.
+            "sm:max-w-2xl",
             // Bleed below viewport for drag affordance
             "-mb-[var(--bleed)]",
             // Padding — safe area + bleed at the bottom, extra on sides
             "px-6 pt-4",
             "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px)+var(--bleed))]",
             // Visual
-            "border-t border-border bg-white text-foreground outline-none",
+            "rounded-t-2xl border-t border-border bg-white text-foreground outline-none",
             "shadow-[0_0.25rem_0.25rem] shadow-black/12",
             "overflow-y-auto overscroll-contain",
             // Drag transform — includes snap point offset when applicable

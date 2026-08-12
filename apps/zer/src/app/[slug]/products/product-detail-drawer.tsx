@@ -7,6 +7,7 @@ import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatCurrency } from "@/lib/format";
 import type { OrgMeta, PublicProduct } from "./page";
 
@@ -67,11 +68,12 @@ export function ProductDetailDrawer({
           {/* Image */}
           {product.image_url && (
             <div className="relative overflow-hidden rounded-xl bg-muted">
-              {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
-              <img
+              <OptimizedImage
                 src={product.image_url}
                 alt={product.name}
-                className="aspect-[16/10] w-full object-cover"
+                width={1024}
+                aspectRatio="16/10"
+                priority
               />
             </div>
           )}

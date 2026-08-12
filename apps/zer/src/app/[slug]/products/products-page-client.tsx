@@ -7,7 +7,6 @@ import {
   Heart,
   MagnifyingGlass,
   Package,
-  ShoppingCart,
   Star,
   X,
 } from "@phosphor-icons/react";
@@ -15,12 +14,13 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
-import { useStorefrontCart } from "@/components/storefront/cart-context";
+import { StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { useWishlist } from "@/components/storefront/wishlist-context";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -57,7 +57,6 @@ export function ProductsPageClient({
   const router = useRouter();
   const pathname = usePathname();
   const urlSearchParams = useSearchParams();
-  const { count: cartCount } = useStorefrontCart();
   const { count: wishlistCount } = useWishlist();
 
   // Local input state drives the debounced URL update for `q` and prices.
@@ -207,22 +206,7 @@ export function ProductsPageClient({
                 )}
               </Link>
               {/* Cart link */}
-              <Link
-                href={`/${organization.slug}/cart`}
-                aria-label={`Сагс (${cartCount})`}
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "default" }),
-                  "relative",
-                )}
-              >
-                <ShoppingCart className="size-4" />
-                <span className="hidden sm:inline">Сагс</span>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+              <StorefrontCartLink slug={organization.slug} />
               <div className="text-right">
                 <p className="text-2xl font-bold tabular-nums">{total}</p>
                 <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
@@ -571,12 +555,12 @@ export function ProductCard({
       <div className="relative">
         {product.image_url ? (
           <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-            {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
-            <img
+            <OptimizedImage
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              loading="lazy"
+              width={640}
+              aspectRatio="4/3"
+              className="h-full w-full transition-transform duration-300 group-hover:scale-105"
             />
             {product.attribute_count > 0 && (
               <div className="absolute right-2 bottom-2">
