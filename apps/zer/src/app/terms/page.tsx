@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <div className="py-16 md:py-24">
       <div className="mx-auto max-w-3xl px-4">
-        <h1 className="mb-6 font-display text-4xl leading-tight md:text-5xl">
+        <h1 className="mb-6 font-display text-4xl leading-tight text-balance md:text-5xl">
           Үйлчилгээний нөхцөл
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">

@@ -183,7 +183,7 @@ export function ProductImageGallery({
                 className="h-24 w-24 object-cover"
               />
             </div>
-            <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+            <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
               <Star className="size-2.5" weight="fill" /> Нүүр
             </span>
           </div>
@@ -242,7 +242,7 @@ export function ProductImageGallery({
           ) : (
             <>
               <UploadSimple className="size-5" />
-              <span className="mt-1 text-[10px]">Нэмэх</span>
+              <span className="mt-1 text-xs">Нэмэх</span>
             </>
           )}
           <input

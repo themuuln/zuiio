@@ -138,7 +138,7 @@ function ProductPreviewCard({
           {price.toLocaleString()}₮
         </p>
         {unit && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Үлдэгдэл &bull; {unit}
           </p>
         )}
@@ -593,7 +593,7 @@ export function ProductCreateDrawer({
           {/* ── Right: preview card ── */}
           <div className="hidden md:block">
             <div className="sticky top-4 space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Урьдчилсан харагдац
               </p>
               <ProductPreviewCard

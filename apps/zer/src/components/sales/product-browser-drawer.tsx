@@ -115,12 +115,12 @@ export function ProductBrowserDrawer({
                         {formatCurrency(Number(product.sale_price ?? 0))}
                       </span>
                       {!isOutOfStock && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {stock} {product.unit ?? "ширхэг"} үлдэгдэл
                         </span>
                       )}
                       {isOutOfStock && (
-                        <span className="text-[10px] text-destructive">
+                        <span className="text-xs text-destructive">
                           Дууссан
                         </span>
                       )}

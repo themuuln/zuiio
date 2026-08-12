@@ -305,16 +305,16 @@ function StageStepper({ stages }: { stages: ProductionStageData[] }) {
               <p className="text-xs font-medium leading-tight">
                 {stage.stage_name}
               </p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {STAGE_STATUS_LABELS[stage.status] ?? stage.status}
               </p>
               {stage.started_at && (
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Эхэлсэн: {formatDate(stage.started_at)}
                 </p>
               )}
               {stage.completed_at && (
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Дууссан: {formatDate(stage.completed_at)}
                 </p>
               )}

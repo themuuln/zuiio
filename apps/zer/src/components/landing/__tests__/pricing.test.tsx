@@ -20,7 +20,7 @@ vi.mock("next/link", () => ({
     href,
     ...props
   }: {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     href: string;
   }) => (
     <a href={href} {...props}>
@@ -70,23 +70,26 @@ vi.mock("@/components/ui/badge", () => ({
 
 import { Pricing } from "../pricing";
 
+// Plan names, prices and the "Хамгийн сонголт" badge render twice:
+// once in the plan card row and once in the comparison table header.
+
 // ── Tests ──────────────────────────────────────────────────────────────
 
 describe("Pricing", () => {
-  it("renders all 4 plan names", () => {
+  it("renders all 4 plan cards", () => {
     render(<Pricing />);
-    expect(screen.getByText("Үнэгүй")).toBeInTheDocument();
-    expect(screen.getByText("Стандарт")).toBeInTheDocument();
-    expect(screen.getByText("Бизнес")).toBeInTheDocument();
-    expect(screen.getByText("Аж ахуйн")).toBeInTheDocument();
+    expect(screen.getAllByText("Үнэгүй")).toHaveLength(2); // card + table header
+    expect(screen.getAllByText("Стандарт")).toHaveLength(2);
+    expect(screen.getAllByText("Бизнес")).toHaveLength(2);
+    expect(screen.getAllByText("Аж ахуйн")).toHaveLength(2);
   });
 
   it("shows yearly prices by default", () => {
     render(<Pricing />);
-    // Default is yearly — Standard shows ₮790,000
-    expect(screen.getByText("₮790,000")).toBeInTheDocument();
-    // /жил appears on 3 paid plans — use getAllByText
-    expect(screen.getAllByText("/жил")).toHaveLength(3);
+    // Standard yearly price appears in the card and the table header
+    expect(screen.getAllByText("₮790,000")).toHaveLength(2);
+    // /жил on 3 paid plans in cards + 3 in table header
+    expect(screen.getAllByText("/жил")).toHaveLength(6);
   });
 
   it("switches to monthly prices on toggle click", () => {
@@ -95,15 +98,15 @@ describe("Pricing", () => {
     // Click "Сарын" toggle
     fireEvent.click(screen.getByText("Сарын"));
 
-    // Monthly prices should appear
-    expect(screen.getByText("₮79,000")).toBeInTheDocument();
-    expect(screen.getByText("₮129,000")).toBeInTheDocument();
-    expect(screen.getAllByText("/сар")).toHaveLength(3); // 3 paid plans
+    // Monthly prices should appear in cards and table header
+    expect(screen.getAllByText("₮79,000")).toHaveLength(2);
+    expect(screen.getAllByText("₮129,000")).toHaveLength(2);
+    expect(screen.getAllByText("/сар")).toHaveLength(6);
   });
 
   it("shows 'Хамгийн сонголт' badge on Standard plan", () => {
     render(<Pricing />);
-    expect(screen.getByText("Хамгийн сонголт")).toBeInTheDocument();
+    expect(screen.getAllByText("Хамгийн сонголт")).toHaveLength(2);
   });
 
   it("shows '14 өдөр үнэгүй турших' CTA on Standard plan", () => {
@@ -130,78 +133,47 @@ describe("Pricing", () => {
     expect(contactLink.closest("a")).toHaveAttribute("href", "/contact");
   });
 
-  it("shows anchor value badge on Standard plan", () => {
+  it("renders grouped comparison sections", () => {
     render(<Pricing />);
+    expect(screen.getByText("Багцын мэдээлэл")).toBeInTheDocument();
+    expect(screen.getByText("Бараа ба борлуулалт")).toBeInTheDocument();
+    expect(screen.getByText("Харилцагч ба онлайн дэлгүүр")).toBeInTheDocument();
+    expect(screen.getByText("Тайлан ба дэмжлэг")).toBeInTheDocument();
+    expect(screen.getByText("AI боломжууд")).toBeInTheDocument();
+    expect(screen.getByText("Нягтлан ба үйлдвэрлэл")).toBeInTheDocument();
+    expect(screen.getByText("Аж ахуйн түвшин")).toBeInTheDocument();
+  });
+
+  it("shows per-plan limit values in the comparison table", () => {
+    render(<Pricing />);
+    // Барааны тоо row: 200 / 5,000 / Хязгааргүй / Хязгааргүй
+    expect(screen.getByText("200")).toBeInTheDocument();
+    expect(screen.getByText("5,000")).toBeInTheDocument();
+    expect(screen.getAllByText("Хязгааргүй")).toHaveLength(2);
+    expect(screen.getByText("Барааны тоо")).toBeInTheDocument();
+  });
+
+  it("renders check and dash indicators for included/excluded features", () => {
+    render(<Pricing />);
+    // Included features render a primary-colored Check icon
     expect(
-      screen.getByText("Борлуулалт + Нягтлан + Агуулах — нэгдмэл систем"),
-    ).toBeInTheDocument();
-  });
-
-  it("shows per-month breakdown on yearly Standard plan", () => {
-    render(<Pricing />);
-    // Yearly is default
-    expect(screen.getByText("₮65,833/сар")).toBeInTheDocument();
-  });
-
-  it("shows per-month breakdown on yearly Business plan", () => {
-    render(<Pricing />);
-    expect(screen.getByText("₮165,833/сар")).toBeInTheDocument();
-  });
-
-  it("shows feature icons and AI badges", () => {
-    render(<Pricing />);
-
-    // Standard plan features — some appear in multiple plans, use getAllByText
-    expect(screen.getByText("5,000 хүртэлх бараа")).toBeInTheDocument();
-    expect(
-      screen.getAllByText("Борлуулалт ба POS касс").length,
+      document.querySelectorAll("svg.text-primary").length,
     ).toBeGreaterThan(0);
-    expect(screen.getByText("Онлайн дэлгүүр")).toBeInTheDocument();
-
-    // AI features should have the Sparkle icon
-    // AI Telegram туслах — the Sparkle icon has text-amber-500 class
-    const aiFeature = screen.getByText("AI Telegram туслах");
-    expect(aiFeature).toBeInTheDocument();
-    // Look for Sparkle icon next to it
-    const aiRow = aiFeature.closest("li");
-    expect(aiRow).toBeInTheDocument();
-    // The Sparkle icon should be in this row
-    const sparkles = aiRow?.querySelector(".text-amber-500");
-    expect(sparkles).toBeInTheDocument();
-
-    // Non-AI features should NOT have the Sparkle icon
-    const nonAIFeature = screen.getByText("5,000 хүртэлх бараа");
-    const nonAIRow = nonAIFeature.closest("li");
-    expect(nonAIRow).toBeInTheDocument();
-    const noSparkles = nonAIRow?.querySelector(".text-amber-500");
-    expect(noSparkles).not.toBeInTheDocument();
-  });
-
-  it("renders feature icons (not just plain Check)", () => {
-    render(<Pricing />);
-
-    // Each feature li should have an icon in its circle container
-    const _featureIcons = screen
-      .getAllByText("Борлуулалт ба POS касс")
-      .map((el) => el.closest("li"))
-      .filter(Boolean);
-
-    // At least one feature row has the ShoppingCart icon (not just Check)
-    // We check that the icon container renders proper SVG elements
-    const allLis = document.querySelectorAll(
-      '[class*="rounded-full bg-primary/10"]',
-    );
-    expect(allLis.length).toBeGreaterThan(0);
+    // Excluded features render a muted Minus icon
+    expect(
+      document.querySelectorAll("svg.text-muted-foreground\\/40").length,
+    ).toBeGreaterThan(0);
   });
 
   it("shows Enterprise price as 'Тохиролцсон' on monthly toggle", () => {
     render(<Pricing />);
-    // Default is yearly — shows ₮8 сая/жил
-    expect(screen.getByText("₮8 сая/жил")).toBeInTheDocument();
+    // Default is yearly — card + table header show ₮8 сая/жил
+    expect(screen.getAllByText("₮8 сая/жил")).toHaveLength(2);
 
-    // Click monthly to see "Тохиролцсон"
+    // Click monthly: card + table header price become Тохиролцсон
+    // (plus the table header suffix label)
     fireEvent.click(screen.getByText("Сарын"));
-    expect(screen.getByText("Тохиролцсон")).toBeInTheDocument();
+    expect(screen.getAllByText("Тохиролцсон").length).toBeGreaterThanOrEqual(3);
   });
 
   it("shows 2 сар үнэгүй badge on yearly toggle", () => {

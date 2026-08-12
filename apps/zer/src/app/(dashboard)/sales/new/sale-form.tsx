@@ -866,14 +866,14 @@ export function SaleForm({
 
                   {/* Stock warning */}
                   {stockWarnings[index] && (
-                    <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                    <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                       {stockWarnings[index]}
                     </p>
                   )}
 
                   {/* Field errors */}
                   {errors.items?.[index] && (
-                    <p className="mt-1 text-[11px] text-destructive">
+                    <p className="mt-1 text-xs text-destructive">
                       {errors.items[index]?.product_id?.message ||
                         errors.items[index]?.quantity?.message ||
                         errors.items[index]?.unit_price?.message}
@@ -1027,7 +1027,7 @@ export function SaleForm({
         <aside className="lg:sticky lg:top-0">
           <div className="mt-3 space-y-2">
             <div className="px-3 py-2.5">
-              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Нийт дүн
               </span>
               <p className="mt-0.5 text-base font-semibold">
@@ -1035,7 +1035,7 @@ export function SaleForm({
               </p>
             </div>
             <div className="border-t border-border/60 px-3 py-2.5">
-              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Төлсөн дүн
               </span>
               <p className="mt-0.5 text-base font-semibold">
@@ -1044,7 +1044,7 @@ export function SaleForm({
             </div>
             {remaining > 0 && (
               <div className="border-t border-border/60 px-3 py-2.5">
-                <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-amber-600 dark:text-amber-400">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-amber-600 dark:text-amber-400">
                   Үлдэгдэл
                 </span>
                 <p className="mt-0.5 text-base font-semibold text-amber-600 dark:text-amber-400">

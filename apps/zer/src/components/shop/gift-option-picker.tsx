@@ -64,7 +64,7 @@ export function GiftOptionPicker({
         <Gift className="size-4" />
         Бэлэглэх
         {value.giftOptionId && (
-          <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">
+          <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
             Сонгосон
           </span>
         )}
@@ -128,7 +128,7 @@ export function GiftOptionPicker({
                 rows={2}
                 maxLength={200}
               />
-              <p className="text-right text-[10px] text-muted-foreground">
+              <p className="text-right text-xs text-muted-foreground">
                 {value.giftMessage.length}/200
               </p>
             </div>

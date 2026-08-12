@@ -158,7 +158,7 @@ export function CartPanel() {
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold">Захиалга</h2>
           {mounted && itemCount > 0 && (
-            <span className="flex min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-bold leading-none text-primary-foreground tabular-nums">
+            <span className="flex min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground tabular-nums">
               {itemCount > 99 ? "99+" : itemCount}
             </span>
           )}
@@ -205,7 +205,7 @@ export function CartPanel() {
                                 .toLocaleString()}
                               ш
                             </p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               {new Date(sale.heldAt).toLocaleTimeString(
                                 "mn-MN",
                                 {

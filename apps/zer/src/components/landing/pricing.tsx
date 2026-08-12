@@ -1,172 +1,162 @@
 "use client";
 
-import {
-  Buildings,
-  Calculator,
-  CalendarCheck,
-  ChartBar,
-  Chat,
-  Check,
-  Code,
-  Envelope,
-  FileText,
-  Gear,
-  Gift,
-  Globe,
-  HardDrive,
-  Headphones,
-  Heart,
-  Image,
-  ImageSquare,
-  Package,
-  PuzzlePiece,
-  Receipt,
-  ShieldCheck,
-  ShoppingCart,
-  Sliders,
-  Sparkle,
-  Tag,
-  Truck,
-  User,
-  Users,
-  Warehouse,
-} from "@phosphor-icons/react";
-// NOTE: Prices shown are illustrative. Payment integration (card/gateway) is
-// required before this section can be used for live subscriptions.
-
+import { Check, Minus } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const featureConfig: Record<string, { icon: React.ElementType; ai?: boolean }> =
-  {
-    "1 эзэмшигч": { icon: User },
-    "200 хүртэлх бараа": { icon: Package },
-    "Борлуулалт ба POS касс": { icon: ShoppingCart },
-    "Зарлагын бүртгэл": { icon: Receipt },
-    "Үндсэн тайлан": { icon: ChartBar },
-    "И-мэйл дэмжлэг": { icon: Envelope },
-    "5,000 хүртэлх бараа": { icon: Package },
-    "Харилцагчийн бүртгэл": { icon: Users },
-    "Бүх төрлийн тайлан": { icon: ChartBar },
-    "Олон агуулах": { icon: Warehouse },
-    "Худалдан авалт ба нийлүүлэгч": { icon: Truck },
-    "Онлайн дэлгүүр": { icon: Globe },
-    "Баримт бичиг": { icon: FileText },
-    "Хямдрал ба урамшуулал": { icon: Tag },
-    "Бэлгийн сонголт": { icon: Gift },
-    "Лояльти программ": { icon: Heart },
-    "Хүргэлтийн удирдлага": { icon: Truck },
-    "AI Telegram туслах": { icon: Sparkle, ai: true },
-    "AI постер": { icon: ImageSquare, ai: true },
-    "AI зураг сайжруулах": { icon: Image, ai: true },
-    "AI бүтээгдэхүүний тайлбар": { icon: Sparkle, ai: true },
-    "AI лого": { icon: ImageSquare, ai: true },
-    "AI дэлгүүрийн нэр": { icon: Sparkle, ai: true },
-    "AI домэйн нэр": { icon: Globe, ai: true },
-    "AI Чатбот (Facebook Messenger)": { icon: Chat, ai: true },
-    "Автомат өдрийн тайлан": { icon: CalendarCheck, ai: true },
-    "Тэргүүлэх дэмжлэг": { icon: Headphones },
-    "Барааны тоо хязгааргүй": { icon: Package },
-    "Бүрэн боломж — бүх модуль": { icon: PuzzlePiece },
-    "Олон салбар": { icon: Buildings },
-    "Нягтлан бодох бүртгэл": { icon: Calculator },
-    "Үйлдвэрлэлийн удирдлага (BOM)": { icon: Gear },
-    "Хүний нөөц ба цалин": { icon: Users },
-    "API холболт": { icon: Code },
-    "24/7 тэргүүлэх дэмжлэг": { icon: Headphones },
-    "Тохиролцсон хязгаар": { icon: Sliders },
-    "Тусгай интеграц": { icon: PuzzlePiece },
-    "Тусгай сервер": { icon: HardDrive },
-    "Dedicated support SLA": { icon: ShieldCheck },
-  };
+// NOTE: Prices shown are illustrative. Payment integration (card/gateway) is
+// required before this section can be used for live subscriptions.
 
-const plans = [
+type Plan = {
+  name: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
+  description: string;
+  highlighted?: boolean;
+};
+
+const plans: Plan[] = [
   {
     name: "Үнэгүй",
     monthlyPrice: "₮0",
     yearlyPrice: "₮0",
     description: "Ганц эзэмшигчид тохиромжтой",
-    features: [
-      "1 эзэмшигч",
-      "200 хүртэлх бараа",
-      "Борлуулалт ба POS касс",
-      "Зарлагын бүртгэл",
-      "Үндсэн тайлан",
-      "Харилцагчийн бүртгэл",
-      "И-мэйл дэмжлэг",
-    ],
-    highlighted: false,
-    icon: true,
   },
   {
     name: "Стандарт",
     monthlyPrice: "₮79,000",
     yearlyPrice: "₮790,000",
     description: "Нэг салбарт бүрэн хяналт",
-    features: [
-      "5,000 хүртэлх бараа",
-      "Борлуулалт ба POS касс",
-      "Зарлагын бүртгэл",
-      "Харилцагчийн бүртгэл",
-      "Бүх төрлийн тайлан",
-      "Олон агуулах",
-      "Худалдан авалт ба нийлүүлэгч",
-      "Онлайн дэлгүүр",
-      "Баримт бичиг",
-      "Хямдрал ба урамшуулал",
-      "Бэлгийн сонголт",
-      "Лояльти программ",
-      "Хүргэлтийн удирдлага",
-      "AI Telegram туслах",
-      "AI бүтээгдэхүүний тайлбар",
-      "AI лого",
-      "AI дэлгүүрийн нэр",
-      "AI домэйн нэр",
-      "AI постер",
-      "AI зураг сайжруулах",
-      "AI Чатбот (Facebook Messenger)",
-      "Автомат өдрийн тайлан",
-      "Тэргүүлэх дэмжлэг",
-    ],
     highlighted: true,
-    icon: false,
   },
   {
     name: "Бизнес",
     monthlyPrice: "₮129,000",
     yearlyPrice: "₮1,290,000",
     description: "Олон салбар, бүрэн хяналт",
-    features: [
-      "Барааны тоо хязгааргүй",
-      "Бүрэн боломж — бүх модуль",
-      "Олон салбар",
-      "Нягтлан бодох бүртгэл",
-      "Үйлдвэрлэлийн удирдлага (BOM)",
-      "Хүний нөөц ба цалин",
-      "API холболт",
-      "24/7 тэргүүлэх дэмжлэг",
-    ],
-    highlighted: false,
-    icon: true,
   },
   {
     name: "Аж ахуйн",
     monthlyPrice: "Тохиролцсон",
     yearlyPrice: "₮8 сая/жил",
     description: "Томоохон байгууллага, групп компаниудад",
-    features: [
-      "Тохиролцсон хязгаар",
-      "Тусгай интеграц",
-      "Тусгай сервер",
-      "Dedicated support SLA",
-    ],
-    highlighted: false,
-    icon: true,
   },
 ];
+
+/** Comparison cell: `true` renders a check, `false` a dash, a string its text. */
+type Cell = boolean | string;
+
+type ComparisonGroup = {
+  title: string;
+  rows: Array<{ label: string; cells: Cell[] }>;
+};
+
+const comparisonGroups: ComparisonGroup[] = [
+  {
+    title: "Бараа ба борлуулалт",
+    rows: [
+      {
+        label: "Барааны тоо",
+        cells: ["200", "5,000", "Хязгааргүй", "Хязгааргүй"],
+      },
+      { label: "Борлуулалт ба POS касс", cells: [true, true, true, true] },
+      { label: "Зарлагын бүртгэл", cells: [true, true, true, true] },
+      { label: "Хямдрал ба урамшуулал", cells: [false, true, true, true] },
+      { label: "Бэлгийн сонголт", cells: [false, true, true, true] },
+      { label: "Олон агуулах", cells: [false, true, true, true] },
+    ],
+  },
+  {
+    title: "Харилцагч ба онлайн дэлгүүр",
+    rows: [
+      { label: "Харилцагчийн бүртгэл", cells: [true, true, true, true] },
+      { label: "Онлайн дэлгүүр", cells: [false, true, true, true] },
+      { label: "Хүргэлтийн удирдлага", cells: [false, true, true, true] },
+      { label: "Лояльти программ", cells: [false, true, true, true] },
+      { label: "Баримт бичиг", cells: [false, true, true, true] },
+    ],
+  },
+  {
+    title: "Тайлан ба дэмжлэг",
+    rows: [
+      { label: "Үндсэн тайлан", cells: [true, true, true, true] },
+      { label: "Бүх төрлийн тайлан", cells: [false, true, true, true] },
+      { label: "И-мэйл дэмжлэг", cells: [true, true, true, true] },
+      { label: "Тэргүүлэх дэмжлэг", cells: [false, true, true, true] },
+      { label: "24/7 дэмжлэг", cells: [false, false, true, true] },
+      { label: "Dedicated support SLA", cells: [false, false, false, true] },
+    ],
+  },
+  {
+    title: "AI боломжууд",
+    rows: [
+      { label: "AI Telegram туслах", cells: [false, true, true, true] },
+      {
+        label: "AI постер ба зураг сайжруулах",
+        cells: [false, true, true, true],
+      },
+      { label: "AI лого, нэр, тайлбар", cells: [false, true, true, true] },
+      {
+        label: "AI Чатбот (Facebook Messenger)",
+        cells: [false, true, true, true],
+      },
+      { label: "Автомат өдрийн тайлан", cells: [false, true, true, true] },
+    ],
+  },
+  {
+    title: "Нягтлан ба үйлдвэрлэл",
+    rows: [
+      { label: "Нягтлан бодох бүртгэл", cells: [false, false, true, true] },
+      {
+        label: "Үйлдвэрлэлийн удирдлага (BOM)",
+        cells: [false, false, true, true],
+      },
+      { label: "Хүний нөөц ба цалин", cells: [false, false, true, true] },
+      { label: "API холболт", cells: [false, false, true, true] },
+      { label: "Олон салбар", cells: [false, false, true, true] },
+    ],
+  },
+  {
+    title: "Аж ахуйн түвшин",
+    rows: [
+      { label: "Тохиролцсон хязгаар", cells: [false, false, false, true] },
+      { label: "Тусгай интеграц", cells: [false, false, false, true] },
+      { label: "Тусгай сервер", cells: [false, false, false, true] },
+    ],
+  },
+];
+
+function planPrice(plan: Plan, isYearly: boolean) {
+  return isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+}
+
+function planCta(plan: Plan) {
+  if (plan.name === "Аж ахуйн") return { href: "/contact", label: "Холбогдох" };
+  if (plan.monthlyPrice === "₮0")
+    return { href: "/login", label: "Үнэгүй эхлэх" };
+  if (plan.highlighted)
+    return { href: "/register?trial=standard", label: "14 өдөр үнэгүй турших" };
+  return { href: "/register?trial=standard", label: "Эхлэх" };
+}
+
+function CellValue({ value }: { value: Cell }) {
+  if (typeof value === "boolean") {
+    return value ? (
+      <Check weight="bold" className="mx-auto size-4 text-primary" />
+    ) : (
+      <Minus
+        weight="bold"
+        className="mx-auto size-4 text-muted-foreground/40"
+      />
+    );
+  }
+  return <span className="text-sm">{value}</span>;
+}
+
+const GRID_COLS = "grid grid-cols-[1.35fr_repeat(4,minmax(0,1fr))]";
 
 export function Pricing() {
   const [isYearly, setIsYearly] = useState(true);
@@ -186,10 +176,10 @@ export function Pricing() {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
             Үнэ тогтолцоо
           </p>
-          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight text-balance md:text-5xl">
             Энгийн үнэ тогтолцоо
           </h2>
-          <p className="text-base text-muted-foreground md:text-lg">
+          <p className="text-pretty text-base text-muted-foreground md:text-lg">
             Бизнесийн хэмжээнд тохирсон төлөвлөгөө. Хүссэн үедээ шинэчлэх эсвэл
             цуцлах боломжтой.
           </p>
@@ -226,111 +216,144 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-4 lg:gap-6">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={cn(
-                "relative flex flex-col rounded-2xl border p-8 transition-all duration-200",
-                plan.highlighted
-                  ? "border-primary/30 bg-gradient-to-b from-primary/[0.04] to-card shadow-xl ring-1 ring-primary/10 scale-[1.02] lg:scale-105"
-                  : "border-border/60 bg-card shadow-sm hover:shadow-md",
-              )}
-            >
-              {plan.highlighted && (
-                <>
-                  <div className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-gradient-to-b from-primary/[0.06] to-transparent" />
+        {/* Plan cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {plans.map((plan) => {
+            const cta = planCta(plan);
+            return (
+              <div
+                key={plan.name}
+                className={cn(
+                  "relative flex flex-col rounded-2xl border bg-card p-6",
+                  plan.highlighted
+                    ? "border-primary/30 shadow-xl ring-1 ring-primary/10"
+                    : "border-border/60 shadow-sm",
+                )}
+              >
+                {plan.highlighted && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground hover:bg-primary/90">
                     Хамгийн сонголт
                   </Badge>
-                </>
-              )}
-
-              <div className="mb-8">
-                <h3 className="mb-1.5 text-lg font-semibold">{plan.name}</h3>
-                <p className="mb-6 text-sm text-muted-foreground">
+                )}
+                <h3 className="mb-1 text-lg font-semibold">{plan.name}</h3>
+                <p className="mb-5 text-sm text-muted-foreground">
                   {plan.description}
                 </p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold tracking-tight">
-                    {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                <div className="mb-6 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold tracking-tight">
+                    {planPrice(plan, isYearly)}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {plan.name === "Аж ахуйн" ? "" : isYearly ? "/жил" : "/сар"}
                   </span>
                 </div>
-                {isYearly && plan.name === "Стандарт" && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    ₮65,833/сар
-                  </p>
+                <div className="mt-auto">
+                  <Button
+                    variant={plan.highlighted ? "default" : "outline"}
+                    asChild
+                    className="w-full"
+                  >
+                    <Link href={cta.href}>{cta.label}</Link>
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Features comparison table */}
+        <div className="mt-16">
+          <div className="mb-6 text-center">
+            <h3 className="font-display text-2xl text-balance md:text-3xl">
+              Багцын мэдээлэл
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground md:text-base">
+              Багцуудын дэлгэрэнгүй боломжуудыг доороос харна уу.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
+            <div className="min-w-[720px]">
+              {/* Plan header row */}
+              <div
+                className={cn(
+                  GRID_COLS,
+                  "border-b border-border/60 bg-muted/50",
                 )}
-                {isYearly && plan.name === "Бизнес" && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    ₮165,833/сар
-                  </p>
-                )}
-                {plan.highlighted && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <Badge
-                      variant="secondary"
-                      className="gap-1.5 text-[11px] font-normal"
-                    >
-                      <Check weight="bold" className="size-3 text-primary" />
-                      Борлуулалт + Нягтлан + Агуулах — нэгдмэл систем
-                    </Badge>
+              >
+                <div className="px-4 py-3" />
+                {plans.map((plan) => (
+                  <div
+                    key={plan.name}
+                    className={cn(
+                      "flex flex-col gap-1 px-4 py-4",
+                      plan.highlighted && "bg-primary/[0.04]",
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold">{plan.name}</span>
+                      {plan.highlighted && (
+                        <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">
+                          Хамгийн сонголт
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-lg font-bold tracking-tight">
+                      {planPrice(plan, isYearly)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {plan.name === "Аж ахуйн"
+                        ? "Тохиролцсон"
+                        : isYearly
+                          ? "/жил"
+                          : "/сар"}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
 
-              <ul className="mb-8 flex-1 space-y-3.5">
-                {plan.features.map((feature) => {
-                  const cfg = featureConfig[feature] ?? {};
-                  const Icon = cfg.icon ?? Check;
-                  return (
-                    <li
-                      key={feature}
-                      className="flex items-center gap-3 text-sm"
-                    >
-                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <Icon weight="bold" className="size-3 text-primary" />
-                      </span>
-                      <span>{feature}</span>
-                      {cfg.ai && (
-                        <Sparkle
-                          weight="fill"
-                          className="size-3 shrink-0 text-amber-500"
-                        />
+              {/* Grouped feature rows */}
+              {comparisonGroups.map((group) => (
+                <div key={group.title}>
+                  <div
+                    className={cn(
+                      GRID_COLS,
+                      "border-b border-border/60 bg-muted/30",
+                    )}
+                  >
+                    <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {group.title}
+                    </div>
+                    <div className="col-span-4" />
+                  </div>
+                  {group.rows.map((row) => (
+                    <div
+                      key={row.label}
+                      className={cn(
+                        GRID_COLS,
+                        "border-b border-border/40 last:border-0",
                       )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <Button
-                variant={plan.highlighted ? "default" : "outline"}
-                asChild
-                className="w-full"
-              >
-                <Link
-                  href={
-                    plan.name === "Аж ахуйн"
-                      ? "/contact"
-                      : plan.monthlyPrice === "₮0"
-                        ? "/login"
-                        : "/register?trial=standard"
-                  }
-                >
-                  {plan.name === "Аж ахуйн"
-                    ? "Холбогдох"
-                    : plan.monthlyPrice === "₮0"
-                      ? "Үнэгүй эхлэх"
-                      : plan.highlighted
-                        ? "14 өдөр үнэгүй турших"
-                        : "Эхлэх"}
-                </Link>
-              </Button>
+                    >
+                      <div className="sticky left-0 z-10 border-r border-border/40 bg-card px-4 py-3">
+                        <span className="text-sm font-medium">{row.label}</span>
+                      </div>
+                      {row.cells.map((cell, i) => (
+                        <div
+                          key={plans[i]?.name ?? i}
+                          className={cn(
+                            "flex items-center justify-center px-2 py-3",
+                            plans[i]?.highlighted && "bg-primary/[0.04]",
+                          )}
+                        >
+                          <CellValue value={cell} />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

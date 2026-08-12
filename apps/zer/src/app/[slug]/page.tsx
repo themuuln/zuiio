@@ -303,7 +303,7 @@ async function OrgProfileDataFetcher({
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <Envelope className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
                     Имэйл
                   </p>
                   <p className="text-sm">
@@ -316,7 +316,7 @@ async function OrgProfileDataFetcher({
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <Phone className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
                     Утас
                   </p>
                   <p className="text-sm">
@@ -329,7 +329,7 @@ async function OrgProfileDataFetcher({
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <MapPin className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
                     Хаяг
                   </p>
                   <p className="text-sm">{orgData.public_profile.address}</p>
@@ -340,7 +340,7 @@ async function OrgProfileDataFetcher({
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <Globe className="size-4 text-muted-foreground" />
                 <div>
-                  <p className="text-[10px] font-medium uppercase text-muted-foreground">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
                     Вебсайт
                   </p>
                   <a

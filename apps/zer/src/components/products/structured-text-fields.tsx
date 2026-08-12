@@ -104,7 +104,7 @@ export function StructuredTextFields({
               rows={3}
               className="resize-y"
             />
-            <p className="text-right text-[10px] text-muted-foreground">
+            <p className="text-right text-xs text-muted-foreground">
               {values[field.key].length}/{field.maxLength}
             </p>
           </div>

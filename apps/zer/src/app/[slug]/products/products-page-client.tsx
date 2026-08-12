@@ -647,7 +647,7 @@ export function ProductCard({
               {formatCurrency(Number(product.sale_price ?? 0))}
             </p>
             {currency && (
-              <p className="text-[10px] text-muted-foreground">{currency}</p>
+              <p className="text-xs text-muted-foreground">{currency}</p>
             )}
           </div>
           <AddToCartButton

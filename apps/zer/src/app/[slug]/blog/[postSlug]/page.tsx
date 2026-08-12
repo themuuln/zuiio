@@ -152,7 +152,7 @@ async function PostDataFetcher({
             <p className="mb-8 text-lg text-muted-foreground">{post.excerpt}</p>
           )}
 
-          <div className="prose prose-sm max-w-none text-muted-foreground sm:prose-base">
+          <div className="prose prose-base max-w-none text-muted-foreground">
             {paragraphs.map((paragraph) => (
               <p key={paragraph} className="mb-4 whitespace-pre-line last:mb-0">
                 {paragraph}

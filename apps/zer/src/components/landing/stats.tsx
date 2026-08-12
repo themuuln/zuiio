@@ -44,10 +44,10 @@ export function Stats() {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
             Үзүүлэлтүүд
           </p>
-          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight text-balance md:text-5xl">
             Баталгаатай үр дүн
           </h2>
-          <p className="text-base text-muted-foreground md:text-lg">
+          <p className="text-pretty text-base text-muted-foreground md:text-lg">
             Zer нь Монголын жижиг дунд бизнесийг дэмжиж, жил бүр өсөн хөгжиж
             байна.
           </p>
@@ -67,7 +67,7 @@ export function Stats() {
                   <Icon className="size-6" />
                 </div>
 
-                <div className="mb-2 font-display text-4xl font-bold md:text-5xl">
+                <div className="mb-2 font-display text-4xl md:text-5xl">
                   <span className="bg-gradient-to-r from-violet-600 via-primary to-teal-500 bg-clip-text text-transparent dark:from-violet-400 dark:via-primary dark:to-teal-400">
                     {stat.value}
                   </span>

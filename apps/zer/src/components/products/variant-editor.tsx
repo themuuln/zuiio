@@ -152,7 +152,7 @@ function QuickAddOptions({ onAdd }: { onAdd: (values: string[]) => void }) {
         <button
           type="button"
           onClick={handleSubmit}
-          className="flex h-7 items-center rounded-md bg-primary px-2 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+          className="flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
         >
           Нэмэх
         </button>
@@ -167,7 +167,7 @@ function QuickAddOptions({ onAdd }: { onAdd: (values: string[]) => void }) {
           <X className="size-3.5" />
         </button>
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Утгуудыг таслалаар тусгаарлаж бичээд Enter дарна уу.
       </p>
     </div>
@@ -281,7 +281,7 @@ function BulkActionBar({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-muted/30 p-2">
-      <span className="mr-1 text-[11px] font-medium text-muted-foreground">
+      <span className="mr-1 text-xs font-medium text-muted-foreground">
         Масс үйлдэл:
       </span>
 
@@ -290,7 +290,7 @@ function BulkActionBar({
           render={
             <button
               type="button"
-              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-xs font-medium text-foreground hover:bg-muted"
             >
               <Calculator className="size-3" />
               Бүгдэд үнэ тохируулах
@@ -327,7 +327,7 @@ function BulkActionBar({
           render={
             <button
               type="button"
-              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-xs font-medium text-foreground hover:bg-muted"
             >
               <CurrencyDollar className="size-3" />
               Бүгдэд үлдэгдэл тохируулах
@@ -351,7 +351,7 @@ function BulkActionBar({
 
       {showPercentageInput && (
         <div className="flex w-full items-center gap-1.5 pt-1">
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Зарах үнэд хэдэн хувь нэмэх/хасах вэ?
           </span>
           <Input
@@ -380,7 +380,7 @@ function BulkActionBar({
               const pct = Number(percentageInput);
               if (!Number.isNaN(pct)) applyPercentageToField("sale_price", pct);
             }}
-            className="flex h-7 items-center rounded-md bg-primary px-2 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+            className="flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
           >
             Хэрэглэх
           </button>
@@ -461,19 +461,19 @@ export function VariantSummaryCard({
           <p className="text-lg font-semibold tabular-nums">
             {summary.variantCount}
           </p>
-          <p className="text-[10px] text-muted-foreground">Вариант</p>
+          <p className="text-xs text-muted-foreground">Вариант</p>
         </div>
         <div>
           <p className="text-lg font-semibold tabular-nums">
             {summary.groupCount}/{summary.optionCount}
           </p>
-          <p className="text-[10px] text-muted-foreground">Бүлэг/Сонголт</p>
+          <p className="text-xs text-muted-foreground">Бүлэг/Сонголт</p>
         </div>
         <div>
           <p className="text-lg font-semibold tabular-nums">
             {summary.totalStock.toFixed(0)}
           </p>
-          <p className="text-[10px] text-muted-foreground">Нийт үлдэгдэл</p>
+          <p className="text-xs text-muted-foreground">Нийт үлдэгдэл</p>
         </div>
         <div>
           <p className="text-lg font-semibold tabular-nums">
@@ -482,7 +482,7 @@ export function VariantSummaryCard({
               ? ` - ${formatCurrency(summary.maxSalePrice)}`
               : ""}
           </p>
-          <p className="text-[10px] text-muted-foreground">Үнийн хүрээ</p>
+          <p className="text-xs text-muted-foreground">Үнийн хүрээ</p>
         </div>
       </div>
     </div>
@@ -801,7 +801,7 @@ export function VariantEditor({
               placeholder="Бүлгийн нэр (жиш: Хэмжээ, Өнгө)"
               className="h-8 text-sm"
             />
-            <Badge variant="secondary" className="shrink-0 text-[10px]">
+            <Badge variant="secondary" className="shrink-0 text-xs">
               {group.options.length}
             </Badge>
             <button
@@ -877,7 +877,7 @@ export function VariantEditor({
             <p className="text-xs font-medium text-muted-foreground">
               Нийт {combinations.length} вариант
               {totals && (
-                <span className="ml-2 text-[10px]">
+                <span className="ml-2 text-xs">
                   (идэвхтэй: {totals.activeVariants})
                 </span>
               )}
@@ -1018,19 +1018,19 @@ export function VariantEditor({
                 {/* Totals row */}
                 {totals && (
                   <tr className="sticky bottom-0 border-t bg-muted/60 font-medium">
-                    <td className="py-2 pr-2 pl-3 text-[11px] text-muted-foreground">
+                    <td className="py-2 pr-2 pl-3 text-xs text-muted-foreground">
                       Нийт
                     </td>
-                    <td className="py-2 px-1 text-[11px] text-muted-foreground">
+                    <td className="py-2 px-1 text-xs text-muted-foreground">
                       {totals.activeVariants} ид.
                     </td>
-                    <td className="py-2 px-1 text-[11px] text-muted-foreground">
+                    <td className="py-2 px-1 text-xs text-muted-foreground">
                       Ø{totals.avgCost.toFixed(0)}
                     </td>
-                    <td className="py-2 px-1 text-[11px] text-muted-foreground">
+                    <td className="py-2 px-1 text-xs text-muted-foreground">
                       Ø{totals.avgSale.toFixed(0)}
                     </td>
-                    <td className="py-2 px-1 pr-3 text-[11px] font-semibold text-foreground">
+                    <td className="py-2 px-1 pr-3 text-xs font-semibold text-foreground">
                       {totals.totalStock.toFixed(0)}
                     </td>
                   </tr>
@@ -1038,7 +1038,7 @@ export function VariantEditor({
               </tbody>
             </table>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Хоосон SKU-тай вариант автоматаар идэвхгүй болно.
           </p>
         </div>

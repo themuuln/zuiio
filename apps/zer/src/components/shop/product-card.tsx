@@ -42,7 +42,7 @@ function StockChip({ stock, unit }: { stock: number; unit: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-medium tabular-nums",
         low
           ? "border-destructive/30 bg-destructive/10 text-destructive"
           : "border-border bg-muted text-muted-foreground",
@@ -119,7 +119,7 @@ function ListVariantBody({
         )}
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
-            <span className="text-[10px] font-semibold text-destructive">
+            <span className="text-xs font-semibold text-destructive">
               Дууссан
             </span>
           </div>
@@ -142,7 +142,7 @@ function ListVariantBody({
                 className="size-3.5 rounded object-contain"
               />
             ) : null}
-            <span className="text-[11px] text-muted-foreground leading-tight">
+            <span className="text-xs text-muted-foreground leading-tight">
               {product.brand_name}
             </span>
           </div>
@@ -152,7 +152,7 @@ function ListVariantBody({
             {price.toLocaleString()}₮
           </p>
           {trackStock && !isOutOfStock && (
-            <span className="text-[11px] text-muted-foreground/60 tabular-nums">
+            <span className="text-xs text-muted-foreground/60 tabular-nums">
               {stock} {unit}
             </span>
           )}
@@ -288,7 +288,7 @@ function GridVariantBody({
 
         {/* Cart quantity badge */}
         {!isOutOfStock && cartQuantity > 0 && (
-          <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-[11px] text-primary-foreground shadow-sm">
+          <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-xs text-primary-foreground shadow-sm">
             <ShoppingCart className="size-3" weight="fill" />
             {cartQuantity}
           </Badge>
@@ -341,7 +341,7 @@ function GridVariantBody({
                     className="size-4 rounded object-contain"
                   />
                 ) : null}
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {product.brand_name}
                 </span>
               </div>

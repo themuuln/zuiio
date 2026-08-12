@@ -47,10 +47,10 @@ export function Sponsors() {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
             Түншүүд
           </p>
-          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight text-balance md:text-5xl">
             Бидэнтэй хамт
           </h2>
-          <p className="text-base text-muted-foreground md:text-lg">
+          <p className="text-pretty text-base text-muted-foreground md:text-lg">
             Манай итгэмжлэгдсэн түнш, хамтрагч байгууллагууд.
           </p>
         </div>

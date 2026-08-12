@@ -226,7 +226,7 @@ export function VariantPicker({
                   {group.name}
                 </p>
                 {selectedOption && (
-                  <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                     {selectedOption.value}
                   </span>
                 )}
@@ -261,7 +261,7 @@ export function VariantPicker({
                         {option.value}
                       </span>
                       {isAvailable && !isSelected && (
-                        <span className="ml-0.5 text-[11px] text-muted-foreground/70">
+                        <span className="ml-0.5 text-xs text-muted-foreground/70">
                           {isVariantsLoading ? (
                             <Skeleton className="inline-block h-[11px] w-7 rounded-sm" />
                           ) : (
@@ -298,7 +298,7 @@ export function VariantPicker({
                 </span>
                 <Badge
                   variant="outline"
-                  className="border-current/25 bg-background/70 text-[11px] text-muted-foreground"
+                  className="border-current/25 bg-background/70 text-xs text-muted-foreground"
                 >
                   {matchedVariant.current_stock ?? 0} ш
                 </Badge>
@@ -320,7 +320,7 @@ export function VariantPicker({
             <p className="text-xs font-semibold leading-none text-foreground">
               Вариант сонгох
             </p>
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {matchedVariant
                 ? "Сонголт бэлэн боллоо — сагсанд шууд хийж болно"
                 : nextGroup
@@ -328,7 +328,7 @@ export function VariantPicker({
                   : "Сонголтоо шалгаад тохирох хувилбар хайж байна"}
             </p>
           </div>
-          <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">
             {selectedCount}/{groups?.length ?? 0}
           </span>
         </div>
@@ -352,7 +352,7 @@ export function VariantPicker({
               }}
             />
           </div>
-          <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
             <span className="truncate">
               {matchedVariant
                 ? matchedVariant.option_labels
@@ -405,7 +405,7 @@ export function VariantPicker({
                 <div className="flex items-start gap-3">
                   <span
                     className={cn(
-                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
+                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                       isCompletedStep
                         ? "bg-primary text-primary-foreground"
                         : isCurrentStep
@@ -426,7 +426,7 @@ export function VariantPicker({
                         <p className="truncate text-sm font-medium text-foreground">
                           {group.name}
                         </p>
-                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                        <p className="text-xs leading-relaxed text-muted-foreground">
                           {isCompletedStep
                             ? "Энэ алхам дууссан"
                             : isCurrentStep
@@ -438,11 +438,11 @@ export function VariantPicker({
                       </div>
 
                       {selectedOption ? (
-                        <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                           {selectedOption.value}
                         </span>
                       ) : isCurrentStep ? (
-                        <span className="shrink-0 text-[10px] font-medium text-primary">
+                        <span className="shrink-0 text-xs font-medium text-primary">
                           Одоо
                         </span>
                       ) : null}
@@ -505,7 +505,7 @@ export function VariantPicker({
                           {option.value}
                         </span>
                         {isAvailable && !isSelected && (
-                          <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/70">
+                          <span className="ml-auto shrink-0 text-xs text-muted-foreground/70">
                             {isVariantsLoading ? (
                               <Skeleton className="inline-block h-[11px] w-7 rounded-sm" />
                             ) : (
@@ -551,7 +551,7 @@ export function VariantPicker({
                   ? `${nextGroup.name} сонгоод үргэлжлүүлнэ`
                   : "Вариант сонгож эхэлнэ үү"}
           </p>
-          <p className="mt-0.5 text-[11px] opacity-80">
+          <p className="mt-0.5 text-xs opacity-80">
             {matchedVariant
               ? matchedVariant.option_labels
               : isCompleteSelection
@@ -568,7 +568,7 @@ export function VariantPicker({
               </span>
               <Badge
                 variant="outline"
-                className="shrink-0 border-current/25 bg-background/70 text-[10px]"
+                className="shrink-0 border-current/25 bg-background/70 text-xs"
               >
                 {matchedVariant.current_stock ?? 0} ш
               </Badge>
@@ -579,7 +579,7 @@ export function VariantPicker({
             <button
               type="button"
               onClick={() => setSelections({})}
-              className="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Цэвэрлэх
             </button>

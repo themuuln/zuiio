@@ -84,7 +84,7 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mx-auto mb-10 max-w-2xl text-base text-muted-foreground md:text-lg">
+          <p className="mx-auto mb-10 max-w-2xl text-pretty text-base text-muted-foreground md:text-lg">
             Бараа материалын бүртгэл, борлуулалт, зарлага, харилцагчийн
             менежмент — бүгд нэг системд. Монгол жижиг дунд бизнест зориулсан
             энгийн, хэрэгцээт ERP.

@@ -91,7 +91,7 @@ export function ProductDetailDrawer({
 
           {/* Price */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Үнэ
             </p>
             <p className="mt-1 text-xl font-bold tracking-tight tabular-nums">

@@ -55,10 +55,10 @@ export function Testimonials() {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
             Сэтгэгдэл
           </p>
-          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight text-balance md:text-5xl">
             Хэрэглэгчдийн сэтгэгдэл
           </h2>
-          <p className="text-base text-muted-foreground md:text-lg">
+          <p className="text-pretty text-base text-muted-foreground md:text-lg">
             Zer-ийг ашиглаж буй бизнес эрхлэгчид, нягтлан бодогчдын сэтгэгдэл.
           </p>
         </div>

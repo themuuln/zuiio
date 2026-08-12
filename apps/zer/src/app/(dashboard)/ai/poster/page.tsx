@@ -255,7 +255,7 @@ export default function AiPosterPage() {
                     >
                       {s.label}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {s.description}
                     </div>
                   </div>

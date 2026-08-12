@@ -21,10 +21,10 @@ export function CTA() {
             <RocketLaunch className="size-6 text-primary" />
           </div>
 
-          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight text-balance md:text-5xl">
             Бизнесээ дижитал болгоход бэлэн үү?
           </h2>
-          <p className="mb-8 text-base text-muted-foreground md:text-lg">
+          <p className="mb-8 text-pretty text-base text-muted-foreground md:text-lg">
             Өнөөдөр бүртгүүлж, Zer-ийн бүх боломжийг үнэгүй ашиглаж эхлээрэй.
             Кредит карт шаардахгүй.
           </p>

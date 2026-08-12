@@ -147,7 +147,7 @@ function ImageUploadField({
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="text-[11px] text-muted-foreground">{description}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
       <div className="flex items-start gap-3">
         {currentUrl ? (
           <div className="relative overflow-hidden rounded-lg border bg-muted">

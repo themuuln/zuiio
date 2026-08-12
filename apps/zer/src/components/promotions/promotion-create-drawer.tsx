@@ -605,7 +605,7 @@ export function PromotionCreateDrawer({
                 className="flex flex-wrap items-end gap-2 rounded-lg border border-border bg-muted/30 p-3"
               >
                 <div className="min-w-[140px] flex-1 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Төрөл
                   </label>
                   <NativeSelect
@@ -627,7 +627,7 @@ export function PromotionCreateDrawer({
                 </div>
 
                 <div className="w-20 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Оператор
                   </label>
                   <NativeSelect
@@ -644,7 +644,7 @@ export function PromotionCreateDrawer({
                 </div>
 
                 <div className="min-w-[100px] flex-1 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Утга
                   </label>
                   <Input
@@ -704,7 +704,7 @@ export function PromotionCreateDrawer({
                 className="flex flex-wrap items-end gap-2 rounded-lg border border-border bg-muted/30 p-3"
               >
                 <div className="min-w-[140px] flex-1 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Төрөл
                   </label>
                   <NativeSelect
@@ -724,7 +724,7 @@ export function PromotionCreateDrawer({
                 </div>
 
                 <div className="w-28 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-muted-foreground">
                     {reward.reward_type === "percentage_discount"
                       ? "Хувь"
                       : "Утга"}
@@ -743,7 +743,7 @@ export function PromotionCreateDrawer({
 
                 {reward.reward_type === "free_product" && (
                   <div className="min-w-[160px] flex-1 space-y-1">
-                    <label className="text-[11px] font-medium text-muted-foreground">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Бүтээгдэхүүн
                     </label>
                     {reward.reward_product_id ? (
@@ -796,7 +796,7 @@ export function PromotionCreateDrawer({
 
                 {reward.reward_type === "free_product" && (
                   <div className="w-20 space-y-1">
-                    <label className="text-[11px] font-medium text-muted-foreground">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Макс тоо
                     </label>
                     <Input

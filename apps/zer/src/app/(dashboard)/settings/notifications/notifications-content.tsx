@@ -103,7 +103,7 @@ export function NotificationsContent() {
                     <p className="text-xs text-muted-foreground line-clamp-2">
                       {n.message}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>
                         {EVENT_LABELS[n.event_type ?? ""] ?? n.event_type}
                       </span>

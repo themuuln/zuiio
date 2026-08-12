@@ -374,294 +374,284 @@ export function CatalogClient({
   const showStatus = barcodeStatus.type !== "idle";
 
   return (
-    <div className="lg:flex lg:items-start lg:gap-6">
-      <div className="min-w-0 flex-1 lg:grid lg:grid-cols-[14rem_1fr] lg:gap-6">
-        {/* Desktop category sidebar */}
-        <aside className="hidden overflow-y-auto lg:block">
-          <div className="flex flex-col gap-1 pt-4">
-            <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Ангилал
-            </p>
+    <div className="lg:grid lg:grid-cols-[14rem_1fr] lg:gap-6">
+      {/* Desktop category sidebar */}
+      <aside className="hidden overflow-y-auto lg:block">
+        <div className="flex flex-col gap-1 pt-4">
+          <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Ангилал
+          </p>
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryId(null)}
+            className={cn(
+              "rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+              selectedCategoryId === null
+                ? "bg-primary/10 font-medium text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            Бүгд
+          </button>
+          {categories.map((cat) => (
             <button
+              key={cat.id}
               type="button"
-              onClick={() => setSelectedCategoryId(null)}
+              onClick={() => setSelectedCategoryId(cat.id)}
               className={cn(
-                "rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                selectedCategoryId === null
+                "truncate rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                selectedCategoryId === cat.id
                   ? "bg-primary/10 font-medium text-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              Бүгд
+              {cat.name}
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategoryId(cat.id)}
-                className={cn(
-                  "truncate rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                  selectedCategoryId === cat.id
-                    ? "bg-primary/10 font-medium text-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </aside>
-        {/* Left pane: search + categories + product grid */}
-        <div className="flex min-w-0 flex-col gap-4 pb-20 lg:pb-6">
-          {/* Unified search + barcode input */}
-          <div className="sticky top-[var(--header-height,52px)] z-20 bg-background pb-2 pt-4">
-            <div className="relative flex items-center gap-2">
-              <div className="relative flex-1">
-                <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  ref={inputRef}
-                  type="search"
-                  value={searchQuery}
-                  autoComplete="off"
-                  data-1p-ignore
-                  data-lpignore="true"
-                  data-bwignore
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    if (barcodeStatus.type !== "idle") {
-                      setBarcodeStatus({ type: "idle" });
-                      clearTimeout(timeoutRef.current ?? undefined);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      if (selectionMode === "grid") {
-                        if (searchQuery.trim()) recordSearch(searchQuery);
-                      } else if (searchQuery.trim()) {
-                        handleBarcodeMatch(searchQuery);
-                      }
-                    }
-                  }}
-                  onPaste={(e) => {
-                    if (selectionMode !== "grid") {
-                      const pastedText = e.clipboardData.getData("text");
-                      if (pastedText) {
-                        setTimeout(() => {
-                          handleBarcodeMatch(pastedText);
-                          setSearchQuery("");
-                        }, 0);
-                      }
-                    }
-                  }}
-                  placeholder={
-                    selectionMode === "grid"
-                      ? "Бүтээгдэхүүнээр хайх..."
-                      : "Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+          ))}
+        </div>
+      </aside>
+      {/* Left pane: search + categories + product grid */}
+      <div className="flex min-w-0 flex-col gap-4 pb-20 lg:pb-6">
+        {/* Unified search + barcode input */}
+        <div className="sticky top-[var(--header-height,52px)] z-20 bg-background pb-2 pt-4">
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                type="search"
+                value={searchQuery}
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
+                data-bwignore
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (barcodeStatus.type !== "idle") {
+                    setBarcodeStatus({ type: "idle" });
+                    clearTimeout(timeoutRef.current ?? undefined);
                   }
-                  enterKeyHint={selectionMode === "grid" ? "search" : "done"}
-                  className={cn(
-                    "h-[44px] w-full rounded-md pl-9 pr-4 text-sm",
-                    "focus-visible:ring-2 focus-visible:ring-primary/20",
-                    showStatus &&
-                      barcodeStatus.type === "found" &&
-                      "border-primary bg-primary/5",
-                    showStatus &&
-                      barcodeStatus.type === "not-found" &&
-                      "border-border bg-muted",
-                    showStatus &&
-                      barcodeStatus.type === "error" &&
-                      "border-destructive bg-destructive/10",
-                  )}
-                />
-              </div>
-              {selectionMode !== "grid" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsCameraOpen(true)}
-                  className={cn(
-                    "h-[44px] w-[44px] shrink-0 rounded-md",
-                    "border-2 border-dashed",
-                    isCameraOpen && "ring-2 ring-primary/30",
-                  )}
-                  aria-label="Баркод скан хийх"
-                >
-                  <Barcode className="size-5" weight="bold" />
-                </Button>
-              )}
-            </div>
-            {/* Recent searches */}
-            {searchQuery === "" && recentSearches.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                <ClockCounterClockwise
-                  className="size-3.5 shrink-0 text-muted-foreground"
-                  weight="bold"
-                />
-                {recentSearches.map((term) => (
-                  <button
-                    key={term}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(term);
-                      recordSearch(term);
-                    }}
-                    className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Status feedback */}
-            {showStatus && (
-              <output
-                className="mt-2 flex items-center gap-2 text-sm"
-                aria-live="polite"
-              >
-                {barcodeStatus.type === "found" && (
-                  <>
-                    <CheckCircle
-                      className="size-4 text-primary"
-                      weight="fill"
-                    />
-                    <span className="text-primary">
-                      <strong>{barcodeStatus.productName}</strong> сагсанд
-                      нэмэгдлээ.
-                    </span>
-                  </>
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (selectionMode === "grid") {
+                      if (searchQuery.trim()) recordSearch(searchQuery);
+                    } else if (searchQuery.trim()) {
+                      handleBarcodeMatch(searchQuery);
+                    }
+                  }
+                }}
+                onPaste={(e) => {
+                  if (selectionMode !== "grid") {
+                    const pastedText = e.clipboardData.getData("text");
+                    if (pastedText) {
+                      setTimeout(() => {
+                        handleBarcodeMatch(pastedText);
+                        setSearchQuery("");
+                      }, 0);
+                    }
+                  }
+                }}
+                placeholder={
+                  selectionMode === "grid"
+                    ? "Бүтээгдэхүүнээр хайх..."
+                    : "Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+                }
+                enterKeyHint={selectionMode === "grid" ? "search" : "done"}
+                className={cn(
+                  "h-[44px] w-full rounded-md pl-9 pr-4 text-sm",
+                  "focus-visible:ring-2 focus-visible:ring-primary/20",
+                  showStatus &&
+                    barcodeStatus.type === "found" &&
+                    "border-primary bg-primary/5",
+                  showStatus &&
+                    barcodeStatus.type === "not-found" &&
+                    "border-border bg-muted",
+                  showStatus &&
+                    barcodeStatus.type === "error" &&
+                    "border-destructive bg-destructive/10",
                 )}
-                {barcodeStatus.type === "not-found" && (
-                  <>
-                    <XCircle
-                      className="size-4 text-muted-foreground"
-                      weight="fill"
-                    />
-                    <span className="text-muted-foreground">
-                      &ldquo;{barcodeStatus.barcode}&rdquo; баркодтой
-                      бүтээгдэхүүн олдсонгүй.
-                    </span>
-                  </>
-                )}
-                {barcodeStatus.type === "error" && (
-                  <>
-                    <XCircle
-                      className="size-4 text-destructive"
-                      weight="fill"
-                    />
-                    <span className="text-destructive">
-                      {barcodeStatus.message}
-                    </span>
-                  </>
-                )}
-              </output>
-            )}
-          </div>
-
-          {/* Camera scanner overlay */}
-          {isCameraOpen && (
-            <CameraScanner
-              onScan={handleCameraScan}
-              onClose={() => setIsCameraOpen(false)}
-            />
-          )}
-
-          {/* Category chips — mobile only (desktop uses sidebar) */}
-          <div className="lg:hidden">
-            <CategoryChips
-              categories={categories}
-              selectedId={selectedCategoryId}
-              onSelect={setSelectedCategoryId}
-            />
-          </div>
-          {!isEmpty && !hasNoResults && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                {filteredProducts.length === allProducts.length
-                  ? `${allProducts.length} бүтээгдэхүүн`
-                  : `${filteredProducts.length} / ${allProducts.length} бүтээгдэхүүн`}
-              </p>
-              <fieldset
-                aria-label="Харагдах байдал"
-                className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5"
-              >
-                <button
-                  type="button"
-                  aria-label="Тор харагдац"
-                  aria-pressed={viewMode === "grid"}
-                  onClick={() => setViewMode("grid")}
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded transition-colors",
-                    viewMode === "grid"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <SquaresFour className="size-4" weight="bold" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Жагсаалт харагдац"
-                  aria-pressed={viewMode === "list"}
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded transition-colors",
-                    viewMode === "list"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <ListIcon className="size-4" weight="bold" />
-                </button>
-              </fieldset>
-            </div>
-          )}
-
-          {/* Frequent items rail — personalized, persisted from add frequency */}
-          {frequentProducts.length > 0 && (
-            <section
-              aria-label="Түгээмэл бараанууд"
-              className="flex flex-col gap-2"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Fire className="size-4" weight="bold" />
-                <span>Түгээмэл</span>
-              </div>
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {frequentProducts.map((product) => (
-                  <div key={product.id} className="w-[200px] shrink-0">
-                    <ProductCard product={product} variant="tile" />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Content area */}
-          {isEmpty ? (
-            <EmptyCatalogState
-              onCreateClick={() => setCreateDrawerOpen(true)}
-            />
-          ) : hasNoResults ? (
-            <EmptySearchResults query={searchQuery} />
-          ) : (
-            <>
-              <ProductGrid
-                products={filteredProducts}
-                selectionMode={selectionMode}
-                viewMode={viewMode}
               />
-              {hasNextPage && !serverResults && (
-                <InfiniteScrollSentinel
-                  isFetching={isFetchingNextPage}
-                  onIntersect={fetchNextPage}
-                />
+            </div>
+            {selectionMode !== "grid" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setIsCameraOpen(true)}
+                className={cn(
+                  "h-[44px] w-[44px] shrink-0 rounded-md",
+                  "border-2 border-dashed",
+                  isCameraOpen && "ring-2 ring-primary/30",
+                )}
+                aria-label="Баркод скан хийх"
+              >
+                <Barcode className="size-5" weight="bold" />
+              </Button>
+            )}
+          </div>
+          {/* Recent searches */}
+          {searchQuery === "" && recentSearches.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <ClockCounterClockwise
+                className="size-3.5 shrink-0 text-muted-foreground"
+                weight="bold"
+              />
+              {recentSearches.map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery(term);
+                    recordSearch(term);
+                  }}
+                  className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Status feedback */}
+          {showStatus && (
+            <output
+              className="mt-2 flex items-center gap-2 text-sm"
+              aria-live="polite"
+            >
+              {barcodeStatus.type === "found" && (
+                <>
+                  <CheckCircle className="size-4 text-primary" weight="fill" />
+                  <span className="text-primary">
+                    <strong>{barcodeStatus.productName}</strong> сагсанд
+                    нэмэгдлээ.
+                  </span>
+                </>
               )}
-            </>
+              {barcodeStatus.type === "not-found" && (
+                <>
+                  <XCircle
+                    className="size-4 text-muted-foreground"
+                    weight="fill"
+                  />
+                  <span className="text-muted-foreground">
+                    &ldquo;{barcodeStatus.barcode}&rdquo; баркодтой бүтээгдэхүүн
+                    олдсонгүй.
+                  </span>
+                </>
+              )}
+              {barcodeStatus.type === "error" && (
+                <>
+                  <XCircle className="size-4 text-destructive" weight="fill" />
+                  <span className="text-destructive">
+                    {barcodeStatus.message}
+                  </span>
+                </>
+              )}
+            </output>
           )}
         </div>
+
+        {/* Camera scanner overlay */}
+        {isCameraOpen && (
+          <CameraScanner
+            onScan={handleCameraScan}
+            onClose={() => setIsCameraOpen(false)}
+          />
+        )}
+
+        {/* Category chips — mobile only (desktop uses sidebar) */}
+        <div className="lg:hidden">
+          <CategoryChips
+            categories={categories}
+            selectedId={selectedCategoryId}
+            onSelect={setSelectedCategoryId}
+          />
+        </div>
+        {!isEmpty && !hasNoResults && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {filteredProducts.length === allProducts.length
+                ? `${allProducts.length} бүтээгдэхүүн`
+                : `${filteredProducts.length} / ${allProducts.length} бүтээгдэхүүн`}
+            </p>
+            <fieldset
+              aria-label="Харагдах байдал"
+              className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5"
+            >
+              <button
+                type="button"
+                aria-label="Тор харагдац"
+                aria-pressed={viewMode === "grid"}
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded transition-colors",
+                  viewMode === "grid"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <SquaresFour className="size-4" weight="bold" />
+              </button>
+              <button
+                type="button"
+                aria-label="Жагсаалт харагдац"
+                aria-pressed={viewMode === "list"}
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded transition-colors",
+                  viewMode === "list"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <ListIcon className="size-4" weight="bold" />
+              </button>
+            </fieldset>
+          </div>
+        )}
+
+        {/* Frequent items rail — personalized, persisted from add frequency */}
+        {frequentProducts.length > 0 && (
+          <section
+            aria-label="Түгээмэл бараанууд"
+            className="flex flex-col gap-2"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Fire className="size-4" weight="bold" />
+              <span>Түгээмэл</span>
+            </div>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {frequentProducts.map((product) => (
+                <div key={product.id} className="w-[200px] shrink-0">
+                  <ProductCard product={product} variant="tile" />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Content area */}
+        {isEmpty ? (
+          <EmptyCatalogState onCreateClick={() => setCreateDrawerOpen(true)} />
+        ) : hasNoResults ? (
+          <EmptySearchResults query={searchQuery} />
+        ) : (
+          <>
+            <ProductGrid
+              products={filteredProducts}
+              selectionMode={selectionMode}
+              viewMode={viewMode}
+            />
+            {hasNextPage && !serverResults && (
+              <InfiniteScrollSentinel
+                isFetching={isFetchingNextPage}
+                onIntersect={fetchNextPage}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {/* Right pane: order panel (desktop POS) — slides in from right on mount */}

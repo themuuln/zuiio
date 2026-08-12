@@ -176,7 +176,7 @@ export default function AiLogoPage() {
                       <span className="font-medium leading-tight">
                         {s.label}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {s.description}
                       </span>
                     </label>

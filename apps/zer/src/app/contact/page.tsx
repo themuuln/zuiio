@@ -15,10 +15,10 @@ export default function ContactPage() {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
             Холбогдох
           </p>
-          <h1 className="mb-6 font-display text-4xl leading-tight md:text-5xl">
+          <h1 className="mb-6 font-display text-4xl leading-tight text-balance md:text-5xl">
             Бидэнтэй холбогдох
           </h1>
-          <p className="mx-auto max-w-2xl text-base text-muted-foreground md:text-lg">
+          <p className="mx-auto max-w-2xl text-pretty text-base text-muted-foreground md:text-lg">
             Асуулт, санал хүсэлтээ бидэн рүү илгээнэ үү. Бид танд туслахад
             баяртай байх болно.
           </p>
