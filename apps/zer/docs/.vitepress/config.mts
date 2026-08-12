@@ -28,6 +28,10 @@ const guideSidebar = {
         { text: "Шимтгэл", link: "/guide/features/commissions.html" },
         { text: "Тайлан", link: "/guide/features/reports.html" },
         { text: "Дэлгүүр (POS)", link: "/guide/features/shop.html" },
+        {
+          text: "Өөрийн домэйн",
+          link: "/guide/features/custom-domain.html",
+        },
         { text: "Тохиргоо", link: "/guide/features/settings.html" },
         { text: "Баркод шошго", link: "/guide/features/barcode-label.html" },
         { text: "Үнийн жагсаалт", link: "/guide/features/price-lists.html" },
