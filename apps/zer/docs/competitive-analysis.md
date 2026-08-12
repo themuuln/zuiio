@@ -6,7 +6,8 @@ date: 2026-08-10
 
 # Zer Storefront Competitive Analysis
 
-> Review date: 2026-08-10
+> Review date: 2026-08-10 (storefront brief); §12 ERPNext full-ERP comparison
+> added 2026-08-11.
 > Scope: The public org page (`/[slug]`) and its complete buyer flow —
 > products list → product detail → add to cart → checkout → delivery location →
 > post-order. Seeded from `docs/gaps.md` (2026-07-18/07-31) and
@@ -367,3 +368,236 @@ true contradiction once scoped.
    `external_tracking_id` in `get_my_orders`; reuse SMTP/Telegram infra for
    confirmation messages.
 6. Remove or fix the cosmetic mobile coupon field in the same change as R5.
+
+---
+
+## 11. Status Update 2026-08-11 — Complete Flow SHIPPED, New Gap Set
+
+> Verified against the codebase (scouts + source) after commits 569c82b7…
+> a7af2219. All R1–R10 from §6 are now implemented. This section supersedes
+> §9 backlog items R4/R9 and the G1–G11 list in `docs/gaps.md`.
+
+### Shipped (verified)
+
+| Requirement | Evidence |
+|---|---|
+| R1+R2 delivery location + pickup/delivery choice | `cart-client.tsx` (name/phone/email, delivery/pickup radio, branch select, address+note) → `submit_shop_order` 15 params (latest `20260810200000_coupon_scope_tables.sql:126-157`) auto-creates `deliveries` row |
+| R3 delivery fee + free-delivery threshold | org profile columns + RPC evaluation; `20260810190000_public_checkout_full_flow.sql` |
+| R5–R7 coupon/gift-card/promotion redemption | web + mobile coupon fields now server-validated (`p_coupon_code`, `p_gift_card_code`); scoped coupons via `coupon_product_scope`/`coupon_category_scope`; promotions incl. buy-X-get-Y + free shipping |
+| R8 order tracking | `get_my_orders`/`get_public_order` return `delivery_status` + `external_tracking_id`; buyer detail page + timeline (`[slug]/account/orders/[orderId]/`) |
+| R10 order detail page | shipped with timeline, delivery card, totals, contact card |
+| R11 gallery | `product_images` table + `product-gallery.tsx` (thumbnail strip) |
+| R12 stock/sold-out | org opt-in `show_stock` (default false); "Дууссан"/"Нөөцөд байна — N" badges |
+| R4 partial | payment methods qpay/bank_transfer + static `payment_instructions` (bank block / QPay QR image) returned on the order row |
+
+### New verified gap set (2026-08-11)
+
+**P0 — revenue / legal:**
+- **G-QPAY: no real payment gateway.** `qpay_qr_url` is TEXT on
+  `organization_public_profiles` (`20260810190000:79`); checkout renders the
+  QR `<img>` (`cart-client.tsx:301-310`). No QPay invoice creation, no
+  payment webhook route in `src/app/api/`, no checksum verification, no
+  `pending → completed` flip. Confirmation is manual by staff.
+- **G-EBARIMT: no e-Barimt API.** `invoices.ebarimt_id` column + vertical
+  flag only (`20260715130000`, `src/lib/vertical-config.ts`). No client.
+- **G-EMAIL: confirmation email is dead code.** `submitStoreOrder` +
+  `sendOrderConfirmationEmail` (`src/lib/order-email.ts`, unit-tested) are
+  imported NOWHERE — web (`cart-client.tsx:230-262`) and mobile checkouts
+  call the RPC directly from clients. One-day wiring fix (route through the
+  server action or a pg_net/edge hook).
+- **G-SMS: no SMS sender.** `notifications.ts` has SMS channel templates;
+  `notification.ts` implements Telegram + WebPush only. Buyers get no
+  status-change notification (shop.mn SMSes paid/pickup/delivered).
+
+**P1 — conversion parity with shop.mn:**
+- **G-CHAT: no buyer-facing AI chat commerce.** shop.mn's flagship: FB
+  Messenger + storefront chatbot that searches products, quotes price/stock,
+  creates orders + payment link in chat. Zer has dashboard Q&A only
+  (`/ai-assistant`). Reuse `@zuiio/ai-agent` + agent-gateway (Messenger/
+  Telegram channels exist in the monorepo).
+- **G-LISTING-AI: no AI product-listing tools** (description-from-image,
+  studio photo cleanup). Zer AI is poster/logo/naming/enhance only.
+- **G-BNPL: no installments** (shop.mn: StorePay, PocketZero, LendMN).
+- **G-THEME / G-FAV / G-IMPORT / G-AFFILIATE**: no storefront theming
+  (templates/color/font), no buyer favorites, no Excel bulk product import
+  (export-only), no affiliate program.
+
+**P2 — schema hygiene:**
+- **G-LOYALTY-DRIFT: `loyalty_settings`/`loyalty_rewards` have NO migration
+  in repo** (remote-created only), absent from generated types; code casts
+  `as unknown as SupabaseClient` (violates zer-coding-rules). Add migration +
+  regen types; storefront points display is also absent (admin-only).
+- **G-TIMELINE: order timeline is derived from current status** — no
+  persisted history table, no per-step timestamps (`order-detail-client.tsx
+  buildTimelineSteps`).
+- **G-BILLING: no subscription/billing product** (Zer unmonetized;
+  shop.mn: plans + prepaid wallet).
+
+### Next actions
+
+1. **QPay (P0):** invoice creation at submit (merchant API) → `payment_link`
+   → webhook route with checksum verification flips `pending → completed`.
+   Reference: bonum gateway in zatly/black-yak. Largest revenue impact.
+2. **e-Barimt (P0, legal):** API client + receipt on paid orders.
+3. **Email (P0, 1 day):** wire web/mobile checkout through
+   `submitStoreOrder` or a pg_net hook — email is already built.
+4. **SMS (P0):** MN provider (sms.mn/sendease) into the delivery-status
+   flow; notify buyers on status changes.
+5. **AI chat commerce (P1):** Messenger + storefront widget via
+   `@zuiio/ai-agent` + agent-gateway; order creation + payment link in chat.
+6. **P1 small:** theming, favorites, Excel import, AI listing tools, BNPL
+   partners.
+7. **P2:** loyalty migration + type regen + storefront points; persisted
+   status history; billing product (needs pricing decision).
+
+---
+
+## 12. ERP-to-ERP: ERPNext (Frappe) — the Open-Source ERP Reference (2026-08-11)
+
+> Scope: full-ERP comparison (not storefront-only). Zer's ERP surface was
+> inventoried from `supabase/migrations/` + `src/app/(dashboard)/` (verified
+> 2026-08-11). ERPNext facts verified on primary sources (GitHub, frappe.io)
+> + 2026 third-party analyses. Companion storefront brief: §1–§11 above.
+> Cross-reference: `docs/gaps.md`, `docs/features/ecommerce-gap-plan.md`.
+
+### 12.1 Why ERPNext matters
+
+ERPNext is the canonical free/open-source ERP: 100% of modules at $0 license
+cost, 37,938 GitHub stars, 12,430 forks (GitHub API, 2026-08-11), v16 current.
+It is the global SMB reference for "a complete ERP with zero license fees" —
+and therefore the benchmark Zer must beat on **total cost of adoption**
+(not just license price), and the baseline for what "complete ERP" means in
+module terms. It is NOT a direct Mongolia competitor today (no MN partner
+ecosystem surfaced in research — see §12.6), but it sets the category bar.
+
+### 12.2 ERPNext profile (verified)
+
+| Fact | Value | Source | Confidence |
+|---|---|---|---|
+| Vendor | Frappe Technologies (India; ERPNext launched 2010) | frappe.io/about | High |
+| License | **GPLv3** (GNU GPL v3, 29 June 2007) — verified `license.txt` in repo | github.com/frappe/erpnext license.txt (2026-08-11) | High (primary) |
+| Current version | v16 (2026) | frappe.io/erpnext/version-16 | High |
+| Stack | Python + Frappe framework (MIT), MariaDB/Postgres, Redis; Vue-based Frappe UI | github.com/frappe/erpnext README | High (primary) |
+| Scale | 37,938 stars / 12,430 forks; ~1.3k contributors (vendor claim) | GitHub API; frappe.io | High / Medium |
+| Business model | Free software; revenue = Frappe Cloud hosting (usage-based Site/Server plans) + support/consulting + enterprise services | frappe.io/erpnext/pricing, frappe.io/handbook/pricing-faqs | High |
+| Target | Global SMBs 1–250 staff; manufacturing, distribution, retail, services; strong in emerging markets (India, SE Asia, Africa) | erpresearch.com, frappe.io | Medium |
+| Deployment | Self-host (bench/Docker, 2–8 weeks typical implementation) or Frappe Cloud | frappe.io/erpnext | High |
+| HR module | **Frappe HR is a separate app** in 2026 (not core ERPNext) | erpresearch.com/erp/erpnext/modules | Medium |
+
+### 12.3 Module-by-module comparison (verified codebase inventory, 2026-08-11)
+
+| Domain | Zer (evidence) | ERPNext (evidence) | Read |
+|---|---|---|---|
+| Accounting | GL, chart of accounts, invoices + public receipt/invoice share links (`r/receipt`, `r/invoice`), financial statements + trial balance RPCs (`20260716000001`, `20260619042304`), multi-currency sales (`20260716210000`), bank accounts, cash registers, credit accounts, discounts, **financial data protection: soft delete + period locking** (`20260716120000`), audit log, budgets | Full double-entry GL, AR/AP, **fixed assets**, multi-currency + revaluation, deferred/subscription revenue, period closing | Parity on core; ERPNext leads on fixed assets + revenue-deferral depth; Zer's period locking is a trust feature ERPNext approximates with period-closing vouchers |
+| Inventory | warehouses, branches, stock transfers, stock movements + **batch_id** (`20260621000001`), UoM conversions, variants/attributes/bundles, price books, `track_stock` opt-in, `FOR UPDATE` stock RPCs | Multi-warehouse, batch/serial/lot, **FIFO/AVCO/LIFO valuation**, landed cost, reorder points | Parity on basics; ERPNext leads on valuation methods, landed cost, reorder automation |
+| Purchasing | suppliers, purchase orders, quotations, returns (`20260617000001`), expenses | Suppliers, POs, RFQs, subcontracting | Parity |
+| Sales / POS | sales, discounts, returns, commissions (`20260614160905`), cash register + receipt printer settings + thermal receipts, online sales flag (`20260810160000`), order templates, gift options | Sales orders/invoices, POS with payment terminals | Parity; Zer leads on MN retail specifics (thermal receipt, cash register) |
+| Manufacturing | **BOM, manufacturing orders, inventory, costing, quality** (`20260717110000`–`150000`), production dashboard | **MRP, multi-level BOM, job cards, work orders, subcontracting, capacity planning, quality inspection** | ERPNext leads (MRP/subcontracting/capacity); Zer = capable light MES |
+| HR / Payroll | employees, attendance records, leave requests, payroll runs + items (`20260624000002`), MN payroll rules (PRODUCT.md) | Frappe HR app: employee self-service, shifts, overtime, salary structures, payroll engine | Zer = MN-specific but thin; ERPNext = broad but generic (no MN compliance) + now separate app |
+| Quality | quality module + dashboard (`manufacturing_quality`, `(dashboard)/quality`) | quality inspections, standards compliance | Parity (thin both) |
+| CRM | customers, customer segments, credit accounts — **no lead/opportunity pipeline** | leads, opportunities, pipeline, campaigns | ERPNext leads |
+| Projects / timesheets | none (production orders ≠ projects) | projects, tasks, timesheets, project billing | ERPNext only (out of Zer's retail scope) |
+| Fixed assets | none | full asset lifecycle: purchase → depreciation → disposal | ERPNext only |
+| Support / helpdesk | contact form, reviews, embedded reports — no tickets | support tickets / helpdesk | ERPNext only |
+| **E-commerce / storefront** | full buyer loop: catalog, variants, cart, checkout with delivery/pickup + address, coupons, gift cards, promotions, reviews, blog, SEO/sitemap, GA4/Pixel, custom domains, buyer accounts, order tracking, wishlist; staff delivery module | website module + simple shopping cart — e-commerce is ERPNext's known weak spot (vs Odoo, 2026 analyses) | **Zer leads decisively** |
+| Payments | QPay/SocialPay/bank-transfer/cash/card context; static payment instructions; real QPay gateway = open gap (§11 G-QPAY) | payment gateway integrations (India-centric), bank reconciliation | Mixed; Zer leads for MN payment context |
+| Compliance / localization | **Mongolian-first by design**: mn_MN UI, MN payroll tax, phone/plate validation, descriptive addresses, e-Barimt column planned (`20260715130000`), vertical presets (shop/gym) | ~100 locales via Crowdin; **no official Mongolian translation or e-Barimt integration surfaced** (2026-08-11 research) | Zer leads for Mongolia by construction |
+| AI | dashboard Q&A assistant, AI posters/logo/naming, **agent-gateway Telegram/Messenger bot commerce** (`bot_buyer_sessions`, `create_telegram_agent_links`) | limited AI integrations; no AI commerce | Zer leads |
+| Offline / mobile | **PWA offline-first + offline-sync**, mobile app (zer-mobile) | responsive web only; no offline-first | Zer leads |
+| Multi-tenancy | **SaaS multi-tenant**: `organization_id` RLS on every table, one deployment serves all orgs | single-tenant per site (one Frappe site ≈ one company; multi-company within site supported) | Different models; Zer's wins for SaaS distribution |
+| Extensibility | server actions, migrations, @zuiio packages, per-org feature flags; no UI no-code builder | **Frappe metadata-driven doctypes, no-code form builder, workflow engine, custom fields, server/client scripts** | ERPNext leads (mature extensibility platform); Zer trades this for simplicity |
+| Data import | export tools; **no bulk import** (Excel import = known gap, §11 G-IMPORT) | CSV/excel data import tooling | ERPNext leads |
+
+### 12.4 What Zer should borrow from ERPNext (prioritized)
+
+| # | Capability | Priority | Evidence | Acceptance signal |
+|---|---|---|---|---|
+| Z-E1 | **Fixed assets module** (asset register + depreciation + GL posting) | P2 | ERPNext asset lifecycle; MN SMBs depreciate equipment; Zer has nothing | assets table + depreciation schedule + posting; audit log |
+| Z-E2 | ~~Bulk data import (Excel/CSV products, stock)~~ — **SHIPPED** `/products/bulk`: CSV upload + template + manual entry + barcode/camera (verified 2026-08-11) | ~~P1~~ | ERPNext data import; §11 G-IMPORT | — |
+| Z-E3 | **Reorder automation** (reorder points + suggested POs) | P1 | ERPNext reorder levels; Zer's `stock_movements` already has the data | Org sets reorder point per product → dashboard suggests purchase qty |
+| Z-E4 | **CRM lead/opportunity pipeline** | P2 | ERPNext pipeline; only relevant if Zer targets B2B/wholesale customers (Zer `customers` has no pipeline) | Lead → opportunity → customer flow for wholesale vertical |
+| Z-E5 | **Workflow approvals** (e.g., PO approval chain) | P2 | ERPNext workflow engine | Org configures approval step → action blocked until approved |
+| Z-E6 | **Stock valuation method selection (FIFO/AVCO)** | P2 | ERPNext valuation; Zer has batch_id but no method selection | Org setting → valuation per method in reports |
+| Z-E7 | **Support tickets** | P2 | ERPNext helpdesk; only if Zer adds services vertical | Ticket board scoped by org |
+
+**Non-gaps (do NOT copy):** single-tenant architecture, metadata no-code
+builder (erodes Zer's simplicity + Mongolian-first density), projects/
+timesheets for the retail core, healthcare/education verticals, 2–8 week
+implementation model.
+
+### 12.5 What Zer does better than ERPNext (the moat)
+
+1. **Mongolian-first by construction.** mn_MN UI, MN payroll tax rules, MN
+   phone/plate validation, descriptive addresses. ERPNext has no official
+   Mongolian translation or e-Barimt integration surfaced (2026-08-11);
+   MN adoption would require a localization app + integrator.
+2. **Zero-friction adoption.** Zer runs in a browser, day one, self-serve.
+   ERPNext requires bench/Docker/MariaDB/Redis + 2–8 week implementation
+   (frappe.io) or Frappe Cloud signup + setup — integrator economics.
+3. **Offline-first + mobile** for MN shops with unreliable connectivity.
+4. **Integrated storefront + delivery + promotions** — ERPNext's e-commerce
+   is its known weak spot; Zer ships the complete sell→fulfill→account loop.
+5. **AI commerce** (bot buying in Telegram/Messenger via agent-gateway) —
+   nothing comparable in ERPNext.
+6. **MN payment/compliance context** (QPay/SocialPay; e-Barimt in flight).
+7. **Product velocity** — Zer ships weekly; ERPNext majors are annual.
+
+### 12.6 Threat assessment (12–18 months)
+
+- **Direct: LOW.** No ERPNext partner ecosystem in Mongolia surfaced
+  (searches returned only Odoo partners, 2026-08-11). MN mid-market runs
+  Odoo via partners — CoreMind (110+ implementations, 2,000+ enterprise
+  users, "Mongolian tax, payroll, financial reporting, bank gateway"
+  localization — vendor-stated, odoo.com partners page) and Cubicsoft
+  (100+ rollouts — vendor-stated). Small shops (Zer's 1–20 staff core) have
+  neither the DevOps nor the integrator budget ERPNext requires.
+- **Indirect: MEDIUM.** Erdenet Mining rewrote ~90% of Odoo's purchase
+  module for MN procurement law (Odoo customer case, 2026) — proof that a
+  global open-source ERP can be localized for MN mid-market. A Frappe
+  partner could do the same with ERPNext (GPLv3, $0 license) targeting
+  50–250-staff companies — above Zer's current focus, but it anchors the
+  market's price expectation: "free ERP" is now a credible MN category.
+- **Response:** never position Zer against "free ERP" on license price
+  alone. Price on day-one value: Mongolian compliance out of the box, zero
+  setup, storefront, offline, AI channels. The §12.4 borrow list closes the
+  module gap without copying ERPNext's deployment model.
+
+### 12.7 Positioning statement (ERPNext lens)
+
+Zer is Mongolia's answer to ERPNext: the same promise — one system for
+sell → stock → money → numbers — delivered in Mongolian, in a browser,
+on day one, with no install, no integrator, and no 8-week implementation.
+ERPNext is the free-**license** benchmark; Zer is the free-**friction**
+benchmark. Where ERPNext sells a platform you staff and customize, Zer
+sells a finished product you open and use.
+
+### 12.8 Verified data (2026-08-11)
+
+| Claim | Value | Source | Confidence |
+|---|---|---|---|
+| ERPNext license | GPLv3 (GNU GPL v3) | github.com/frappe/erpnext `license.txt` (2026-08-11) | High (primary) |
+| ERPNext repo scale | 37,938 stars, 12,430 forks, Python | GitHub API (2026-08-11) | High (primary) |
+| ERPNext modules | Accounting, Procurement, Sales, CRM, Stock, Manufacturing, Projects, Assets, POS, Quality, Support, No-code builder; HR = separate Frappe HR app | frappe.io/erpnext/modules; erpresearch.com | High / Medium |
+| ERPNext deployment time | 2–8 weeks typical SMB implementation; faster for standard modules | frappe.io/erpnext | High (vendor) |
+| ERPNext business model | $0 license (self-host); revenue from Frappe Cloud hosting + support/consulting | frappe.io/erpnext/pricing, pricing-faqs | High |
+| Frappe Cloud exact plan prices | Figures surfaced (e.g. "410/mo", "3600/mo") but plan names unlabeled → **UNVERIFIED (2026-08-11)** | frappe.io/cloud/pricing | Low |
+| ERPNext vs Odoo verdict 2026 | ERPNext: free, simpler, manufacturing/emerging markets; Odoo: broader ecosystem, UX, marketplace, paid tiers | erpresearch.com, ecosire.com, velsof.com | Medium (third-party) |
+| ERPNext official Mongolian translation / e-Barimt | **None surfaced** in MN-localization searches (2026-08-11) | web research | Medium (absence of evidence) |
+| CoreMind (Odoo MN partner) | 110+ implementations, 2,000+ users, MN tax/payroll/bank localization | odoo.com/partners (vendor-stated) | Medium |
+| Cubicsoft (Odoo MN partner) | 100+ rollouts, distribution/manufacturing/healthcare/retail | cubicsoft.mn (vendor-stated) | Medium |
+| Erdenet Mining Odoo case | ~90% of purchase module rewritten for MN procurement law | Odoo customer-review blog (2026) | Medium (vendor case study) |
+| Zer ERP module inventory | migrations `20260613000000`–`20260811100000` (130 files) + 40 dashboard routes | codebase (verified 2026-08-11) | High (code) |
+
+**Contradictions:** none material. (Search snippets once labeled ERPNext
+"AGPL-3.0" — resolved against the repo's `license.txt`: GPLv3. Frappe
+**framework** is MIT, ERPNext the app is GPLv3.)
+
+### 12.9 Research backlog
+
+| Open question | Method | Timing |
+|---|---|---|
+| Frappe Cloud exact plan prices (Site vs Server tiers) | frappecloud.com dashboard/signup walkthrough | Before any pricing work |
+| ERPNext Mongolian translation status on Crowdin (`mn` in frappe project) | crowdin.com/project/frappe | Before claiming "no MN localization" permanently |
+| ERPNext UX vs Zer (task-time, density) | Drive erpnext-demo.frappe.cloud demo; compare a sale + a report task | Before §12.4 borrow decisions |
+| Does any MN company run ERPNext? | LinkedIn/Facebook ERP groups, discuss.frappe.io search | Quarter |
+| MN ERP price benchmarks for Zer pricing (Odoo partner quotes, 1C, shop.mn ERP) | CoreMind/Cubicsoft RFQs; shop.mn pricing | Before billing product (needs pricing decision) |

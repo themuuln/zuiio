@@ -426,3 +426,125 @@ Zer should **NOT** compete as "another ERP" — the local market is saturated. I
 5. **Price at MNT 50-200K/mo** — Mongolian market rates, not international SaaS pricing
 
 **Skip payroll/HR**, full accounting, manufacturing — 1C, Workzone, and ОЧ 7.7 dominate these. Partner instead.
+
+---
+
+# Storefront Complete-Flow Gaps (2026-08-10)
+
+> Source: `docs/competitive-analysis.md` (2026-08-10) — codebase audit +
+> shop.mn/shoppy/easyshop/marketplace/Shopify research. This section
+> supersedes the older storefront-flow sections above.
+
+## Status correction (2026-07-31 → 2026-08-10)
+
+The 2026-07-31 refresh said "web storefront cart/checkout UI still
+staff-side, consumer buying lives in apps/zer-mobile". **Corrected:** the web
+storefront now has a full buyer cart + checkout
+(`src/app/[slug]/cart/cart-client.tsx`) that submits via the public
+`submit_shop_order` RPC (rate-limited + idempotent). The **flow still breaks
+after "pending"**: the buyer can only give name + phone + cash/card.
+
+## Complete-flow gaps (verified 2026-08-10)
+
+| # | Gap | Where it breaks | Evidence |
+|---|-----|-----------------|----------|
+| G1 | **Delivery location not collected** — no address/notes at checkout; `submit_shop_order` has no address params; staff must phone the buyer and re-enter into `deliveries` | checkout → delivery | `cart-client.tsx` fields; RPC signature (20260803130000); `deliveries/actions.ts createDelivery` |
+| G2 | **No delivery fee / free-shipping threshold** — `deliveries.delivery_fee` + promotions `free_shipping` exist staff-side; checkout total = item sum only | checkout totals | `shop-cart.ts computeTotalAmount`; promotions-content.tsx |
+| G3 | **No delivery vs pickup choice; branch picker unused** — RPC accepts `p_branch_slug`, web never sends it | checkout | RPC param; `cart-client.tsx` omits it |
+| G4 | **No QPay/SocialPay/bank transfer** — cash/card only, order stays `pending` until staff confirm | payment | PAYMENT_METHODS in `cart-client.tsx` |
+| G5 | **Coupons not redeemable** — admin CRUD shipped; web has no field; mobile field is a silent no-op ("coupon validation is not public") | checkout | `apps/zer-mobile/src/lib/checkout.ts:39` |
+| G6 | **Gift cards not redeemable** | checkout | — |
+| G7 | **Promotions not evaluated** in public cart totals | checkout | — |
+| G8 | **No buyer order tracking** — static status badge only; no status history/ETA/tracking, no SMS/email | post-order | `orders/orders-client.tsx` |
+| G9 | **No buyer order detail page** | post-order | — |
+| G10 | **No image gallery / related products** | product detail | single `image_url` |
+| G11 | **No stock/sold-out signal** (deliberate privacy decision — revisit as per-org opt-in) | list/detail | `buy-panel.tsx` comment |
+
+## Delivered (2026-08-03 push) — do NOT re-plan
+
+GA4/Meta Pixel, SEO meta + sitemap + custom domains, reviews, blog, buyer
+accounts, idempotent + rate-limited checkout RPC, offline-first, staff
+delivery module (`deliveries`/`delivery_zones`/`delivery_providers`),
+coupons/gift cards/promotions admin CRUD.
+
+## Next
+
+Build R1–R4 from `docs/competitive-analysis.md` §6 (delivery location +
+pickup/delivery choice → fee config → QPay) — the delivery module is already
+staff-side; the work is wiring the public flow to it.
+
+---
+
+# Missing Features Register (2026-08-11)
+
+> **Purpose:** single machine-usable list of features Zer does NOT have yet.
+> Consolidates `docs/competitive-analysis.md` §11 (storefront flow gaps,
+> 2026-08-11), §12 (ERPNext borrow list Z-E*, 2026-08-11), and the older
+> sections of this file. **This register supersedes the "Next" section above
+> (R1–R4 are shipped — see competitive-analysis.md §11).**
+> Status column = verified codebase state on 2026-08-11; anything NOT
+> verified in code this day is marked.
+
+## Shipped since this register's sources (do NOT re-plan)
+
+- **Buyer favorites / wishlist (G-FAV)** — shipped 2026-08-11:
+  `[slug]/wishlist/` + `wishlist-context.tsx` + vitest tests. §11's G-FAV is
+  stale.
+- **Bulk product import (G-IMPORT / Z-E2)** — shipped: `/products/bulk`
+  CSV upload (barcode, name, sale_price, cost_price, current_stock, unit),
+  template download, manual multi-entry, barcode + camera scanning
+  (verified 2026-08-11). §12.4 Z-E2 row superseded.
+- **Touch POS register (M-POS)** — shipped 2026-08-11: `/pos` register
+  (grid, search, categories, variants, cart steppers, price override,
+  cash/card/bank/invoice + change, barcode, offline queue, session banner,
+  receipt redirect) + E2E `e2e/pos-register.spec.ts`. Remaining hardware
+  slice tracked as M-HW (cash drawer + ESC/POS driver + dedicated terminal).
+- R1–R4 (delivery location + pickup/delivery, fee config, coupons/gift
+  cards/promotions redemption, order tracking, order detail, gallery,
+  stock/sold-out badges) — all shipped per competitive-analysis.md §11.
+
+## 🔴 P0 — blocks revenue or legal compliance
+
+| ID | Feature | Status | Source | Acceptance signal |
+|----|---------|--------|--------|-------------------|
+| G-QPAY | **Real QPay payment gateway** — invoice creation at submit (merchant API), `payment_link`/QR, webhook route with checksum verification, flips `pending → completed`. Current: static QR text + manual staff confirmation | ❌ Missing | competitive-analysis §11 G-QPAY (code: `20260810190000:79`, `cart-client.tsx:301-310`); gaps.md 2026-07-31 (2–3 wk est.) | Buyer pays by QPay → order auto-flips to paid; no staff step |
+| G-EBARIMT | **e-Barimt tax receipt API** — receipt issue on paid orders. Current: `invoices.ebarimt_id` column + vertical flag only | ❌ Missing (legal) | competitive-analysis §11 G-EBARIMT; gaps.md 2026-07-31 (3–4 wk est.) | Paid order issues e-Barimt receipt; id stored; retry/queue on failure |
+| G-EMAIL | **Buyer confirmation email wiring** — `submitStoreOrder` + `sendOrderConfirmationEmail` (unit-tested) imported NOWHERE; web/mobile call the RPC directly | ❌ Dead code | competitive-analysis §11 G-EMAIL (1-day fix) | Web + mobile checkout route through the server action (or pg_net hook); email fires |
+| G-SMS | **SMS sender** — `notifications.ts` has SMS templates; `notification.ts` implements Telegram + WebPush only | ❌ Missing | competitive-analysis §11 G-SMS | MN provider (sms.mn/sendease) wired; status-change SMS to buyer |
+| M-POS | ~~Full touch POS register~~ — **SHIPPED 2026-08-11**: `/pos` touch register (product grid + search/categories, variants, cart steppers + price override, cash/card/bank/invoice payment with change, barcode, offline queue, cash-session banner, receipt-printer redirect). E2E: `e2e/pos-register.spec.ts` + `e2e/pos-register-advanced.spec.ts` (login → sell → sale row verified; barcode wedge scan; real VariantPicker flow; desktop/mobile layout probes) — **5/5 passing** against the local stack | ✅ Shipped | gaps.md 2026-07-31 P0 table | `playwright test e2e/pos-register*.spec.ts` (needs local stack + `scripts/org-data/pos-e2e.ts` provisioned) |
+
+## 🟡 P1 — conversion parity / growth
+
+| ID | Feature | Status | Source | Acceptance signal |
+|----|---------|--------|--------|-------------------|
+| G-CHAT | **Buyer-facing AI chat commerce** — Messenger + storefront widget that searches products, quotes price/stock, creates order + payment link in chat (shop.mn flagship) | ❌ Missing (dashboard Q&A only) | competitive-analysis §11 G-CHAT | Chat order created via `@zuiio/ai-agent` + agent-gateway; payment link returned |
+| G-LISTING-AI | **AI product-listing tools** — description-from-image, studio photo cleanup | ❌ Missing | competitive-analysis §11 G-LISTING-AI | Product image → description draft; cleanup tool in product form |
+| G-BNPL | **Installments / BNPL** (StorePay, PocketZero, LendMN) | ❌ Missing | competitive-analysis §11 G-BNPL | Payment option → partner flow at checkout |
+| G-THEME | **Storefront theming** — templates/color/font per org | ❌ Missing | competitive-analysis §11 G-THEME | Org picks theme → storefront restyles |
+| G-AFFILIATE | **Affiliate program** | ❌ Missing | competitive-analysis §11 G-AFFILIATE | Affiliate link → tracked commission |
+| Z-E3 | **Reorder automation** — reorder points + suggested purchase quantities | ❌ Missing | competitive-analysis §12.4 Z-E3 | Org sets reorder point → dashboard suggests PO qty (data already in `stock_movements`) |
+| M-SOCIAL | **Catalog-to-chat social commerce** — sell via FB post / catalog → chat flow. Current: Telegram + Messenger agent links/webhooks exist | ⚠️ Partial | gaps.md 2026-07-31 P1 table | FB catalog → buyer chats → order in Zer |
+| M-HW | **Hardware: cash-drawer control + ESC/POS driver + dedicated terminal** (barcode + receipt printer shipped) | ⚠️ Partial | gaps.md 2026-07-18 #7 | Drawer opens on cash payment; ESC/POS print |
+
+## 🟢 P2 — differentiation / polish
+
+| ID | Feature | Status | Source | Acceptance signal |
+|----|---------|--------|--------|-------------------|
+| Z-E1 | **Fixed assets module** — asset register + depreciation + GL posting | ❌ Missing | competitive-analysis §12.4 Z-E1 | assets table + depreciation schedule + posting + audit log |
+| Z-E4 | **CRM lead/opportunity pipeline** (for B2B/wholesale vertical) | ❌ Missing | competitive-analysis §12.4 Z-E4 | Lead → opportunity → customer flow |
+| Z-E5 | **Workflow approvals** (e.g., PO approval chain) | ❌ Missing | competitive-analysis §12.4 Z-E5 | Org configures approval → action blocked until approved |
+| Z-E6 | **Stock valuation method selection** (FIFO/AVCO) — `batch_id` exists, no method | ❌ Missing | competitive-analysis §12.4 Z-E6 | Org setting → valuation per method in reports |
+| Z-E7 | **Support tickets / helpdesk** (only if services vertical) | ❌ Missing | competitive-analysis §12.4 Z-E7 | Ticket board scoped by org |
+| G-LOYALTY-DRIFT | **Loyalty schema migration** — `loyalty_settings`/`loyalty_rewards` remote-created only, absent from generated types; code casts `as unknown as SupabaseClient`; storefront points absent | ❌ Schema drift | competitive-analysis §11 G-LOYALTY-DRIFT | Migration added + types regen; points shown on storefront |
+| G-TIMELINE | **Persisted order status history** — timeline derived from current status, no history table | ❌ Missing | competitive-analysis §11 G-TIMELINE | Status transitions insert rows with timestamps |
+| G-BILLING | **Subscription/billing product** — Zer unmonetized (needs pricing decision) | ❌ Missing | competitive-analysis §11 G-BILLING | Pricing decision → billing module |
+
+## Not gaps (deliberate or shipped — do NOT re-plan)
+
+Mongolian-first UX, offline-first, AI dashboard assistant, industry presets
+(company-type onboarding), multi-location transfers, embeddable analytics,
+web-push + Telegram alerts, buyer accounts, reviews, blog, SEO/GA4/Pixel,
+custom domains, wishlist (2026-08-11), delivery module, coupons/gift cards/
+promotions engine, HR/payroll, manufacturing BOM→orders→quality→costing,
+period locking + soft delete, multi-currency sales, price books, credit
+accounts, stock transfers, webhooks, receipt printing, barcode scanning.
