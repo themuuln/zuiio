@@ -1,7 +1,7 @@
 import { generateEveningReport } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
 import { startOfDay, subDays } from "date-fns";
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { getActiveSmtpConfig, sendDailyReportEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
@@ -45,6 +45,7 @@ async function sendWithRetry(
  * is not set.
  */
 export async function POST(request: Request) {
+  await connection();
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {

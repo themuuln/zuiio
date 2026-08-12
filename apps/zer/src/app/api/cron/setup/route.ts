@@ -1,5 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 /**
@@ -12,6 +13,7 @@ import { createServiceClient } from "@/lib/supabase/server-service";
  * POST /api/cron/daily-report to process orgs.
  */
 export async function GET(request: Request) {
+  await connection();
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
@@ -26,16 +28,42 @@ export async function GET(request: Request) {
 
   try {
     const supabase = createServiceClient();
+    const appUrl = siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`;
+
+    // G-EMAIL/G-ABANDONED: keep site_url fresh for DB-side pg_net hooks
+    // (order confirmation trigger, cron routes). Object shape matches the
+    // trigger's value->>'site_url' read.
+    const { error: configError } = await (supabase as SupabaseClient)
+      .from("app_config")
+      .upsert(
+        { key: "site_url", value: JSON.stringify({ site_url: appUrl }) },
+        { onConflict: "key" },
+      );
+    if (configError)
+      capture(configError, { context: "[cron/setup] app_config site_url" });
+
     const { data, error } = await supabase.rpc("schedule_daily_report_cron", {
-      app_url: siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`,
+      app_url: appUrl,
     });
     if (error)
       capture(error, { context: "[cron/setup] schedule_daily_report_cron" });
 
+    const abandoned = await (supabase as SupabaseClient).rpc(
+      "schedule_abandoned_cart_cron",
+      {
+        p_app_url: appUrl,
+      },
+    );
+    if (abandoned.error)
+      capture(abandoned.error, {
+        context: "[cron/setup] schedule_abandoned_cart_cron",
+      });
+
     return NextResponse.json({
       ok: true,
       message: data,
-      note: "Cron job runs every 30 minutes. To change schedule, update via Supabase SQL editor.",
+      abandonedCron: abandoned.data,
+      note: "Cron jobs run every 30 minutes. To change schedule, update via Supabase SQL editor.",
     });
   } catch (err) {
     capture(err, { context: "cron/setup: GET" });
@@ -48,6 +76,7 @@ export async function GET(request: Request) {
  * DELETE /api/cron/setup - unschedule the cron job
  */
 export async function DELETE(request: Request) {
+  await connection();
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
