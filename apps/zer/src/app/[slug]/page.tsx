@@ -203,11 +203,23 @@ async function OrgProfileDataFetcher({
       products.push(...firstPage.products);
       const pagesRemaining = Math.max(0, Math.ceil(catalogTotal / 100) - 1);
       if (pagesRemaining > 0) {
-        const rest = await Promise.all(
-          Array.from({ length: pagesRemaining }, (_, i) =>
-            getPublicCatalog(supabase, slug, { page: i + 2, pageSize: 100 }),
-          ),
+        // Bounded concurrency: 4 parallel RPCs at a time, so huge catalogs
+        // don't fire dozens of requests at once.
+        const pageNumbers = Array.from(
+          { length: pagesRemaining },
+          (_, i) => i + 2,
         );
+        const rest: Awaited<ReturnType<typeof getPublicCatalog>>[] = [];
+        for (let i = 0; i < pageNumbers.length; i += 4) {
+          const batch = await Promise.all(
+            pageNumbers
+              .slice(i, i + 4)
+              .map((p) =>
+                getPublicCatalog(supabase, slug, { page: p, pageSize: 100 }),
+              ),
+          );
+          rest.push(...batch);
+        }
         for (const catalog of rest) {
           if (catalog) products.push(...catalog.products);
         }
