@@ -48,19 +48,6 @@ export async function maybeRewriteStorefrontHost(
   if (host === "localhost:3000" || host === "localhost") return null;
   if (host.endsWith(".vercel.app")) return null;
 
-  // Raw IP literals (127.0.0.1, [::1], LAN/Tailscale IPs — local dev hosts)
-  // and mDNS names (.local) can never be a verified custom domain or an org
-  // subdomain. Skip before the domain-resolve fetch, which would 404 for
-  // every dev host.
-  if (
-    host.startsWith("[") ||
-    host.startsWith("::") ||
-    host.endsWith(".local") ||
-    /^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(host)
-  ) {
-    return null;
-  }
-
   // Subdomain of the primary host: `{slug}.{siteHost}` → /{slug}/…
   if (siteHost) {
     const subdomainSuffix = `.${siteHost}`;

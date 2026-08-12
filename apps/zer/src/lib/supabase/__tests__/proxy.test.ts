@@ -214,7 +214,6 @@ describe("updateSession", () => {
     });
 
     it.each([
-      "/",
       "/forgot-password",
       "/reset-password",
       "/update-password",
@@ -226,6 +225,17 @@ describe("updateSession", () => {
       await updateSession(req);
 
       expect(mockNextResponseRedirect).not.toHaveBeenCalled();
+    });
+
+    it("redirects anonymous visitors on / to the landing page", async () => {
+      const req = createMockRequest("/");
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+      expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe(
+        "/landing",
+      );
     });
 
     it("allows unauthenticated access to /r/ share routes", async () => {
@@ -474,7 +484,7 @@ describe("updateSession", () => {
 
     it("still allows public routes when getClaims fails", async () => {
       mockGetClaims.mockRejectedValue(new Error("Session error"));
-      const req = createMockRequest("/");
+      const req = createMockRequest("/landing");
       const { updateSession } = await import("../proxy");
       await updateSession(req);
 
@@ -542,20 +552,6 @@ describe("updateSession — custom domains", () => {
     await updateSession(req);
 
     expect(mockNextResponseRewrite).not.toHaveBeenCalled();
-  });
-
-  it("does not treat local dev hosts (IP literals) as custom domains", async () => {
-    // 127.0.0.1:3000 / LAN / Tailscale IPs can never be verified custom
-    // domains — the domain-resolve fetch must not fire for them (it would
-    // 404 on every dev request).
-    for (const host of ["127.0.0.1:3000", "192.168.1.126", "100.102.22.106"]) {
-      const req = createMockRequest("/", "", {}, host);
-      const { updateSession } = await import("../proxy");
-      await updateSession(req);
-
-      expect(mockNextResponseRewrite).not.toHaveBeenCalled();
-    }
-    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it("does not rewrite when domain-resolve returns not found", async () => {

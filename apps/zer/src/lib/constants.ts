@@ -10,6 +10,7 @@ export const APP_NAME = messages[DEFAULT_LOCALE]["app.name"];
 export const APP_DESCRIPTION = messages[DEFAULT_LOCALE]["app.description"];
 
 export const PUBLIC_ROUTES = [
+  "/",
   "/landing",
   "/login",
   "/register",
@@ -19,10 +20,6 @@ export const PUBLIC_ROUTES = [
   "/organization/new",
   "/sso",
   "/offline",
-  // Sentry tunnel route — the browser POSTs error envelopes here on every
-  // page (including anonymous visitors); the middleware must not redirect
-  // it to /login or all client-side errors are lost.
-  "/monitoring",
 ];
 
 export const COMPANY_TYPES = [
