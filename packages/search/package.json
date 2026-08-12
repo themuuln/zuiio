@@ -8,7 +8,7 @@
 		"./sql": "./src/sql-template.sql"
 	},
 	"peerDependencies": {
-		"@tanstack/react-query": "^5",
+		"@tanstack/react-query": "catalog:",
 		"@supabase/supabase-js": "^2",
 		"@zuiio/hooks": "workspace:*",
 		"react": "^19.2.8"

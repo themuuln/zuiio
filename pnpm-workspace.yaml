@@ -28,6 +28,7 @@ catalog:
   "@lhci/cli": ^0.15.1
   # TanStack Query
   "@tanstack/react-query": ^5.101.2
+  "@tanstack/react-query-persist-client": ^5.101.2
   # Supabase
   "@supabase/supabase-js": ^2.110.7
   # TypeScript
