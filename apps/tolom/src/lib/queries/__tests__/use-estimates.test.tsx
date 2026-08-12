@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { estimateKeys } from "../keys";
 import {
   useConvertEstimate,
   useDuplicateEstimate,
@@ -13,14 +14,30 @@ import {
   useUpdateEstimateStatus,
 } from "../use-estimates";
 
+const orgMutationMocks = vi.hoisted(() => {
+  const configs: Array<Record<string, unknown>> = [];
+  const mutate = vi.fn();
+  const mutateAsync = vi.fn().mockResolvedValue(undefined);
+
+  return {
+    configs,
+    mutate,
+    mutateAsync,
+    useOrgMutation: vi.fn((config: Record<string, unknown>) => {
+      configs.push(config);
+      return {
+        mutate,
+        mutateAsync,
+        isPending: false,
+        isError: false,
+        error: null,
+      };
+    }),
+  };
+});
+
 vi.mock("@zuiio/query", () => ({
-  useOrgMutation: vi.fn(() => ({
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
-    isPending: false,
-    isError: false,
-    error: null,
-  })),
+  useOrgMutation: orgMutationMocks.useOrgMutation,
 }));
 
 const queryClient = new QueryClient({
@@ -368,53 +385,62 @@ describe("useUpdateEstimateStatus", () => {
   beforeEach(() => {
     queryClient.clear();
     vi.restoreAllMocks();
+    orgMutationMocks.configs.length = 0;
+    orgMutationMocks.useOrgMutation.mockClear();
   });
 
-  it("updates status successfully", async () => {
-    const responseData = { id: "est-1", status: "approved" };
-    vi.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: responseData }),
-    } as Response);
-
-    const { result } = renderHook(() => useUpdateEstimateStatus("org-1"), {
+  it("configures the PATCH endpoint and status body", () => {
+    renderHook(() => useUpdateEstimateStatus("org-1"), {
       wrapper: createWrapper(),
     });
 
-    const output = await result.current.mutateAsync({
-      estimateId: "est-1",
-      status: "approved",
-    });
-
-    expect(output).toEqual(responseData);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/organizations/org-1/estimates/est-1",
-      expect.objectContaining({
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "approved" }),
+    const config = orgMutationMocks.configs[0];
+    expect(config.method).toBe("PATCH");
+    expect(config.queryKey).toEqual(estimateKeys.all("org-1"));
+    expect(
+      (config.endpoint as (variables: { estimateId: string }) => string)({
+        estimateId: "est-1",
       }),
-    );
-  });
-
-  it("handles fetch error", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        error: { message: "Cannot update status for converted estimate" },
-      }),
-    } as Response);
-
-    const { result } = renderHook(() => useUpdateEstimateStatus("org-1"), {
-      wrapper: createWrapper(),
-    });
-
-    await expect(
-      result.current.mutateAsync({
+    ).toBe("/api/organizations/org-1/estimates/est-1");
+    expect(
+      (
+        config.bodyFn as (variables: {
+          estimateId: string;
+          status: string;
+        }) => unknown
+      )({
         estimateId: "est-1",
         status: "approved",
       }),
-    ).rejects.toThrow("Cannot update status for converted estimate");
+    ).toEqual({ status: "approved" });
+    expect(config.successMessage).toBe("Status updated");
+    expect(typeof config.onOptimisticUpdate).toBe("function");
+  });
+
+  it("updates the detail cache optimistically", () => {
+    const detailKey = estimateKeys.detail("org-1", "est-1");
+    queryClient.setQueryData(detailKey, {
+      id: "est-1",
+      status: "draft",
+      updated_at: "old",
+    });
+
+    renderHook(() => useUpdateEstimateStatus("org-1"), {
+      wrapper: createWrapper(),
+    });
+
+    const config = orgMutationMocks.configs[0];
+    const previous = (
+      config.onOptimisticUpdate as (
+        client: QueryClient,
+        variables: { estimateId: string; status: string },
+      ) => unknown
+    )(queryClient, { estimateId: "est-1", status: "approved" });
+
+    expect(previous).toMatchObject({ id: "est-1", status: "draft" });
+    expect(queryClient.getQueryData(detailKey)).toMatchObject({
+      status: "approved",
+    });
   });
 });
 
@@ -424,41 +450,29 @@ describe("useConvertEstimate", () => {
   beforeEach(() => {
     queryClient.clear();
     vi.restoreAllMocks();
+    orgMutationMocks.configs.length = 0;
+    orgMutationMocks.useOrgMutation.mockClear();
   });
 
-  it("converts estimate to work order", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { id: "wo-1" } }),
-    } as Response);
-
-    const { result } = renderHook(() => useConvertEstimate("org-1"), {
+  it("configures the conversion endpoint and deterministic idempotency key", () => {
+    renderHook(() => useConvertEstimate("org-1"), {
       wrapper: createWrapper(),
     });
 
-    const output = await result.current.mutateAsync({ estimateId: "est-1" });
-    expect(output).toEqual({ id: "wo-1" });
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/organizations/org-1/estimates/est-1/convert",
-      expect.objectContaining({ method: "POST" }),
-    );
-  });
-
-  it("handles fetch error", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        error: { message: "Estimate already converted" },
+    const config = orgMutationMocks.configs[0];
+    expect(config.method).toBe("POST");
+    expect(config.queryKey).toEqual(estimateKeys.all("org-1"));
+    expect(
+      (config.endpoint as (variables: { estimateId: string }) => string)({
+        estimateId: "est-1",
       }),
-    } as Response);
-
-    const { result } = renderHook(() => useConvertEstimate("org-1"), {
-      wrapper: createWrapper(),
-    });
-
-    await expect(
-      result.current.mutateAsync({ estimateId: "est-1" }),
-    ).rejects.toThrow("Estimate already converted");
+    ).toBe("/api/organizations/org-1/estimates/est-1/convert");
+    expect(config.successMessage).toBe("Estimate converted to work order");
+    expect(
+      (config.idempotencyKey as (variables: { estimateId: string }) => string)({
+        estimateId: "est-1",
+      }),
+    ).toBe("convert-org-1-est-1");
   });
 });
 

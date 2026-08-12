@@ -1,6 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
-import { toast } from "sonner";
 import type { EstimateDetail, EstimateStatus } from "@/lib/types";
 import { estimateKeys } from "./keys";
 
@@ -148,31 +147,22 @@ export function usePublicEstimate(token: string | undefined) {
 // ── Status Mutation ────────────────────────────────────────────
 
 export function useUpdateEstimateStatus(orgId: string | undefined) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      estimateId,
-      status,
-    }: {
-      estimateId: string;
-      status: EstimateStatus;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/estimates/${estimateId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as EstimateDetail;
-    },
-    onMutate: async (variables) => {
+  return useOrgMutation<
+    EstimateDetail,
+    { estimateId: string; status: EstimateStatus }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/estimates/${vars.estimateId}`,
+    method: "PATCH",
+    queryKey: estimateKeys.all(orgId ?? ""),
+    bodyFn: (vars) => ({ status: vars.status }),
+    successMessage: "Status updated",
+    // Instant status flip in the detail cache; onSettled invalidates the
+    // estimate prefix, so the cache converges with the server on both
+    // success and error (factory does not auto-rollback onOptimisticUpdate).
+    onOptimisticUpdate: (queryClient, variables) => {
       const detailKey = estimateKeys.detail(orgId ?? "", variables.estimateId);
-      await queryClient.cancelQueries({ queryKey: detailKey });
+      void queryClient.cancelQueries({ queryKey: detailKey });
       const previous = queryClient.getQueryData<EstimateDetail>(detailKey);
       if (previous) {
         queryClient.setQueryData<EstimateDetail>(detailKey, {
@@ -181,26 +171,7 @@ export function useUpdateEstimateStatus(orgId: string | undefined) {
           updated_at: new Date().toISOString(),
         });
       }
-      return { previous };
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.detail(orgId ?? "", variables.estimateId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.all(orgId ?? ""),
-      });
-      toast.dismiss();
-      toast.success("Status updated");
-    },
-    onError: (err: Error, variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          estimateKeys.detail(orgId ?? "", variables.estimateId),
-          context.previous,
-        );
-      }
-      toast.error(err.message ?? "Failed to update status");
+      return previous;
     },
   });
 }
@@ -208,31 +179,15 @@ export function useUpdateEstimateStatus(orgId: string | undefined) {
 // ── Convert to Work Order Mutation ─────────────────────────────
 
 export function useConvertEstimate(orgId: string | undefined) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ estimateId }: { estimateId: string }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/estimates/${estimateId}/convert`,
-        { method: "POST" },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as { id: string };
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.detail(orgId ?? "", variables.estimateId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.all(orgId ?? ""),
-      });
-      toast.dismiss();
-      toast.success("Estimate converted to work order");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message ?? "Failed to convert estimate");
-    },
+  return useOrgMutation<{ id: string }, { estimateId: string }>({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/estimates/${vars.estimateId}/convert`,
+    method: "POST",
+    queryKey: estimateKeys.all(orgId ?? ""),
+    successMessage: "Estimate converted to work order",
+    // Convert creates a work order — replayed requests need a stable key so
+    // the server can reject duplicates once endpoint deduplication is enabled.
+    idempotencyKey: (vars) => `convert-${orgId}-${vars.estimateId}`,
   });
 }
 
