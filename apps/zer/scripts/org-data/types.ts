@@ -44,6 +44,7 @@ export interface OrgSetup {
   products: Array<{
     name: string;
     sku?: string | null;
+    barcode?: string | null;
     unit?: string;
     category?: string | null;
     brand?: string | null;

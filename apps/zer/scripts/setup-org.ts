@@ -551,6 +551,7 @@ async function ensureProducts(
       organization_id: orgId,
       name: product.name,
       sku: product.sku ?? null,
+      barcode: product.barcode ?? null,
       unit: product.unit ?? "ширхэг",
       category_id: categoryId,
       brand_id: brandId,
