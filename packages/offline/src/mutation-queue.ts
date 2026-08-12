@@ -51,8 +51,15 @@ export interface QueuedMutation {
    * Idempotency key for safe offline replay.
    * When set, the server should reject duplicate requests with the same key.
    * Sent as the `Idempotency-Key` HTTP header during replay.
+   * Auto-generated per mutation when not supplied.
    */
   idempotencyKey?: string;
+  /**
+   * Timestamp when the mutation was claimed for replay (status in-flight).
+   * Used to recover mutations stranded by a killed tab/service worker:
+   * requeue any in-flight mutation older than IN_FLIGHT_STALE_MS.
+   */
+  inFlightAt?: number;
 }
 
 export interface ReplayResult {
@@ -66,6 +73,12 @@ export interface ReplayResult {
 const DB_NAME = "zuiio-mutation-queue";
 const DB_VERSION = 1;
 const STORE_NAME = "mutations";
+
+/**
+ * An in-flight mutation older than this is presumed stranded by a killed
+ * tab/service worker and is requeued as pending on the next replay.
+ */
+export const IN_FLIGHT_STALE_MS = 30_000;
 
 function getDb(): Promise<IDBPDatabase> {
   return openDB(DB_NAME, DB_VERSION, {
@@ -97,6 +110,9 @@ export async function enqueueMutation(
     status: "pending",
     retries: 0,
     maxRetries: 3,
+    // Every queued mutation gets an idempotency key so replay retries and
+    // double-sends (app + service worker racing) dedupe server-side.
+    idempotencyKey: mutation.idempotencyKey ?? id,
   };
   await db.put(STORE_NAME, record);
   return id;
@@ -160,7 +176,68 @@ async function updateMutationStatus(
   mutation.status = status;
   if (error) mutation.error = error;
   if (status === "pending") mutation.retries += 1;
+  // Claim timestamp for stale-in-flight recovery.
+  if (status === "in-flight") mutation.inFlightAt = Date.now();
   await db.put(STORE_NAME, mutation);
+}
+
+/**
+ * Requeue mutations stranded in "in-flight" (a tab or service worker was
+ * killed mid-replay). Idempotency keys make the replayed request safe:
+ * the server dedupes on them, so a completed-but-acked request is not
+ * applied twice.
+ */
+export async function requeueStaleInFlight(): Promise<number> {
+  const db = await getDb();
+  const all = await db.getAll(STORE_NAME);
+  const stale = all.filter(
+    (m) =>
+      m.status === "in-flight" &&
+      Date.now() - (m.inFlightAt ?? m.createdAt) > IN_FLIGHT_STALE_MS,
+  );
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  for (const m of stale) {
+    m.status = "pending";
+    delete m.inFlightAt;
+    await tx.store.put(m);
+  }
+  await tx.done;
+  return stale.length;
+}
+
+/**
+ * Whether an HTTP status should be retried after a failed replay.
+ * Network failures (no status) and 408/429/5xx are retryable; 4xx client
+ * errors are permanent (invalid payload, auth, forbidden) — retrying them
+ * just burns attempts and triggers retry storms.
+ */
+export function shouldRetryStatus(status: number | undefined): boolean {
+  if (status === undefined) return true; // network failure
+  if (status === 408 || status === 429) return true;
+  return status >= 500;
+}
+
+/**
+ * Atomically claim a pending mutation for replay: transition pending →
+ * in-flight. Returns the claimed record, or null if it is no longer
+ * pending (another replay path already claimed it). Prevents double-sends
+ * when the app and the service worker replay concurrently.
+ */
+async function claimMutation(id: string): Promise<QueuedMutation | null> {
+  const db = await getDb();
+  // One readwrite transaction — the get + put are atomic, so two concurrent
+  // replays cannot both claim the same mutation.
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const mutation = await tx.store.get(id);
+  if (mutation?.status !== "pending") {
+    await tx.done;
+    return null;
+  }
+  mutation.status = "in-flight";
+  mutation.inFlightAt = Date.now();
+  await tx.store.put(mutation);
+  await tx.done;
+  return mutation;
 }
 
 // ─── Replay Engine ─────────────────────────────────────────────
@@ -170,13 +247,20 @@ async function updateMutationStatus(
  * Called when the browser comes back online.
  *
  * Each mutation is retried up to `maxRetries` times. After max retries,
- * it's marked as failed.
+ * it's marked as failed. Mutations stranded in "in-flight" by a killed
+ * tab/worker are requeued first (idempotency keys make replay safe).
+ * Mutations already claimed in-flight by a concurrent replay (app vs
+ * service worker) are skipped to avoid double-sends.
  *
  * @param onInvalidate — Callback to invalidate React Query caches after each success
  */
 export async function replayPendingMutations(
   onInvalidate: (queryKeys: unknown[][]) => void,
 ): Promise<ReplayResult> {
+  // Recover mutations left in-flight by a crash — they are stuck otherwise
+  // (never read again by any replay path).
+  await requeueStaleInFlight();
+
   const pending = await getMutationsByStatus("pending");
   const result: ReplayResult = { completed: 0, failed: 0, errors: [] };
 
@@ -194,31 +278,45 @@ export async function replayPendingMutations(
         throw new Error(`Invalid endpoint: ${mutation.endpoint}`);
       }
 
-      await updateMutationStatus(mutation.id, "in-flight");
+      // Atomic claim: skip if a concurrent replay (another tab or the
+      // service worker) already took this mutation in-flight.
+      const claimed = await claimMutation(mutation.id);
+      if (!claimed) continue;
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (mutation.idempotencyKey) {
-        headers["Idempotency-Key"] = mutation.idempotencyKey;
+      if (claimed.idempotencyKey) {
+        headers["Idempotency-Key"] = claimed.idempotencyKey;
       }
 
-      const res = await fetch(mutation.endpoint, {
-        method: mutation.method,
+      const res = await fetch(claimed.endpoint, {
+        method: claimed.method,
         headers,
-        body: mutation.body ? JSON.stringify(mutation.body) : undefined,
+        body: claimed.body ? JSON.stringify(claimed.body) : undefined,
+        // Explicit — same-origin cookies (auth) must travel with replay.
+        credentials: "same-origin",
       });
 
       if (!res.ok) {
         const text = await res.text().catch(() => "Unknown error");
-        throw new Error(`HTTP ${res.status}: ${text}`);
+        const message = `HTTP ${res.status}: ${text}`;
+        if (shouldRetryStatus(res.status)) {
+          throw new Error(message);
+        }
+        // Permanent client error (400/401/403/413) — fail now, don't burn
+        // retries on a request that can never succeed.
+        await updateMutationStatus(claimed.id, "failed", message);
+        result.failed += 1;
+        result.errors.push({ id: claimed.id, error: message });
+        continue;
       }
 
-      await updateMutationStatus(mutation.id, "completed");
+      await updateMutationStatus(claimed.id, "completed");
       result.completed += 1;
 
-      if (mutation.queryKeysToInvalidate.length > 0) {
-        onInvalidate(mutation.queryKeysToInvalidate);
+      if (claimed.queryKeysToInvalidate.length > 0) {
+        onInvalidate(claimed.queryKeysToInvalidate);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);

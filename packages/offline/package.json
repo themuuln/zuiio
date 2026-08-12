@@ -7,8 +7,8 @@
 		".": "./src/index.ts"
 	},
 	"peerDependencies": {
-		"@tanstack/react-query": "catalog:",
-		"@tanstack/react-query-persist-client": "catalog:",
+		"@tanstack/react-query": "^5.101.2",
+		"@tanstack/react-query-persist-client": "^5",
 		"react": "^19.2.8",
 		"sonner": "^2"
 	},

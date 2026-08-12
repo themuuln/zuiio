@@ -11,7 +11,7 @@
 		"@zuiio/offline": "workspace:*"
 	},
 	"peerDependencies": {
-		"@tanstack/react-query": "catalog:",
+		"@tanstack/react-query": "^5",
 		"react": "^19.2.8",
 		"sonner": "^2"
 	},

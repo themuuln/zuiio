@@ -17,10 +17,13 @@ export {
   getAllMutations,
   getMutationsByStatus,
   getPendingCount,
+  IN_FLIGHT_STALE_MS,
   type QueuedMutation,
   type ReplayResult,
   removeMutation,
   replayPendingMutations,
+  requeueStaleInFlight,
+  shouldRetryStatus,
 } from "./mutation-queue";
 // ─── React context provider ───────────────────────────────────
 export {

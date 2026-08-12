@@ -1,7 +1,5 @@
 "use client";
 
-import { toast } from "sonner";
-
 /**
  * Configuration for withOfflineQueue wrapper.
  */
@@ -45,6 +43,7 @@ export function withOfflineQueue<TData, TVariables>({
   method = "POST",
   bodyFn,
   queryKeys = [],
+  skipQueue = false,
   mutationFn,
 }: OfflineQueueConfig<TData, TVariables>) {
   return async function wrappedMutationFn(
@@ -61,7 +60,10 @@ export function withOfflineQueue<TData, TVariables>({
       };
     },
   ): Promise<TData> {
-    if (!context || context.isOnline) {
+    // skipQueue — never queue this mutation (e.g. file uploads, side
+    // effects that cannot be replayed): always delegate to mutationFn,
+    // even when offline.
+    if (skipQueue || !context || context.isOnline) {
       return mutationFn(variables);
     }
 
