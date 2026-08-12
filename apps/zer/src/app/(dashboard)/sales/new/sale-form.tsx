@@ -17,7 +17,6 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -189,6 +188,7 @@ export function SaleForm({
     handleSubmit,
     control,
     watch,
+    getValues,
     setValue,
     reset,
     formState: { errors },
@@ -243,25 +243,20 @@ export function SaleForm({
   const watchedStatus = watch("status");
   const watchedSplits = watch("payment_splits");
 
-  // Compute subtotals per row and grand total
-  const subtotals = useMemo(() => {
-    return (watchedItems ?? []).map(
-      (item) => Number(item.quantity || 0) * Number(item.unit_price || 0),
-    );
-  }, [watchedItems]);
-
-  const grandTotal = useMemo(
-    () => subtotals.reduce((sum, s) => sum + s, 0),
-    [subtotals],
+  // Compute subtotals per row and grand total. These are derived inline (not
+  // useMemo): react-hook-form's setValue() mutates nested form values in
+  // place, so watch("items") can return the same array reference after a
+  // nested field changes. A useMemo keyed on that reference would keep the
+  // totals frozen at their previous value (e.g. ₮ 0 after setting a price).
+  const subtotals = (watchedItems ?? []).map(
+    (item) => Number(item.quantity || 0) * Number(item.unit_price || 0),
   );
 
-  const totalPaid = useMemo(
-    () =>
-      (watchedSplits ?? []).reduce(
-        (sum, s) => sum + (Number(s.amount) || 0),
-        0,
-      ),
-    [watchedSplits],
+  const grandTotal = subtotals.reduce((sum, s) => sum + s, 0);
+
+  const totalPaid = (watchedSplits ?? []).reduce(
+    (sum, s) => sum + (Number(s.amount) || 0),
+    0,
   );
 
   const remaining = Math.max(0, grandTotal - totalPaid);
@@ -289,32 +284,28 @@ export function SaleForm({
     }
   }, [grandTotal, splitFields.length, watchedSplits, setValue]);
 
-  // Stock warnings per row
-  const stockWarnings = useMemo(() => {
-    return (watchedItems ?? []).map((item, index) => {
-      if (watchedStatus === "cancelled") return null;
-      // Check variant stock if a variant is selected
-      const variant = variantSelections[index];
-      if (variant) {
-        if (Number(item.quantity || 0) > Number(variant.current_stock ?? 0)) {
-          return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${variant.current_stock ?? 0} ширхэг)`;
-        }
-        return null;
-      }
-      const product = products.find((p) => p.id === item.product_id);
-      if (!product || product.current_stock === null) return null;
-      if (Number(item.quantity || 0) > product.current_stock) {
-        return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${product.current_stock} ${product.unit ?? "ширхэг"})`;
+  // Stock warnings per row. Derived inline for the same reason as the
+  // totals: watchedItems can keep its reference while nested fields change.
+  const stockWarnings = (watchedItems ?? []).map((item, index) => {
+    if (watchedStatus === "cancelled") return null;
+    // Check variant stock if a variant is selected
+    const variant = variantSelections[index];
+    if (variant) {
+      if (Number(item.quantity || 0) > Number(variant.current_stock ?? 0)) {
+        return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${variant.current_stock ?? 0} ширхэг)`;
       }
       return null;
-    });
-  }, [watchedItems, products, watchedStatus, variantSelections]);
+    }
+    const product = products.find((p) => p.id === item.product_id);
+    if (!product || product.current_stock === null) return null;
+    if (Number(item.quantity || 0) > product.current_stock) {
+      return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${product.current_stock} ${product.unit ?? "ширхэг"})`;
+    }
+    return null;
+  });
 
   // Any stock insufficient across all rows
-  const anyStockInsufficient = useMemo(
-    () => stockWarnings.some((w) => w !== null),
-    [stockWarnings],
-  );
+  const anyStockInsufficient = stockWarnings.some((w) => w !== null);
 
   // Shared optimistic-update logic: adds the sale to sales caches and
   // decrements product stock locally. Used by the online mutation (onMutate,
@@ -632,13 +623,13 @@ export function SaleForm({
       } else {
         // Revert to parent product's sale_price when variant is deselected
         const product = products.find(
-          (p) => p.id === watchedItems?.[index]?.product_id,
+          (p) => p.id === getValues(`items.${index}.product_id`),
         );
         setValue(`items.${index}.unit_price`, product?.sale_price ?? 0);
         setValue(`items.${index}.variant_id`, undefined);
       }
     },
-    [products, watchedItems, setValue],
+    [products, setValue, getValues],
   );
 
   const handleBarcodeScan = useCallback(
@@ -852,8 +843,8 @@ export function SaleForm({
                     </div>
                   </div>
 
-                  {/* Variant picker */}
-                  {productForRow && (
+                  {/* Variant picker (only for variant products) */}
+                  {productForRow?.has_variants && (
                     <div className="mt-1.5">
                       <VariantPicker
                         productId={productForRow.id}

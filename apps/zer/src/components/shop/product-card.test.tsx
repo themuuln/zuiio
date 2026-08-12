@@ -37,8 +37,9 @@ vi.mock("@/app/(dashboard)/shop/cart-context", () => ({
   }),
 }));
 // trackStock off => never out of stock, no max restriction.
+const mockTrackStock = { value: false };
 vi.mock("@/lib/org-settings-context", () => ({
-  useOrgSettings: () => ({ trackStock: false }),
+  useOrgSettings: () => ({ trackStock: mockTrackStock.value }),
 }));
 
 // Avoid Supabase/image network + IntersectionObserver in jsdom.
@@ -75,6 +76,7 @@ describe("ProductCard stepper", () => {
     mockUpdateQuantity.mockClear();
     mockRemoveItem.mockClear();
     mockAddItem.mockClear();
+    mockTrackStock.value = false;
   });
 
   it("shows add button when not in cart", () => {
@@ -119,5 +121,51 @@ describe("ProductCard stepper", () => {
     fireEvent.click(screen.getByLabelText("Хасах"));
     expect(mockUpdateQuantity).toHaveBeenCalledWith("p1", 2);
     expect(mockRemoveItem).not.toHaveBeenCalled();
+  });
+
+  it("clicking anywhere on the card adds to cart", () => {
+    render(
+      <ProductCard product={baseProduct} cartQuantity={0} variant="tile" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Сагсанд нэмэх/ }));
+    expect(mockAddItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        productId: "p1",
+        name: "Тест бүтээгдэхүүн",
+        unitPrice: 5000,
+      }),
+    );
+  });
+
+  it("Enter on the card adds to cart", () => {
+    render(
+      <ProductCard product={baseProduct} cartQuantity={0} variant="tile" />,
+    );
+    fireEvent.keyDown(screen.getByRole("button", { name: /Сагсанд нэмэх/ }), {
+      key: "Enter",
+    });
+    expect(mockAddItem).toHaveBeenCalled();
+  });
+
+  it("stepper clicks do not trigger the card-level add (no double add)", () => {
+    render(
+      <ProductCard product={baseProduct} cartQuantity={2} variant="tile" />,
+    );
+    fireEvent.click(screen.getByLabelText("Нэмэх"));
+    expect(mockUpdateQuantity).toHaveBeenCalledWith("p1", 3);
+    expect(mockAddItem).not.toHaveBeenCalled();
+  });
+
+  it("does not expose an add button role when out of stock", () => {
+    mockTrackStock.value = true;
+    render(
+      <ProductCard
+        product={{ ...baseProduct, current_stock: 0 }}
+        cartQuantity={0}
+        variant="tile"
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Сагсанд нэмэх/ })).toBeNull();
+    expect(screen.getAllByText("Дууссан").length).toBeGreaterThan(0);
   });
 });

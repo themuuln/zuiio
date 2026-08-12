@@ -27,7 +27,7 @@ export interface CurrencyOption {
   is_default: boolean;
 }
 
-const DEFAULT_CURRENCIES: CurrencyOption[] = [
+export const DEFAULT_CURRENCIES: CurrencyOption[] = [
   {
     id: "mnt",
     code: "MNT",

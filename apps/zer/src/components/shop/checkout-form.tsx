@@ -33,6 +33,7 @@ import {
 import {
   type CurrencyOption,
   CurrencySelector,
+  DEFAULT_CURRENCIES,
 } from "@/components/ui/currency-selector";
 import {
   Empty,
@@ -150,15 +151,9 @@ export function CheckoutForm({
     },
   });
 
-  // Fetch available currencies
-  const { data: currencies = [] } = useQuery({
-    queryKey: ["currencies"],
-    queryFn: async () => {
-      const response = await fetch("/api/currencies");
-      const result = await response.json();
-      return result.currencies ?? [];
-    },
-  });
+  // Currencies come from a static catalog — no /api/currencies endpoint
+  // exists (the old fetch 404'd on every checkout open).
+  const currencies = DEFAULT_CURRENCIES;
 
   // Customer state
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
@@ -552,6 +547,8 @@ export function CheckoutForm({
         return;
       }
       if (data?.saleId) {
+        toast.success("Борлуулалт амжилттай үүсгэгдлээ.");
+
         // Create delivery if delivery was enabled
         if (deliveryEnabled) {
           try {
@@ -816,7 +813,10 @@ export function CheckoutForm({
                     : "border-border hover:bg-muted/50",
                 )}
               >
-                <RadioGroupItem value={method.value} className="sr-only" />
+                <RadioGroupItem
+                  value={method.value}
+                  className="pointer-events-none absolute opacity-0 focus-visible:opacity-100"
+                />
                 <Icon
                   className={cn(
                     "size-5",

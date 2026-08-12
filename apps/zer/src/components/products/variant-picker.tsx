@@ -171,10 +171,17 @@ export function VariantPicker({
   const isCompleteSelection = !!groups && selectedCount === groups.length;
   const nextGroup = groups?.find((group) => !selections[group.id]);
 
-  // Notify parent when selection changes
+  // Notify parent when selection changes. The callback is held in a ref so an
+  // unstable parent identity (inline arrow, or a callback rebuilt each render)
+  // cannot re-trigger this effect and cause an infinite render loop.
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
+
   useEffect(() => {
     if (matchedVariant) {
-      onSelect({
+      onSelectRef.current({
         variant_id: matchedVariant.id,
         option_labels: matchedVariant.option_labels,
         option_ids: matchedVariant.option_ids,
@@ -185,8 +192,8 @@ export function VariantPicker({
       return;
     }
 
-    onSelect(null);
-  }, [matchedVariant, onSelect]);
+    onSelectRef.current(null);
+  }, [matchedVariant]);
 
   useEffect(() => {
     if (!groups || groups.length === 0) {
@@ -209,6 +216,11 @@ export function VariantPicker({
 
   // Don't render anything until near viewport
   if (!enabled) return <div ref={ref} className="h-0" />;
+
+  // Product has no variant groups (plain product, or variant config missing):
+  // there is nothing to pick, so render nothing instead of a broken
+  // "0/0, no variant found" panel.
+  if (!groups || groups.length === 0) return <div ref={ref} className="h-0" />;
 
   // Dialog mode: flat chip layout for use inside modals/drawers
   if (dialogMode) {
@@ -309,8 +321,6 @@ export function VariantPicker({
       </div>
     );
   }
-
-  if (!groups) return <div ref={ref} className="h-0" />;
 
   return (
     <div className="rounded-2xl border border-border/70 bg-muted/20 p-3.5">

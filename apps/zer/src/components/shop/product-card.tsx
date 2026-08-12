@@ -569,8 +569,22 @@ export const ProductCard = memo(function ProductCard({
       <div ref={detectorRef} className="h-0" />
 
       <Card
+        role={isOutOfStock ? undefined : "button"}
+        tabIndex={isOutOfStock ? undefined : 0}
+        aria-label={isOutOfStock ? undefined : `Сагсанд нэмэх: ${product.name}`}
+        onClick={isOutOfStock ? undefined : handleAddToCart}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleAddToCart();
+          }
+        }}
+        onPointerEnter={prefetchVariants}
         className={cn(
           "overflow-hidden transition-all",
+          !isOutOfStock &&
+            "cursor-pointer select-none hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
           isOutOfStock && "opacity-60",
           justAdded &&
             "ring-2 ring-primary/40 scale-[1.015] transition-transform",
