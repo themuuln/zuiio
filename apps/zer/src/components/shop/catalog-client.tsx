@@ -206,6 +206,8 @@ export function CatalogClient({
     RECENT_SEARCHES_KEY,
     [],
   );
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const recordSearch = (term: string) => {
     const q = term.trim();
@@ -358,7 +360,7 @@ export function CatalogClient({
   // Frequent items: derived client-side from add frequency (persisted in localStorage).
   // Shown only in the neutral browsing state (no search, no category filter).
   const frequentProducts = useMemo(() => {
-    if (debouncedQuery || selectedCategoryId) return [];
+    if (!mounted || debouncedQuery || selectedCategoryId) return [];
     const freq = getProductFrequency();
     const ranked = Object.entries(freq)
       .sort((a, b) => b[1] - a[1])
@@ -366,7 +368,7 @@ export function CatalogClient({
       .map(([id]) => allProducts.find((p) => p.id === id))
       .filter((p): p is ProductCardProduct => Boolean(p));
     return ranked;
-  }, [debouncedQuery, selectedCategoryId, allProducts]);
+  }, [mounted, debouncedQuery, selectedCategoryId, allProducts]);
 
   const isEmpty = allProducts.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;

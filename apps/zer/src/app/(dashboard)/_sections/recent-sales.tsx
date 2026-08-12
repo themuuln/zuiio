@@ -50,18 +50,18 @@ async function getRecentSales(
   // ⚠️ SERVICE ROLE — no RLS. Every query MUST filter by organizationId.
   const supabase = createServiceClient();
 
-  const { data } = await withBranchFilter(
-    withDbCapture(
-      "dashboard_recent_sales",
+  const { data } = await withDbCapture(
+    "dashboard_recent_sales",
+    withBranchFilter(
       supabase
         .from("sales")
         .select("id, total_amount, sale_date, status, contacts(name)")
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: false })
         .limit(5),
+      branchId,
+      isBranchScoped,
     ),
-    branchId,
-    isBranchScoped,
   );
 
   return (data as SaleRow[]) ?? [];

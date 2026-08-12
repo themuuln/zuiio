@@ -17,9 +17,9 @@ async function DataFetcher({
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
-  const { data: discounts } = await withBranchFilter(
-    withDbCapture(
-      "page:discounts discounts",
+  const { data: discounts } = await withDbCapture(
+    "page:discounts discounts",
+    withBranchFilter(
       supabase
         .from("discounts")
         .select(
@@ -27,10 +27,10 @@ async function DataFetcher({
         )
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: false }),
+      branchId,
+      isBranchScoped,
+      urlBranch,
     ),
-    branchId,
-    isBranchScoped,
-    urlBranch,
   );
   // Fetch conditions for each discount
   const discountIds = (discounts ?? []).map((d) => d.id);

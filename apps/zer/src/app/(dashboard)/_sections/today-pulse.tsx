@@ -25,31 +25,31 @@ export async function TodayPulse({
   const tomorrow = addDays(today, 1);
 
   const [salesResult, expensesResult, pendingResult] = await Promise.all([
-    withBranchFilter(
-      withDbCapture(
-        "dashboard_today_sales",
+    withDbCapture(
+      "dashboard_today_sales",
+      withBranchFilter(
         supabase
           .from("sales")
           .select("total_amount")
           .eq("organization_id", orgId)
           .gte("sale_date", today.toISOString())
           .lt("sale_date", tomorrow.toISOString()),
+        branchId,
+        isBranchScoped,
       ),
-      branchId,
-      isBranchScoped,
     ),
-    withBranchFilter(
-      withDbCapture(
-        "dashboard_today_expenses",
+    withDbCapture(
+      "dashboard_today_expenses",
+      withBranchFilter(
         supabase
           .from("expenses")
           .select("amount")
           .eq("organization_id", orgId)
           .gte("expense_date", today.toISOString())
           .lt("expense_date", tomorrow.toISOString()),
+        branchId,
+        isBranchScoped,
       ),
-      branchId,
-      isBranchScoped,
     ),
     (async () => {
       const result = await withDbCapture(

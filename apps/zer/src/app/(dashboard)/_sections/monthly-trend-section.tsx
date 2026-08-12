@@ -23,18 +23,18 @@ async function getMonthlyTrendData(
   const tomorrow = addDays(today, 1);
   const thirtyDaysAgo = subDays(today, 30);
 
-  const { data } = await withBranchFilter(
-    withDbCapture(
-      "dashboard_monthly_sales",
+  const { data } = await withDbCapture(
+    "dashboard_monthly_sales",
+    withBranchFilter(
       supabase
         .from("sales")
         .select("total_amount, sale_date")
         .eq("organization_id", organizationId)
         .gte("sale_date", thirtyDaysAgo.toISOString())
         .lt("sale_date", tomorrow.toISOString()),
+      branchId,
+      isBranchScoped,
     ),
-    branchId,
-    isBranchScoped,
   );
 
   return data ?? [];
