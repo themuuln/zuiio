@@ -2,6 +2,7 @@
 
 import {
   CheckCircle,
+  CopySimple,
   Envelope,
   FacebookLogo,
   Globe,
@@ -23,10 +24,10 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  checkCustomDomainDns,
   updatePublicProfile,
   verifyCustomDomain,
 } from "@/app/(dashboard)/settings/organization/actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/lib/compress-image";
+import { deriveDomainVerificationToken } from "@/lib/domain-verify";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 
@@ -222,6 +224,54 @@ function ImageUploadField({
   );
 }
 
+function CopyField({ value, label }: { value: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard unavailable (non-secure context) — value stays visible.
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <code className="block w-fit max-w-full break-all rounded-md bg-muted px-3 py-2 text-xs">
+        {value}
+      </code>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1 text-xs"
+        onClick={copy}
+      >
+        <CopySimple className="size-3.5" weight="bold" />
+        {copied ? "Хуулсан" : (label ?? "Хуулах")}
+      </Button>
+    </div>
+  );
+}
+
+function dnsRecordForDomain(domain: string): {
+  type: "A" | "CNAME";
+  name: string;
+  value: string;
+} {
+  const dots = domain.split(".").length - 1;
+  if (dots <= 1 && !domain.startsWith("www.")) {
+    return { type: "A", name: "@", value: "76.76.21.21" };
+  }
+  return {
+    type: "CNAME",
+    name: domain.split(".")[0],
+    value: "cname.vercel-dns.com",
+  };
+}
+
 export function PublicProfileSettings({
   slug,
   initialProfile,
@@ -229,13 +279,17 @@ export function PublicProfileSettings({
   slug: string;
   initialProfile?: PublicProfile | null;
 }) {
-  useOrgSettings();
+  const { organizationId } = useOrgSettings();
   const [state, formAction, isPending] = useActionState(
     updatePublicProfile,
     undefined,
   );
   const [verifyState, verifyFormAction, isVerifying] = useActionState(
     verifyCustomDomain,
+    undefined,
+  );
+  const [dnsState, dnsFormAction, isCheckingDns] = useActionState(
+    checkCustomDomainDns,
     undefined,
   );
   const formRef = useRef<HTMLFormElement>(null);
@@ -246,6 +300,9 @@ export function PublicProfileSettings({
   );
   const [bannerUrl, setBannerUrl] = useState<string | null>(
     initialProfile?.banner_url ?? null,
+  );
+  const [customDomainInput, setCustomDomainInput] = useState<string>(
+    initialProfile?.custom_domain ?? "",
   );
 
   // Business hours state
@@ -588,63 +645,122 @@ export function PublicProfileSettings({
                 id="custom_domain"
                 name="custom_domain"
                 placeholder="shop.mydomain.mn"
-                defaultValue={initialProfile?.custom_domain ?? ""}
+                value={customDomainInput}
+                onChange={(e) =>
+                  setCustomDomainInput(e.target.value.toLowerCase())
+                }
               />
               <p className="text-xs text-muted-foreground">
-                Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ энэ апп руу
-                чиглүүлж (CNAME эсвэл A бичлэг), доорх TXT бичлэгийг DNS
-                тохиргоондоо нэмээд "Баталгаажуулах" товчийг дарна уу.
+                Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ хадгалаад доорх
+                TXT бичлэгийг DNS тохиргоондоо нэмж, "Баталгаажуулах" товчийг
+                дарна уу.
               </p>
             </div>
-            <div className="space-y-2">
-              {initialProfile?.domain_verified ? (
-                <Badge variant="outline" className="text-emerald-600">
-                  <CheckCircle className="size-3" weight="fill" />
+
+            {/* Step 1 — TXT ownership */}
+            {customDomainInput.trim() && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  TXT бичлэг нэмнэ үү:
+                </p>
+                <CopyField
+                  value={`zer-verify=${deriveDomainVerificationToken(organizationId)}`}
+                  label="TXT хуулах"
+                />
+                <form action={verifyFormAction}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="sm"
+                    disabled={isVerifying}
+                  >
+                    {isVerifying ? (
+                      <>
+                        <Spinner className="size-3 animate-spin" />
+                        Шалгаж байна...
+                      </>
+                    ) : (
+                      "Баталгаажуулах"
+                    )}
+                  </Button>
+                </form>
+              </div>
+            )}
+            {verifyState?.vercelError && (
+              <p className="text-xs text-amber-600">
+                Домэйн баталгаажсан, гэхдээ Vercel-д холбоход алдаа гарлаа.
+                Доорх "DNS шалгах" товчийг дараад дахин оролдоно уу.
+              </p>
+            )}
+            {verifyState?.error && (
+              <p className="text-xs text-destructive">{verifyState.error}</p>
+            )}
+
+            {/* Step 2 — point DNS at Vercel */}
+            {(initialProfile?.domain_verified || verifyState?.verified) && (
+              <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                  <CheckCircle className="size-4" weight="fill" />
                   Домэйн баталгаажсан
-                </Badge>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Домэйн эзэмшиж буйгаа баталгаажуулахын тулд DNS TXT бичлэг
-                  нэмнэ үү:
                 </p>
-              )}
-              {verifyState?.token && (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    TXT бичлэгийн утга
+                {(() => {
+                  const verifiedDomain =
+                    initialProfile?.custom_domain?.trim().toLowerCase() ?? "";
+                  const record = verifiedDomain
+                    ? dnsRecordForDomain(verifiedDomain)
+                    : null;
+                  return record ? (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Одоо DNS бичлэгээ нэмээд Vercel рүү чиглүүлнэ үү:
+                      </p>
+                      <div className="space-y-1">
+                        <CopyField
+                          value={`${record.type} ${record.name} → ${record.value}`}
+                          label="Бичлэг хуулах"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {record.type === "A"
+                            ? "Дээрх A бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."
+                            : "Дээрх CNAME бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+                <form action={dnsFormAction}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="sm"
+                    disabled={isCheckingDns}
+                  >
+                    {isCheckingDns ? (
+                      <>
+                        <Spinner className="size-3 animate-spin" />
+                        Шалгаж байна...
+                      </>
+                    ) : (
+                      "DNS шалгах"
+                    )}
+                  </Button>
+                </form>
+                {dnsState?.live && (
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                    <CheckCircle className="size-3.5" weight="fill" />
+                    Холбогдсон ✓ Дэлгүүр таны домэйноор нээгдэж байна.
                   </p>
-                  <code className="block w-fit break-all rounded-md bg-muted px-3 py-2 text-xs">
-                    zer-verify={verifyState.token}
-                  </code>
-                </div>
-              )}
-              <form action={verifyFormAction}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="sm"
-                  disabled={isVerifying}
-                >
-                  {isVerifying ? (
-                    <>
-                      <Spinner className="size-3 animate-spin" />
-                      Шалгаж байна...
-                    </>
-                  ) : (
-                    "Баталгаажуулах"
-                  )}
-                </Button>
-              </form>
-              {verifyState?.verified && (
-                <p className="flex items-center gap-1 text-xs text-emerald-600">
-                  <CheckCircle className="size-3.5" weight="fill" />
-                  Домэйн амжилттай баталгаажуулсан.
-                </p>
-              )}
-              {verifyState?.error && (
-                <p className="text-xs text-destructive">{verifyState.error}</p>
-              )}
-            </div>
+                )}
+                {dnsState?.success && !dnsState?.live && (
+                  <p className="text-xs text-muted-foreground">
+                    DNS тархаж байна. Хэдэн минутын дараа дахин шалгана уу.
+                  </p>
+                )}
+                {dnsState?.error && (
+                  <p className="text-xs text-destructive">{dnsState.error}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <Separator />

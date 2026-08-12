@@ -1,5 +1,5 @@
 "use server";
-import { resolveTxt } from "node:dns/promises";
+import { resolve4, resolveCname, resolveTxt } from "node:dns/promises";
 import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireActionContext } from "@/lib/action-utils";
@@ -7,9 +7,19 @@ import {
   deriveDomainVerificationToken,
   expectedTxtValue,
   hasMatchingTxt,
+  isValidDomain,
 } from "@/lib/domain-verify";
 import { revalidateEntity } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
+import {
+  attachDomainToVercel,
+  type DnsRecord,
+  detachDomainFromVercel,
+  dnsRecordFor,
+  getVercelDomainStatus,
+  VERCEL_CNAME_TARGET,
+  VERCEL_EDGE_IP,
+} from "@/lib/vercel-domains";
 
 export type OrgSettingsState = {
   error?: string;
@@ -21,6 +31,22 @@ export type VerifyDomainState = {
   success?: boolean;
   verified?: boolean;
   token?: string;
+  vercelAttached?: boolean;
+  vercelError?: string;
+  dnsRecord?: DnsRecord;
+};
+
+export type CheckDnsState = {
+  error?: string;
+  success?: boolean;
+  pointing?: boolean;
+  vercelVerified?: boolean;
+  live?: boolean;
+  vercelConfigured?: boolean;
+  aRecords?: string[];
+  cname?: string | null;
+  expected?: string;
+  expectedCname?: string;
 };
 
 const DNS_RESOLVE_TIMEOUT_MS = 8000;
@@ -179,7 +205,13 @@ export async function updatePublicProfile(
 
   // Fetch the current profile so domain_verified is only preserved while
   // the custom domain is unchanged (verification is server-owned now).
-  const normalizedCustomDomain = customDomain?.toLowerCase() || null;
+  const rawCustomDomain = customDomain?.trim().toLowerCase() || null;
+  if (rawCustomDomain && !isValidDomain(rawCustomDomain)) {
+    return {
+      error: "Домэйн формат буруу байна. Жишээ: shop.mydomain.mn",
+    };
+  }
+  const normalizedCustomDomain = rawCustomDomain;
   const { data: existingProfile } = await withDbCapture(
     "updatePublicProfile: fetch existing",
     supabase
@@ -243,6 +275,20 @@ export async function updatePublicProfile(
     return { error: `Хадгалахад алдаа гарлаа: ${result.error.message}` };
   }
 
+  // The org changed its custom domain and the old one was verified —
+  // release it from the Vercel project so another org can claim it.
+  if (
+    existingCustomDomain &&
+    existingProfile?.domain_verified === true &&
+    existingCustomDomain !== normalizedCustomDomain
+  ) {
+    try {
+      await detachDomainFromVercel(existingCustomDomain);
+    } catch (e) {
+      capture(e, { context: "updatePublicProfile: detach old domain" });
+    }
+  }
+
   revalidateEntity("settings");
   return { success: true };
 }
@@ -297,14 +343,14 @@ export async function verifyCustomDomain(
       error: `DNS бичлэг шалгахад алдаа гарлаа: ${
         err instanceof Error ? err.message : "DNS query failed"
       }`,
-      token: expected,
+      token,
     };
   }
 
   if (!hasMatchingTxt(records, expected)) {
     return {
       error: `Баталгаажуулах TXT бичлэг олдсонгүй. Дараах утгыг нэмнэ үү: ${expected}`,
-      token: expected,
+      token,
     };
   }
 
@@ -320,10 +366,90 @@ export async function verifyCustomDomain(
     capture(updateError, { context: "verifyCustomDomain: update" });
     return {
       error: `Хадгалахад алдаа гарлаа: ${updateError.message}`,
-      token: expected,
+      token,
     };
   }
 
+  // Ownership proven — attach the domain to the Zer Vercel project so the
+  // storefront actually serves on it. Best-effort: verification stays
+  // recorded even if the attach fails (retried via the DNS check step).
+  const vercel = await attachDomainToVercel(domain);
+  const vercelAttached = vercel.configured && vercel.attached;
+
   revalidateEntity("settings");
-  return { success: true, verified: true, token: expected };
+  return {
+    success: true,
+    verified: true,
+    token,
+    dnsRecord: dnsRecordFor(domain),
+    vercelAttached,
+    vercelError:
+      vercel.configured && !vercel.attached ? vercel.error : undefined,
+  };
+}
+
+/**
+ * Checks whether the org's custom domain currently points at Vercel:
+ * resolves the A/CNAME records and compares them with Vercel's targets,
+ * then reads Vercel's own verification flag for the domain.
+ */
+export async function checkCustomDomainDns(
+  _prevState: CheckDnsState | undefined,
+  _formData: FormData,
+): Promise<CheckDnsState> {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("organization_public_profiles")
+    .select("custom_domain, domain_verified")
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  if (profileError) {
+    capture(profileError, { context: "checkCustomDomainDns: load profile" });
+    return { error: `Хадгалахад алдаа гарлаа: ${profileError.message}` };
+  }
+
+  const domain = profile?.custom_domain?.trim().toLowerCase();
+  if (!domain) {
+    return { error: "Эхлээд домэйнээ оруулна уу." };
+  }
+
+  let aRecords: string[] = [];
+  let cname: string | null = null;
+  try {
+    aRecords = await resolve4(domain);
+  } catch {
+    // No A record yet — possibly still propagating or using CNAME.
+  }
+  try {
+    const [cnameRecord] = await resolveCname(domain);
+    cname = cnameRecord ?? null;
+  } catch {
+    // No CNAME — expected for apex records.
+  }
+
+  const pointsAtVercel =
+    aRecords.includes(VERCEL_EDGE_IP) ||
+    cname?.toLowerCase() === VERCEL_CNAME_TARGET;
+
+  const vercel = await getVercelDomainStatus(domain);
+
+  return {
+    success: true,
+    aRecords,
+    cname,
+    expected: VERCEL_EDGE_IP,
+    expectedCname: VERCEL_CNAME_TARGET,
+    pointing: pointsAtVercel,
+    vercelConfigured: vercel.configured,
+    vercelVerified: vercel.configured ? vercel.verified : false,
+    live: pointsAtVercel && (vercel.configured ? vercel.verified : false),
+    error:
+      vercel.configured && !vercel.present
+        ? "Домэйн Vercel төсөлд холбогдоогүй байна. 'Баталгаажуулах' товчийг дахин дарна уу."
+        : undefined,
+  };
 }

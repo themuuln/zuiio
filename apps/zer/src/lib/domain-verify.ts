@@ -1,12 +1,13 @@
-import { createHash } from "node:crypto";
+import { sha1Hex } from "@/lib/sha1";
 
 /**
  * Deterministically derives the DNS TXT verification token for an
  * organization. The token is derived (never stored), so it can be
- * recomputed at any time from the organization id alone.
+ * recomputed at any time from the organization id alone. Pure JS so
+ * client components can display it without a server round-trip.
  */
 export function deriveDomainVerificationToken(organizationId: string): string {
-  return createHash("sha1").update(organizationId).digest("hex").slice(0, 12);
+  return sha1Hex(organizationId).slice(0, 12);
 }
 
 /**
@@ -36,4 +37,13 @@ export function hasMatchingTxt(records: string[][], expected: string): boolean {
   return flattenTxtRecords(records).some(
     (record) => record.trim() === expected,
   );
+}
+
+// One or more dot-separated labels; no protocol, port, path, or wildcard.
+const DOMAIN_RE =
+  /^(?=.{1,253}$)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+/** True when `domain` is a plausible bare hostname (e.g. shop.example.mn). */
+export function isValidDomain(domain: string): boolean {
+  return DOMAIN_RE.test(domain.trim().toLowerCase());
 }
