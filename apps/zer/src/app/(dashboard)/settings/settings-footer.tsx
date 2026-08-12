@@ -61,7 +61,7 @@ export function SettingsFooter() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Өөрчлөлтүүдийг хадгалах уу?</AlertDialogTitle>
-              <AlertDialogDescription render={<div />}>
+              <AlertDialogDescription>
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Дараах өөрчлөлтүүдийг хадгалах гэж байна:

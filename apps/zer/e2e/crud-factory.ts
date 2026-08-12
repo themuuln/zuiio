@@ -163,13 +163,23 @@ async function createEntity(
 ) {
   // Open create form
   if (config.create.type === "drawer") {
-    await openDrawerByText(page, config.create.triggerText!);
+    const triggerText = config.create.triggerText;
+    if (!triggerText) {
+      throw new Error(
+        `drawer create config missing triggerText (${config.name})`,
+      );
+    }
+    await openDrawerByText(page, triggerText);
   } else if (config.create.type === "dialog") {
     await page
       .locator(`button:has-text("${config.create.triggerText}")`)
       .click();
   } else if (config.create.type === "page") {
-    await page.goto(config.create.url!, { waitUntil: "domcontentloaded" });
+    const url = config.create.url;
+    if (!url) {
+      throw new Error(`page create config missing url (${config.name})`);
+    }
+    await page.goto(url, { waitUntil: "domcontentloaded" });
     return; // page-based creates handle their own flow
   }
   await page.waitForTimeout(1200);
@@ -230,7 +240,13 @@ export function createCrudTests(config: EntityConfig) {
       if (config.createFields.length === 0) {
         // List-only entity: just verify drawer opens
         if (config.create.type === "drawer") {
-          await openDrawerByText(page, config.create.triggerText!);
+          const triggerText = config.create.triggerText;
+          if (!triggerText) {
+            throw new Error(
+              `drawer create config missing triggerText (${config.name})`,
+            );
+          }
+          await openDrawerByText(page, triggerText);
           await page.waitForTimeout(1000);
           // Verify drawer opened by checking for submit button or title
           await expect(page.getByText(config.submitText).first())

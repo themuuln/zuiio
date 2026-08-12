@@ -1,15 +1,8 @@
-import { setMaxListeners } from "node:events";
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    // Next 16.3.0 attaches ~11 close listeners to each per-request
-    // ServerResponse (internals + middleware + instrumentation); the count
-    // resets per request and is not a leak (vercel/next.js discussion
-    // #96973). Raise the per-instance default so dev logs stay quiet —
-    // process.setMaxListeners() only covers the process emitter, not
-    // ServerResponse instances.
-    setMaxListeners(20);
+    process.setMaxListeners?.(20);
 
     // ── Patch console.error to suppress EPIPE storms ────────────
     // Next.js DevTools' console interceptor can create an infinite

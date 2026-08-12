@@ -2,9 +2,7 @@
   "mcpServers": {
     "next-devtools": {
       "command": "npx",
-      "args": [
-        "next-devtools-mcp"
-      ],
+      "args": ["next-devtools-mcp"],
       "enabled": false
     },
     "vercel": {
@@ -17,10 +15,7 @@
     },
     "github": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_TOKEN": "{GITHUB_TOKEN}"
       },
@@ -28,9 +23,7 @@
     },
     "sentry": {
       "command": "npx",
-      "args": [
-        "@sentry/mcp-server@latest"
-      ],
+      "args": ["@sentry/mcp-server@latest"],
       "env": {
         "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
       },
@@ -42,24 +35,15 @@
     },
     "react-grab-mcp": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@react-grab/mcp",
-        "--stdio"
-      ]
+      "args": ["-y", "@react-grab/mcp", "--stdio"]
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
+      "args": ["@playwright/mcp@latest"]
     },
     "shadcn": {
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ],
+      "args": ["shadcn@latest", "mcp"],
       "enabled": false
     }
   }

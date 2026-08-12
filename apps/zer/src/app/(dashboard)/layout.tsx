@@ -3,17 +3,6 @@ import { DashboardFetcher } from "./dashboard-fetcher";
 import { DashboardShellSkeleton } from "./dashboard-shell-skeleton";
 
 /**
- * The dashboard is auth-gated, cookie-dependent, and fully dynamic — it can
- * never render an instant static shell, and its client components depend on
- * root-layout contexts (QueryClient, i18n, theme) that are not re-rendered
- * below the shared layout during client navigations. Opt out of Cache
- * Components instant validation so navigations into the dashboard fall back
- * to the normal blocking render instead of erroring the dev log with
- * "Could not validate `instant`".
- */
-export const instant = false;
-
-/**
  * Dashboard layout — renders a shell skeleton immediately while
  * DashboardFetcher resolves auth, profile, org, and branch data.
  *
