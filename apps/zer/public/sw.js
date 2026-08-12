@@ -70,6 +70,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Local development (plain http on localhost/LAN/Tailscale hosts) must not
+  // be intercepted: cache-first static + SWR navigation caching serve stale
+  // HTML/JS bundles after Turbopack recompiles, producing phantom hydration
+  // and render errors in dev logs. Production is always https and keeps the
+  // full PWA cache behavior.
+  if (self.location.protocol === "http:") return;
+
   const { request } = event;
 
   // API requests — network-first, serve cached copy while refreshing in bg

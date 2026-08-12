@@ -87,10 +87,14 @@ export async function updateSession(request: NextRequest) {
 
   // Allow public storefront pages on the default domain (/{slug} and its
   // storefront subpaths) — resolved against organizations.slug so
-  // dashboard routes never match. Only consulted for anonymous visitors.
-  const isStorefrontRoute = !userId
-    ? await isPublicStorefrontPath(supabase, request.nextUrl.pathname)
-    : false;
+  // dashboard routes never match. Only consulted for anonymous visitors on
+  // non-public routes: public pages (/login, /landing, /offline, …) are
+  // already allowed through, so a DB lookup for them is wasted work (and a
+  // remote round-trip on every page load in dev).
+  const isStorefrontRoute =
+    !userId && !isPublicRoute && !isShareRoute && !isCronRoute
+      ? await isPublicStorefrontPath(supabase, request.nextUrl.pathname)
+      : false;
 
   if (
     !userId &&

@@ -544,6 +544,20 @@ describe("updateSession — custom domains", () => {
     expect(mockNextResponseRewrite).not.toHaveBeenCalled();
   });
 
+  it("does not treat local dev hosts (IP literals) as custom domains", async () => {
+    // 127.0.0.1:3000 / LAN / Tailscale IPs can never be verified custom
+    // domains — the domain-resolve fetch must not fire for them (it would
+    // 404 on every dev request).
+    for (const host of ["127.0.0.1:3000", "192.168.1.126", "100.102.22.106"]) {
+      const req = createMockRequest("/", "", {}, host);
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+    }
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
   it("does not rewrite when domain-resolve returns not found", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
     const req = createMockRequest("/", "", {}, "unknown.example.com");
