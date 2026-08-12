@@ -27,7 +27,7 @@ export function BrandingDrawer({ initialConfig }: BrandingDrawerProps) {
       open={open}
       onOpenChange={setOpen}
       title="Брэндинг"
-      description="Байгууллагын өнгө, загвар, лого тохируулах"
+      description="Байгууллагын өнгө, загвар, лого — нийтийн хуудас болон самбарт хэрэгжинэ"
       panelWidth="42rem"
       trigger={
         <Button variant="outline" size="sm">

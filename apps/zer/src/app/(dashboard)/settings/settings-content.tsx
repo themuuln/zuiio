@@ -730,7 +730,8 @@ export function SettingsContent() {
         <CardHeader>
           <CardTitle>Брэндинг</CardTitle>
           <CardDescription>
-            Байгууллагын өнгө, загвар, лого тохируулах
+            Байгууллагын өнгө, загвар, лого — нийтийн хуудас болон самбарт
+            хэрэгжинэ
           </CardDescription>
         </CardHeader>
         <CardContent>

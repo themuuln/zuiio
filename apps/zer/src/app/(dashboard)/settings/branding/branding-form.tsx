@@ -40,13 +40,21 @@ type BrandingFormProps = {
   initialConfig: BrandConfig;
 };
 
+/** shadcn-style discrete radius steps for the public page + dashboard. */
+const RADIUS_PRESETS = [0, 0.25, 0.5, 0.75, 1] as const;
+
+function presetLabel(value: number): string {
+  return value === 0
+    ? "0"
+    : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
 export function BrandingForm({ initialConfig }: BrandingFormProps) {
   const [selectedTheme, setSelectedTheme] = useState(initialConfig.theme);
   const [radius, setRadius] = useState(initialConfig.radius);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialConfig.logo_url);
   const [uploading, setUploading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [showAllThemes, setShowAllThemes] = useState(false);
 
   // Custom color overrides
   const [customColors, setCustomColors] = useState<{
@@ -76,13 +84,6 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
     if (key === "--accent" && customColors.accent) return customColors.accent;
     return activeTheme?.light[key] ?? "";
   }
-  const zuiioTheme = BRAND_THEMES.find((t) => t.name === "zuiio");
-  const advancedThemes = BRAND_THEMES.filter((t) => t.name !== "zuiio");
-  const VISIBLE_ADVANCED = 6;
-  const hasMoreThemes = advancedThemes.length > VISIBLE_ADVANCED;
-  const visibleThemes = showAllThemes
-    ? advancedThemes
-    : advancedThemes.slice(0, VISIBLE_ADVANCED);
 
   function resetToDefault() {
     setSelectedTheme("zuiio");
@@ -213,78 +214,48 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      {/* Theme Selector */}
+      {/* Base color */}
       <Card>
         <CardHeader>
-          <CardTitle>Суурь сэдэв</CardTitle>
+          <CardTitle>Суурь өнгө</CardTitle>
           <CardDescription>
-            Байгууллагын брэнд өнгөнд тохирсон суурь сэдэв сонгох. Энэ нь
-            дэвсгэр, хүрээ, хажуу самбарын өнгүүдийг тодорхойлно.
+            Брэнд өнгөндөө тохирсон суурь өнгийг сонгох. Энэ нь нийтийн хуудас
+            болон самбарын товч, тодруулга, хүрээний өнгүүдийг тодорхойлно.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Zuiio default — prominent card */}
-          {zuiioTheme && (
-            <button
-              type="button"
-              onClick={() => setSelectedTheme("zuiio")}
-              className={cn(
-                "flex w-full items-center gap-4 rounded-lg border-2 p-4 text-left transition-colors hover:bg-accent",
-                selectedTheme === "zuiio"
-                  ? "border-primary ring-2 ring-primary"
-                  : "border-muted",
-              )}
-            >
-              <div className="flex -space-x-2">
-                <div
-                  className="size-8 rounded-full border-2 border-background"
-                  style={{ backgroundColor: zuiioTheme.light["--primary"] }}
-                />
-                <div
-                  className="size-8 rounded-full border-2 border-background"
-                  style={{ backgroundColor: zuiioTheme.light["--secondary"] }}
-                />
-                <div
-                  className="size-8 rounded-full border-2 border-background"
-                  style={{ backgroundColor: zuiioTheme.light["--accent"] }}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold">Zuiio стандарт</p>
-                <p className="text-xs text-muted-foreground">
-                  Зүйо брэндийн анхны өнгө. Энэ бол стандарт тохиргоо.
-                </p>
-              </div>
-              {selectedTheme === "zuiio" && (
-                <Check className="size-5 shrink-0 text-primary" />
-              )}
-            </button>
-          )}
-
-          {/* Advanced presets */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {visibleThemes.map((theme) => (
-              <ThemeCard
-                key={theme.name}
-                theme={theme}
-                selected={selectedTheme === theme.name}
-                onSelect={() => setSelectedTheme(theme.name)}
-              />
-            ))}
+        <CardContent>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+            {BRAND_THEMES.map((theme) => {
+              const selected = selectedTheme === theme.name;
+              const light = theme.light["--primary"] ?? "";
+              const dark = theme.dark["--primary"] ?? "";
+              return (
+                <button
+                  key={theme.name}
+                  type="button"
+                  onClick={() => setSelectedTheme(theme.name)}
+                  aria-pressed={selected}
+                  className={cn(
+                    "group flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-colors hover:bg-accent",
+                    selected
+                      ? "border-primary ring-2 ring-primary"
+                      : "border-muted",
+                  )}
+                >
+                  <span
+                    className="size-9 rounded-full border shadow-sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${light} 0 50%, ${dark} 50% 100%)`,
+                    }}
+                  />
+                  <span className="text-xs font-medium">{theme.label}</span>
+                  {selected && (
+                    <Check className="size-4 shrink-0 text-primary" />
+                  )}
+                </button>
+              );
+            })}
           </div>
-
-          {/* Progressive disclosure toggle */}
-          {hasMoreThemes && (
-            <button
-              type="button"
-              onClick={() => setShowAllThemes((v) => !v)}
-              className="w-full rounded-md border border-dashed p-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              {showAllThemes
-                ? "Хураах"
-                : `Бусад сэдвүүд (${advancedThemes.length - VISIBLE_ADVANCED})`}
-            </button>
-          )}
         </CardContent>
       </Card>
 
@@ -397,38 +368,46 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
         <CardHeader>
           <CardTitle>Булангийн радиус</CardTitle>
           <CardDescription>
-            Элементүүдийн булангийн дугуйрлыг тохируулах
+            Товч, карт зэрэг элементүүдийн булангийн дугуйрлыг сонгох
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min={0}
-              max={1.5}
-              step={0.0625}
-              value={radius}
-              onChange={(e) => setRadius(parseFloat(e.target.value))}
-              className="flex-1 h-2 cursor-pointer appearance-none rounded-full bg-muted accent-primary
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-grab
-                [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow-sm [&::-moz-range-thumb]:cursor-grab"
-            />
-            <span className="w-16 text-right text-sm tabular-nums text-muted-foreground">
-              {radius.toFixed(3)}rem
-            </span>
+          <div className="grid grid-cols-5 gap-2">
+            {RADIUS_PRESETS.map((preset) => {
+              const selected = radius === preset;
+              return (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setRadius(preset)}
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors hover:bg-accent",
+                    selected
+                      ? "border-primary ring-2 ring-primary"
+                      : "border-muted",
+                  )}
+                >
+                  <span
+                    className="size-6 border"
+                    style={{
+                      backgroundColor: mergedLight("--primary"),
+                      borderRadius: `${Math.max(preset * 0.8, 0.05)}rem`,
+                    }}
+                  />
+                  <span className="text-xs tabular-nums">
+                    {presetLabel(preset)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <div className="flex gap-3">
-            {[0.6, 0.8, 1].map((mult) => (
-              <div
-                key={mult}
-                className="size-12 border"
-                style={{
-                  backgroundColor: mergedLight("--primary"),
-                  borderRadius: `${radius * mult}rem`,
-                }}
-              />
-            ))}
-          </div>
+          {!RADIUS_PRESETS.some((p) => p === radius) && (
+            <p className="text-xs text-muted-foreground">
+              Одоогийн хэмжээ: {radius.toFixed(3)}rem — дээрхээс сонгож
+              шинэчилнэ үү.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -551,43 +530,6 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
   );
 }
 
-function ThemeCard({
-  theme,
-  selected,
-  onSelect,
-}: {
-  theme: BrandTheme;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-colors hover:bg-accent",
-        selected && "border-primary ring-2 ring-primary",
-      )}
-    >
-      <div className="flex -space-x-1.5">
-        <div
-          className="size-5 rounded-full border"
-          style={{ backgroundColor: theme.light["--primary"] }}
-        />
-        <div
-          className="size-5 rounded-full border"
-          style={{ backgroundColor: theme.light["--secondary"] }}
-        />
-        <div
-          className="size-5 rounded-full border"
-          style={{ backgroundColor: theme.light["--accent"] }}
-        />
-      </div>
-      <span className="text-xs font-medium">{theme.label}</span>
-    </button>
-  );
-}
-
 function LivePreview({
   theme,
   radius,
@@ -621,6 +563,7 @@ function LivePreview({
   const m = theme.light["--muted"] ?? "";
   const mfg = theme.light["--muted-foreground"] ?? "";
   const d = theme.light["--destructive"] ?? "";
+  const cardBg = theme.light["--card"] ?? "#fff";
 
   return (
     <div className="space-y-4">
@@ -633,41 +576,73 @@ function LivePreview({
         <Swatch label="Destructive" bg={d} fg={pfg} radius={radius} />
       </div>
 
-      {/* Buttons */}
-      <div className="flex flex-wrap gap-3">
-        <PreviewButton bg={p} fg={pfg} radius={radius}>
-          Товч
-        </PreviewButton>
-        <PreviewButton bg={s} fg={sfg} radius={radius}>
-          Хоёрдогч
-        </PreviewButton>
-        <PreviewButton bg="transparent" fg={mfg} radius={radius} border={m}>
-          Хүрээт
-        </PreviewButton>
-        <PreviewButton bg={d} fg={pfg} radius={radius}>
-          Устгах
-        </PreviewButton>
-      </div>
-
-      {/* Cards */}
-      <div className="grid grid-cols-2 gap-3 rounded-lg border p-4">
+      {/* Storefront mockup — mirrors how the public page will look */}
+      <div
+        className="overflow-hidden border shadow-sm"
+        style={{ borderRadius: `${radius}rem`, borderColor: m }}
+      >
+        {/* Banner */}
         <div
-          className="rounded-lg border bg-[var(--card-bg,#fff)] p-3 text-[var(--card-fg,#000)] shadow-sm"
-          style={{ borderRadius: `${radius}rem` }}
+          className="h-14 w-full"
+          style={{
+            background: `linear-gradient(135deg, ${p}33, ${p}11)`,
+          }}
+        />
+        {/* Header */}
+        <div
+          className="flex items-center justify-between gap-3 px-4 py-3"
+          style={{ backgroundColor: cardBg }}
         >
-          <p className="text-sm font-medium">Card title</p>
-          <p className="text-xs text-muted-foreground">
-            Картын агуулга энд харагдана.
-          </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="flex size-10 shrink-0 items-center justify-center text-sm font-bold"
+              style={{
+                backgroundColor: p,
+                color: pfg,
+                borderRadius: `${radius * 0.8}rem`,
+              }}
+            >
+              Д
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Таны дэлгүүр</p>
+              <p className="truncate text-xs" style={{ color: mfg }}>
+                Жижиглэн худалдаа
+              </p>
+            </div>
+          </div>
+          <PreviewButton bg={p} fg={pfg} radius={radius} className="shrink-0">
+            Сагс
+          </PreviewButton>
         </div>
+        {/* Products */}
         <div
-          className="rounded-lg border bg-[var(--card-bg,#fff)] p-3 text-[var(--card-fg,#000)] shadow-sm"
-          style={{ borderRadius: `${radius}rem` }}
+          className="grid grid-cols-2 gap-3 p-4"
+          style={{ backgroundColor: cardBg }}
         >
-          <p className="text-sm font-medium">Card title</p>
-          <p className="text-xs text-muted-foreground">
-            Картын агуулга энд харагдана.
-          </p>
+          {["Бүтээгдэхүүн 1", "Бүтээгдэхүүн 2"].map((title) => (
+            <div
+              key={title}
+              className="overflow-hidden border"
+              style={{ borderRadius: `${radius}rem`, borderColor: m }}
+            >
+              <div className="h-16 w-full" style={{ backgroundColor: m }} />
+              <div className="space-y-2 p-3">
+                <p className="text-xs font-medium">{title}</p>
+                <p className="text-sm font-semibold" style={{ color: p }}>
+                  ₮ 45,000
+                </p>
+                <PreviewButton
+                  bg={p}
+                  fg={pfg}
+                  radius={radius}
+                  className="w-full"
+                >
+                  Дэлгэрэнгүй
+                </PreviewButton>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -704,18 +679,20 @@ function PreviewButton({
   fg,
   radius,
   border,
+  className,
   children,
 }: {
   bg: string;
   fg: string;
   radius: number;
   border?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      className="px-4 py-2 text-sm font-medium"
+      className={cn("px-4 py-2 text-sm font-medium", className)}
       style={{
         backgroundColor: bg,
         color: fg,

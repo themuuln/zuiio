@@ -1,13 +1,16 @@
 import Script from "next/script";
 import { StorefrontAiChat } from "@/components/storefront/ai-chat/ai-chat-widget";
+import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
 import { createClient } from "@/lib/supabase/server";
 
 /**
  * Public storefront layout.
  *
- * Injects per-organization GA4 + Meta Pixel scripts when the org has
- * configured them in organization settings, and mounts the AI shopping
- * assistant widget. Dashboard/admin pages never render this layout.
+ * Injects the org's brand theme (colors, radius, fonts) so branding
+ * configured in Settings → Брэндинг applies to public pages, injects
+ * per-organization GA4 + Meta Pixel scripts when the org has configured
+ * them, and mounts the AI shopping assistant widget. Dashboard/admin
+ * pages never render this layout.
  *
  * The analytics columns (ga_measurement_id, meta_pixel_id) were added in a
  * migration that is not applied on every environment — they are queried in
@@ -27,10 +30,14 @@ export default async function StorefrontLayout({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, public_profile:organization_public_profiles(display_name)",
+      "id, name, brand_config, public_profile:organization_public_profiles(display_name)",
     )
     .eq("slug", slug)
     .maybeSingle();
+
+  const brandCSS = generateBrandCSS(
+    (org?.brand_config ?? null) as BrandConfig | null,
+  );
 
   // organization_public_profiles is 1:1 with organizations, but PostgREST
   // may still return an array shape; normalize defensively.
@@ -65,6 +72,13 @@ export default async function StorefrontLayout({
 
   return (
     <>
+      {brandCSS && (
+        <style
+          id="brand-theme"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated CSS from brand config
+          dangerouslySetInnerHTML={{ __html: brandCSS }}
+        />
+      )}
       {gaId && (
         <>
           <Script
