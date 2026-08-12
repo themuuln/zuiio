@@ -24,6 +24,7 @@ import {
   Package,
   Percent,
   Robot,
+  ShoppingCart,
   Sparkle,
   Storefront,
   Tag,
@@ -76,6 +77,7 @@ function navGroup(labelKey: MessageKey, items: NavItem[]): NavGroup {
 export const navGroups: NavGroup[] = [
   navGroup("nav.group.main", [navItem("nav.dashboard", "/", House)]),
   navGroup("nav.group.operations", [
+    navItem("nav.pos", "/pos", ShoppingCart, "sales"),
     navItem("nav.sales", "/sales", CurrencyDollar, "sales"),
     navItem("nav.shop", "/shop", Storefront, "shop"),
     navItem("nav.expenses", "/expenses", CreditCard, "expenses"),
