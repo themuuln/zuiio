@@ -8,4 +8,6 @@ export {
   type ReplayResult,
   removeMutation,
   replayPendingMutations,
+  requeueStaleInFlight,
+  shouldRetryStatus,
 } from "@zuiio/offline";

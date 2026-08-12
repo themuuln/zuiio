@@ -210,16 +210,145 @@ describe("replayPendingMutations", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/organizations/org-1/customers",
-      {
+      expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
         body: JSON.stringify({ name: "Alice" }),
-      },
+        credentials: "same-origin",
+      }),
     );
     expect(onInvalidate).toHaveBeenCalledWith([["customers"], ["vehicles"]]);
 
     const completed = await getMutationsByStatus("completed");
     expect(completed.map((m) => m.id)).toEqual([id]);
+  });
+
+  it("auto-generates an idempotency key when none is supplied", async () => {
+    const onInvalidate = vi.fn();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const id = await enqueueMutation({
+      endpoint: "/api/organizations/org-1/customers",
+      method: "POST",
+      body: { name: "Alice" },
+      queryKeysToInvalidate: [],
+    });
+
+    await replayPendingMutations(onInvalidate);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/organizations/org-1/customers",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "Idempotency-Key": id,
+        }),
+      }),
+    );
+  });
+
+  it("recovers a stale in-flight mutation (killed tab) and replays it", async () => {
+    const onInvalidate = vi.fn();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { id } = await seedMutation({
+      status: "in-flight",
+      inFlightAt: Date.now() - 60_000,
+      idempotencyKey: "stale-1",
+    });
+
+    await expect(replayPendingMutations(onInvalidate)).resolves.toEqual({
+      completed: 1,
+      failed: 0,
+      errors: [],
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const completed = await getMutationsByStatus("completed");
+    expect(completed.map((m) => m.id)).toEqual([id]);
+  });
+
+  it("does not requeue a fresh in-flight mutation (concurrent replay guard)", async () => {
+    const onInvalidate = vi.fn();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { id } = await seedMutation({
+      status: "in-flight",
+      inFlightAt: Date.now(),
+      idempotencyKey: "fresh-1",
+    });
+
+    await expect(replayPendingMutations(onInvalidate)).resolves.toEqual({
+      completed: 0,
+      failed: 0,
+      errors: [],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    const stillInFlight = await getMutationsByStatus("in-flight");
+    expect(stillInFlight.map((m) => m.id)).toEqual([id]);
+  });
+
+  it("fails a 4xx mutation immediately without retrying it", async () => {
+    const onInvalidate = vi.fn();
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => "Unauthorized",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const id = await enqueueMutation({
+      endpoint: "/api/organizations/org-1/customers",
+      method: "POST",
+      body: { name: "Alice" },
+      queryKeysToInvalidate: [],
+    });
+
+    await expect(replayPendingMutations(onInvalidate)).resolves.toEqual({
+      completed: 0,
+      failed: 1,
+      errors: [{ id, error: "HTTP 401: Unauthorized" }],
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const failed = await getMutationsByStatus("failed");
+    expect(failed.map((m) => m.id)).toEqual([id]);
+  });
+
+  it("retries network failures (no status) up to max retries", async () => {
+    const onInvalidate = vi.fn();
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await enqueueMutation({
+      endpoint: "/api/organizations/org-1/customers",
+      method: "POST",
+      body: { name: "Alice" },
+      queryKeysToInvalidate: [],
+    });
+
+    await replayPendingMutations(onInvalidate);
+    await replayPendingMutations(onInvalidate);
+    await expect(replayPendingMutations(onInvalidate)).resolves.toEqual({
+      completed: 0,
+      failed: 1,
+      errors: [{ id: expect.any(String), error: "Failed to fetch" }],
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it("sends the idempotency key and omits the body when it is null", async () => {

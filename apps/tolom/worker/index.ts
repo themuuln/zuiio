@@ -55,6 +55,45 @@ interface QueuedMutationRow {
   maxRetries: number;
   error?: string;
   idempotencyKey?: string;
+  inFlightAt?: number;
+}
+
+/** An in-flight mutation older than this is presumed stranded (killed tab/SW). */
+const IN_FLIGHT_STALE_MS = 30_000;
+
+/** Whether an HTTP status should be retried (mirrors the app engine). */
+function shouldRetryStatus(status: number | undefined): boolean {
+  if (status === undefined) return true; // network failure
+  if (status === 408 || status === 429) return true;
+  return status >= 500;
+}
+
+/** Atomically claim a pending mutation for replay (pending → in-flight). */
+async function claimRecord(
+  db: IDBDatabase,
+  id: string,
+): Promise<QueuedMutationRow | null> {
+  // One readwrite transaction — get + put are atomic, so the app and the
+  // service worker cannot both claim the same mutation.
+  const tx = db.transaction(QUEUE_STORE, "readwrite");
+  const { promise, resolve, reject } =
+    Promise.withResolvers<QueuedMutationRow | null>();
+  const getReq = tx.objectStore(QUEUE_STORE).get(id);
+  getReq.onsuccess = () => {
+    const record = getReq.result as QueuedMutationRow | undefined;
+    if (record?.status !== "pending") {
+      resolve(null);
+      return;
+    }
+    record.status = "in-flight";
+    record.inFlightAt = Date.now();
+    const putReq = tx.objectStore(QUEUE_STORE).put(record);
+    putReq.onsuccess = () => resolve(record);
+    putReq.onerror = () => reject(putReq.error);
+  };
+  getReq.onerror = () => reject(getReq.error);
+  tx.oncomplete = () => resolve(null); // no-op if already resolved
+  return promise;
 }
 
 function openQueueDb(): Promise<IDBDatabase> {
@@ -71,6 +110,16 @@ function getPending(db: IDBDatabase): Promise<QueuedMutationRow[]> {
   const tx = db.transaction(QUEUE_STORE, "readonly");
   const index = tx.objectStore(QUEUE_STORE).index("status");
   const req = index.getAll("pending");
+  req.onsuccess = () => resolve((req.result ?? []) as QueuedMutationRow[]);
+  req.onerror = () => reject(req.error);
+  return promise;
+}
+
+function getAllRecords(db: IDBDatabase): Promise<QueuedMutationRow[]> {
+  const { promise, resolve, reject } =
+    Promise.withResolvers<QueuedMutationRow[]>();
+  const tx = db.transaction(QUEUE_STORE, "readonly");
+  const req = tx.objectStore(QUEUE_STORE).getAll();
   req.onsuccess = () => resolve((req.result ?? []) as QueuedMutationRow[]);
   req.onerror = () => reject(req.error);
   return promise;
@@ -129,6 +178,20 @@ async function replayMutations(): Promise<{
 }> {
   const db = await openQueueDb();
   try {
+    // Recover mutations stranded in-flight by a killed tab/SW. Idempotency
+    // keys make the replayed request safe against double-application.
+    const all = await getAllRecords(db);
+    const stale = all.filter(
+      (m) =>
+        m.status === "in-flight" &&
+        Date.now() - (m.inFlightAt ?? m.createdAt) > IN_FLIGHT_STALE_MS,
+    );
+    for (const m of stale) {
+      m.status = "pending";
+      delete m.inFlightAt;
+      await putRecord(db, m);
+    }
+
     const pending = (await getPending(db)).sort(
       (a, b) => a.createdAt - b.createdAt,
     );
@@ -149,28 +212,39 @@ async function replayMutations(): Promise<{
         continue;
       }
 
-      try {
-        await setStatus(db, mutation.id, "in-flight");
+      // Atomic claim — skip if the app (or another replay) took it first.
+      const claimed = await claimRecord(db, mutation.id);
+      if (!claimed) continue;
 
+      try {
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
-        if (mutation.idempotencyKey) {
-          headers["Idempotency-Key"] = mutation.idempotencyKey;
+        if (claimed.idempotencyKey) {
+          headers["Idempotency-Key"] = claimed.idempotencyKey;
         }
 
-        const res = await fetch(mutation.endpoint, {
-          method: mutation.method,
+        const res = await fetch(claimed.endpoint, {
+          method: claimed.method,
           headers,
-          body: mutation.body ? JSON.stringify(mutation.body) : undefined,
+          body: claimed.body ? JSON.stringify(claimed.body) : undefined,
           credentials: "same-origin",
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const message = `HTTP ${res.status}`;
+          if (!shouldRetryStatus(res.status)) {
+            // Permanent client error — fail now, don't burn retries.
+            await setStatus(db, claimed.id, "failed", message);
+            failed += 1;
+            continue;
+          }
+          throw new Error(message);
+        }
 
-        await deleteRecord(db, mutation.id);
+        await deleteRecord(db, claimed.id);
         completed += 1;
-        queryKeys.push(...(mutation.queryKeysToInvalidate ?? []));
+        queryKeys.push(...(claimed.queryKeysToInvalidate ?? []));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (mutation.retries + 1 >= mutation.maxRetries) {
