@@ -55,7 +55,7 @@ export function LeaveOrganizationDialog({
             <WarningCircle className="size-5 text-destructive" />
             Байгууллагаас гарах
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
+          <AlertDialogDescription render={<div />} className="space-y-3">
             <p>
               Та байгууллагаас гарснаар <strong>{orgName}</strong>-ын бүх
               өгөгдөлд хандах боломжгүй болно. Шинээр байгууллага үүсгэн ажиллаж
