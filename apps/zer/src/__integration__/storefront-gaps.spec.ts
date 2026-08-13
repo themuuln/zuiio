@@ -697,3 +697,76 @@ describe("get_public_promotions + estimated_delivery_hours", () => {
     expect(profile?.estimated_delivery_hours).toBe(4);
   });
 });
+
+describe("get_public_branches (pickup locations)", () => {
+  const admin = createAdminClient();
+
+  it("returns the org's branches with name/address/phone", async () => {
+    const { org, branchId } = await setupStorefront(admin);
+    const { error: updateError } = await admin
+      .from("branches")
+      .update({ address: "УБ, СБД, 1-р хороо", phone: "99110000" })
+      .eq("id", branchId);
+    if (updateError) throw updateError;
+
+    const { data, error } = (await createAnonClient().rpc(
+      "get_public_branches",
+      { p_slug: org.slug },
+    )) as unknown as {
+      data: Array<{
+        id: string;
+        slug: string;
+        name: string;
+        address: string | null;
+        phone: string | null;
+      }> | null;
+      error: { message: string } | null;
+    };
+
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0]).toMatchObject({
+      id: branchId,
+      address: "УБ, СБД, 1-р хороо",
+      phone: "99110000",
+    });
+  });
+
+  it("returns an empty list for an org without branches", async () => {
+    const { org, orgId } = await createTestOrg(admin);
+    await admin.from("organization_public_profiles").upsert({
+      organization_id: orgId,
+      catalog_enabled: true,
+      pickup_enabled: true,
+    });
+
+    const { data, error } = (await createAnonClient().rpc(
+      "get_public_branches",
+      { p_slug: org.slug },
+    )) as unknown as {
+      data: unknown[] | null;
+      error: { message: string } | null;
+    };
+
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("returns null for a disabled catalog or unknown slug", async () => {
+    const { org, orgId } = await createTestOrg(admin);
+    await admin.from("organization_public_profiles").upsert({
+      organization_id: orgId,
+      catalog_enabled: false,
+    });
+
+    const disabled = (await createAnonClient().rpc("get_public_branches", {
+      p_slug: org.slug,
+    })) as unknown as { data: unknown };
+    expect(disabled.data).toBeNull();
+
+    const unknown = (await createAnonClient().rpc("get_public_branches", {
+      p_slug: `no-such-${Date.now()}`,
+    })) as unknown as { data: unknown };
+    expect(unknown.data).toBeNull();
+  });
+});

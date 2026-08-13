@@ -39,6 +39,15 @@ describe("createBuyerAgentTools", () => {
       { name: "search_products", parameters: [], execute: async () => ({}) },
       { name: "get_product", parameters: [], execute: async () => ({}) },
       { name: "get_shop_info", parameters: [], execute: async () => ({}) },
+      { name: "get_promotions", parameters: [], execute: async () => ({}) },
+      {
+        name: "get_product_reviews",
+        parameters: [],
+        execute: async () => ({}),
+      },
+      { name: "get_blog_posts", parameters: [], execute: async () => ({}) },
+      { name: "get_branches", parameters: [], execute: async () => ({}) },
+      { name: "track_order", parameters: [], execute: async () => ({}) },
     ]);
   });
 
@@ -48,6 +57,11 @@ describe("createBuyerAgentTools", () => {
     expect(names).toContain("search_products");
     expect(names).toContain("get_product");
     expect(names).toContain("get_shop_info");
+    expect(names).toContain("get_promotions");
+    expect(names).toContain("get_product_reviews");
+    expect(names).toContain("get_blog_posts");
+    expect(names).toContain("get_branches");
+    expect(names).toContain("track_order");
     expect(names).toContain("place_order");
     expect(mockStorefrontTools).toHaveBeenCalledWith(
       expect.anything(),

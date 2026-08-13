@@ -179,6 +179,78 @@ export async function getPublicPromotions(
   return (data as PublicPromotion[]) ?? [];
 }
 
+export type PublicReview = {
+  id: string;
+  customer_name: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
+/**
+ * Fetch approved reviews for one product.
+ */
+export async function getPublicReviews(
+  supabase: SupabaseDb,
+  slug: string,
+  productId: string,
+): Promise<PublicReview[]> {
+  const { data, error } = await supabase.rpc("get_public_reviews", {
+    p_slug: slug,
+    p_product_id: productId,
+  });
+
+  if (error || !data) return [];
+  return (data as PublicReview[]) ?? [];
+}
+
+export type PublicBlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  cover_image_url: string | null;
+  published_at: string | null;
+};
+
+/**
+ * Fetch published blog posts for an organization.
+ */
+export async function getPublicBlogPosts(
+  supabase: SupabaseDb,
+  slug: string,
+): Promise<PublicBlogPost[]> {
+  const { data, error } = await supabase.rpc("get_public_blog_posts", {
+    p_slug: slug,
+  });
+
+  if (error || !data) return [];
+  return (data as PublicBlogPost[]) ?? [];
+}
+
+export type PublicBranch = {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+};
+
+/**
+ * Fetch public branches (pickup locations) for an organization.
+ */
+export async function getPublicBranches(
+  supabase: SupabaseDb,
+  slug: string,
+): Promise<PublicBranch[]> {
+  const { data, error } = await supabase.rpc("get_public_branches", {
+    p_slug: slug,
+  });
+
+  if (error || !data) return [];
+  return (data as PublicBranch[]) ?? [];
+}
+
 /**
  * Fetch a single public product detail.
  */
