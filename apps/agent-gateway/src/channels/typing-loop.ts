@@ -8,7 +8,7 @@ const MAX_TELEGRAM_DRAFT_ID = 2_147_483_647;
 
 interface TelegramStreamingChannel {
 	sendChatAction(chatId: number | string, action?: string): Promise<void>;
-	sendMessage(chatId: number | string, text: string): Promise<void>;
+	sendMessage(chatId: number | string, text: string): Promise<boolean>;
 	sendMessageDraft(
 		chatId: number | string,
 		draftId: number,
