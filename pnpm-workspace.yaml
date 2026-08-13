@@ -11,6 +11,14 @@ packages:
 # node_modules/.pnpm layout — it is what Turbopack supports.
 enableGlobalVirtualStore: false
 
+# expo-widgets@56 ships @expo/spawn-async as a devDependency, but its
+# Xcode build phase (scripts/build-bundle.mjs) imports it at runtime.
+# pnpm never installs a dependency's devDeps → ERR_MODULE_NOT_FOUND.
+packageExtensions:
+  expo-widgets@*:
+    dependencies:
+      '@expo/spawn-async': ^1.8.0
+
 catalogMode: strict
 
 catalog:
@@ -78,6 +86,7 @@ catalog:
   '@stryker-mutator/core': ^9.6.1
   '@stryker-mutator/vitest-runner': ^9.6.1
   tsx: ^4.23.12
+  react-native-get-random-values: ^2.0.0
 
 allowBuilds:
   '@google/genai': true
