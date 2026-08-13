@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     useTypeScriptCli: true,
-    turbopackFileSystemCacheForBuild: true,
+    turbopackFileSystemCacheForBuild: false,
     turbopackLocalPostcssConfig: true,
   },
 };
