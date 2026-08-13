@@ -53,6 +53,9 @@ const nextConfig: NextConfig = {
     turbopackRustReactCompiler: true,
     // Next.js 16.3+ requires this for TypeScript 7.x compatibility
     useTypeScriptCli: true,
+    // Disable Turbopack persistent build cache — known task_cache deadlock
+    // (vercel/next.js #92210, #93880) hangs `next build` on Node 24/16.3.0.
+    turbopackFileSystemCacheForBuild: false,
     inlineCss: true,
     staleTimes: {
       dynamic: 30,
