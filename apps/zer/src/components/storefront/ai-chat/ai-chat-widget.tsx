@@ -1,14 +1,9 @@
 "use client";
 
-import {
-  ChatCircleDots,
-  PaperPlaneTilt,
-  Robot,
-  Sparkle,
-  X,
-} from "@phosphor-icons/react";
+import { PaperPlaneTilt, Robot, Sparkle } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { StorefrontAiChatButton } from "./ai-chat-button";
 import { MarkdownText } from "./markdown";
 
 /**
@@ -96,11 +91,13 @@ async function readSseStream(
 export function StorefrontAiChat({
   slug,
   orgName,
+  initialOpen = false,
 }: {
   slug: string;
   orgName: string | null;
+  initialOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
@@ -216,20 +213,7 @@ export function StorefrontAiChat({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-label={open ? "AI туслах чатыг хаах" : "AI туслах чат нээх"}
-        className="fixed right-4 bottom-4 z-50 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
-      >
-        {open ? (
-          <X className="size-5" weight="bold" />
-        ) : (
-          <ChatCircleDots className="size-5" weight="bold" />
-        )}
-        <span className="hidden sm:inline">AI туслах</span>
-      </button>
+      <StorefrontAiChatButton open={open} onClick={() => setOpen((v) => !v)} />
 
       {open && (
         <section

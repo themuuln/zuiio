@@ -19,12 +19,20 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  // Lazy: only the dashboard's tabular numbers and the product-detail
+  // barcode use mono. Preloading it on every storefront page wasted 8+
+  // font requests (~160KB) for visitors who never see it.
+  preload: false,
 });
 const spectral = Spectral({
   variable: "--font-display",
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
   weight: ["400"],
   style: ["normal", "italic"],
+  // Lazy: font-display is used only by marketing pages (about/terms/…),
+  // never by the storefront — keep it out of the storefront's critical
+  // font preloads.
+  preload: false,
 });
 
 export const viewport: Viewport = {
@@ -108,7 +116,6 @@ export default function RootLayout({
             <Script
               id="ga4-init"
               strategy="afterInteractive"
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: static GA4 snippet
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -126,7 +133,6 @@ export default function RootLayout({
           <Script
             id="meta-pixel-init"
             strategy="afterInteractive"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: static Meta Pixel snippet
             dangerouslySetInnerHTML={{
               __html: `
                 !function(f,b,e,v,n,t,s)
@@ -159,7 +165,6 @@ export default function RootLayout({
         <Script
           id="register-sw"
           strategy="afterInteractive"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: static service worker registration string
           dangerouslySetInnerHTML={{
             __html: `
               if ("serviceWorker" in navigator) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { StorefrontAiChat } from "@/components/storefront/ai-chat/ai-chat-widget";
+import { AffiliateTracker } from "@/components/storefront/affiliate-tracker";
+import { StorefrontAiChatLazy } from "@/components/storefront/ai-chat/storefront-ai-chat-lazy";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
 import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { StorefrontFooter } from "@/components/storefront/storefront-footer";
@@ -143,7 +144,8 @@ export default async function StorefrontLayout({
           </WishlistProvider>
         </StorefrontCartProvider>
       </StorefrontBaseProvider>
-      {org && <StorefrontAiChat slug={slug} orgName={orgName} />}
+      {org && <StorefrontAiChatLazy slug={slug} orgName={orgName} />}
+      <AffiliateTracker slug={slug} />
     </>
   );
 }
