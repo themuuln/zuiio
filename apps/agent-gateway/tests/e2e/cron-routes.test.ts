@@ -23,7 +23,7 @@ vi.mock("@/gateway/webhook-helpers", () => ({
 	getProductTools: vi.fn(() => []),
 }));
 
-const mockSendMessage = vi.fn(async () => {});
+const mockSendMessage = vi.fn(async () => true);
 vi.mock("@/channels/telegram", () => ({
 	TelegramChannel: class {
 		sendMessage = mockSendMessage;

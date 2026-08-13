@@ -29,12 +29,12 @@ export class TelegramChannel implements Channel {
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void> {
+	): Promise<boolean> {
 		// Try rich message first (Bot API 10.1+ tables, headings, etc.)
 		const richBlocks = convertMarkdownToRichBlocks(text);
 		if (richBlocks.length > 0) {
 			const sent = await this.sendRichMessage(chatId, richBlocks);
-			if (sent) return;
+			if (sent) return true;
 		}
 
 		// Fallback: HTML with <pre> blocks for tables
@@ -43,12 +43,12 @@ export class TelegramChannel implements Channel {
 		// Telegram limit: 4096 characters per message
 		const MAX_LENGTH = 4096;
 		if (formatted.length <= MAX_LENGTH) {
-			await this.sendSingleMessage(chatId, formatted, sendOpts);
-			return;
+			return this.sendSingleMessage(chatId, formatted, sendOpts);
 		}
 
 		// Split on paragraph boundaries when possible
 		let remaining = formatted;
+		let allSent = true;
 		while (remaining.length > 0) {
 			let chunk = remaining.slice(0, MAX_LENGTH);
 			// Try to split on last newline within limit
@@ -57,7 +57,31 @@ export class TelegramChannel implements Channel {
 				chunk = remaining.slice(0, lastNewline);
 			}
 			remaining = remaining.slice(chunk.length).trimStart();
-			await this.sendSingleMessage(chatId, chunk, sendOpts);
+			allSent =
+				(await this.sendSingleMessage(chatId, chunk, sendOpts)) && allSent;
+		}
+		return allSent;
+	}
+
+	/**
+	 * Returns false only when the bot definitively cannot reach the chat
+	 * (Bot API 400/403: chat not found, bot blocked or kicked). Transient
+	 * failures (network errors, 5xx, 429) return true so callers keep the
+	 * link active and retry later.
+	 */
+	async isChatAvailable(chatId: number | string): Promise<boolean> {
+		try {
+			const res = await fetch(`${this.baseUrl}/getChat`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ chat_id: chatId }),
+			});
+			if (res.ok) return true;
+			const err = await res.text().catch(() => "unknown");
+			debug("telegram", "getChat failed", { status: res.status, err });
+			return !(res.status === 400 || res.status === 403);
+		} catch {
+			return true;
 		}
 	}
 
@@ -124,7 +148,7 @@ export class TelegramChannel implements Channel {
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void> {
+	): Promise<boolean> {
 		const body: Record<string, unknown> = {
 			chat_id: chatId,
 			text,
@@ -144,7 +168,9 @@ export class TelegramChannel implements Channel {
 			capture(new Error(`Telegram sendMessage failed: ${res.status} ${err}`), {
 				context: "agent-gateway: telegram sendMessage",
 			});
+			return false;
 		}
+		return true;
 	}
 
 	async sendInlineKeyboard(

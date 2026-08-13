@@ -37,7 +37,7 @@ export class FacebookChannel implements Channel {
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void> {
+	): Promise<boolean> {
 		const pageId = this.pageId;
 		const pageAccessToken = this.pageAccessToken;
 		if (!pageId || !pageAccessToken) {
@@ -47,7 +47,7 @@ export class FacebookChannel implements Channel {
 					context: "facebook-channel",
 				},
 			);
-			return;
+			return false;
 		}
 
 		try {
@@ -81,9 +81,12 @@ export class FacebookChannel implements Channel {
 				capture(new Error(`Facebook send failed: ${res.status} ${err}`), {
 					context: "facebook-channel",
 				});
+				return false;
 			}
+			return true;
 		} catch (err) {
 			capture(err, { context: "facebook-channel: sendMessage" });
+			return false;
 		}
 	}
 

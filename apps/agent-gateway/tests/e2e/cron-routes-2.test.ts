@@ -15,10 +15,12 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-const mockSendMessage = vi.fn(async () => {});
+const mockSendMessage = vi.fn(async () => true);
+const mockIsChatAvailable = vi.fn(async () => true);
 vi.mock("@/channels/telegram", () => ({
 	TelegramChannel: class {
 		sendMessage = mockSendMessage;
+		isChatAvailable = mockIsChatAvailable;
 	},
 }));
 vi.mock("@/channels/facebook", () => ({
@@ -132,7 +134,8 @@ function bearerReq(url: string, secret?: string): Request {
 beforeEach(() => {
 	vi.clearAllMocks();
 	delete process.env.CRON_SECRET;
-	mockSendMessage.mockResolvedValue(undefined);
+	mockSendMessage.mockResolvedValue(true);
+	mockIsChatAvailable.mockResolvedValue(true);
 	mockResumeDelayedFlows.mockResolvedValue(2);
 	mockGenerateEmbedding.mockResolvedValue("emb");
 	mockDecryptSecret.mockImplementation((t: string) =>
@@ -353,6 +356,66 @@ describe("GET /api/cron/briefing", () => {
 		expect(message).toContain("Идэвхтэй ажлын захиалга: <b>2</b>");
 		expect(message).toContain("Төлөгдөөгүй нэхэмжлэх: <b>2</b> (7,500₮)");
 		expect(message).toContain("Өнөөдрийн зарлага: <b>1,000₮</b>");
+	});
+
+	it("retires the link when the chat is gone and counts nothing as sent", async () => {
+		const sb = makeSupabase({
+			telegram_links: () => ({
+				data: [{ organization_id: "org-1", telegram_chat_id: "123" }],
+				error: null,
+			}),
+			work_orders: () => ({ data: [{ id: "w1" }], error: null }),
+			appointments: () => ({ data: [], error: null }),
+			invoices: () => ({ data: [], error: null }),
+			expenses: () => ({ data: [], error: null }),
+		});
+		mockSendMessage.mockResolvedValueOnce(false);
+		mockIsChatAvailable.mockResolvedValueOnce(false);
+		mockCreateServiceClient.mockReturnValue(sb);
+		const { GET } = await import("@/app/api/cron/briefing/route");
+		const res = await GET(new Request("http://localhost/api/cron/briefing"));
+		const body = await res.json();
+		expect(body.sent).toBe(0);
+
+		// First telegram_links chain = link select; second = retirement update.
+		const linkFromIndexes = sb.from.mock.calls
+			.map((call: string[], i: number) => ({ call, i }))
+			.filter(({ call }) => call[0] === "telegram_links")
+			.map(({ i }) => i);
+		expect(linkFromIndexes).toHaveLength(2);
+		const updateChain = sb.from.mock.results[linkFromIndexes[1]].value as {
+			update: ReturnType<typeof vi.fn>;
+			eq: ReturnType<typeof vi.fn>;
+		};
+		expect(updateChain.update).toHaveBeenCalledWith({ is_active: false });
+		expect(updateChain.eq).toHaveBeenCalledWith("telegram_chat_id", "123");
+	});
+
+	it("keeps the link active on transient send failure", async () => {
+		const sb = makeSupabase({
+			telegram_links: () => ({
+				data: [{ organization_id: "org-1", telegram_chat_id: "123" }],
+				error: null,
+			}),
+			work_orders: () => ({ data: [], error: null }),
+			appointments: () => ({ data: [], error: null }),
+			invoices: () => ({ data: [], error: null }),
+			expenses: () => ({ data: [], error: null }),
+		});
+		mockSendMessage.mockResolvedValueOnce(false);
+		mockIsChatAvailable.mockResolvedValueOnce(true);
+		mockCreateServiceClient.mockReturnValue(sb);
+		const { GET } = await import("@/app/api/cron/briefing/route");
+		const res = await GET(new Request("http://localhost/api/cron/briefing"));
+		const body = await res.json();
+		expect(body.sent).toBe(0);
+
+		const linkFromIndexes = sb.from.mock.calls
+			.map((call: string[], i: number) => ({ call, i }))
+			.filter(({ call }) => call[0] === "telegram_links")
+			.map(({ i }) => i);
+		// Only the select chain — no retirement update issued.
+		expect(linkFromIndexes).toHaveLength(1);
 	});
 });
 

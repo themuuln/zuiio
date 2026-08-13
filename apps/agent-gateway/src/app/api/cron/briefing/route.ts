@@ -94,8 +94,18 @@ export async function GET(request: Request): Promise<NextResponse> {
 					`💸 Өнөөдрийн зарлага: <b>${todayExpenses.toLocaleString()}₮</b>`,
 				].join("\n");
 
-				await tg.sendMessage(chatId, message);
-				sent++;
+				const sentOk = await tg.sendMessage(chatId, message);
+				if (sentOk) {
+					sent++;
+				} else if (!(await tg.isChatAvailable(chatId))) {
+					// Recipient is gone (blocked bot / deleted chat) — retire
+					// the link so the daily cron stops retrying a dead chat.
+					await sb
+						.from("telegram_links")
+						.update({ is_active: false })
+						.eq("organization_id", orgId)
+						.eq("telegram_chat_id", link.telegram_chat_id);
+				}
 			} catch {
 				// Skip failed briefings
 			}

@@ -18,12 +18,12 @@ export interface Channel {
 	pageId?: string;
 	pageAccessToken?: string;
 
-	/** Send a plain text message. */
+	/** Send a plain text message. Returns false when the channel failed to send. */
 	sendMessage(
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void>;
+	): Promise<boolean>;
 
 	/** Send a message with inline keyboard buttons. */
 	sendInlineKeyboard(

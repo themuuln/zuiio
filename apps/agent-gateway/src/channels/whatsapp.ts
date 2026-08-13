@@ -56,15 +56,16 @@ export class WhatsAppChannel implements Channel {
 		chatId: number | string,
 		text: string,
 		_options?: SendMessageOptions,
-	): Promise<void> {
+	): Promise<boolean> {
 		const formatted = markdownToMessengerFormat(text);
-		await this.api("messages", {
+		const res = await this.api("messages", {
 			messaging_product: "whatsapp",
 			recipient_type: "individual",
 			to: chatId.toString(),
 			type: "text",
 			text: { body: formatted.substring(0, 4096) },
 		});
+		return res.ok;
 	}
 
 	async sendInlineKeyboard(
