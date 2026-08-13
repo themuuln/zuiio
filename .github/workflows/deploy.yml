@@ -16,8 +16,6 @@ on:
         type: choice
         options:
           - ""
-          - zer
-          - tolom
           - website
           - agent-gateway
           - zuiio-id
@@ -30,8 +28,6 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      zer: ${{ steps.filter.outputs.zer }}
-      tolom: ${{ steps.filter.outputs.tolom }}
       website: ${{ steps.filter.outputs.website }}
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
@@ -42,10 +38,6 @@ jobs:
         id: filter
         with:
           filters: |
-            zer:
-              - 'apps/zer/**'
-            tolom:
-              - 'apps/tolom/**'
             website:
               - 'apps/website/**'
             agent-gateway:
@@ -73,8 +65,6 @@ jobs:
         with:
           submodules: false
           sparse-checkout: |
-            apps/zer
-            apps/tolom
             apps/website
             apps/agent-gateway
             apps/zuiio-id
@@ -93,10 +83,6 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: 🔍 FastGate — typecheck
-        run: pnpm --filter zer exec tsc --noEmit || FAILED="$FAILED zer"
-        env:
-          FAILED: ""
       - name: 🧹 FastGate — lint
         run: pnpm turbo run lint --continue
       - name: 🧪 FastGate — test with coverage
@@ -105,25 +91,12 @@ jobs:
       - name: Typecheck deploying apps
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
-          ZER: ${{ needs.detect-changes.outputs.zer }}
-          TOLOM: ${{ needs.detect-changes.outputs.tolom }}
           WEBSITE: ${{ needs.detect-changes.outputs.website }}
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
           ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
         run: |
           # Only typecheck apps that will actually deploy (matching deploy-* job conditions)
           FAILED=""
-          if [ "$ZER" = "true" ] || [ "$SHARED" = "true" ]; then
-            echo "🔍 Typechecking zer..."
-            pnpm --filter zer exec tsc --noEmit 2>&1 || FAILED="$FAILED zer"
-          fi
-          # TODO: tolom has 434 pre-existing type errors (useTranslations strict types + component prop mismatches).
-          # tolom has `ignoreBuildErrors: true` in next.config.ts so builds succeed.
-          # Re-enable typecheck after fixing: pnpm --filter tolom exec tsc --noEmit
-          # if [ "$TOLOM" = "true" ] || [ "$SHARED" = "true" ]; then
-          #   echo "🔍 Typechecking tolom..."
-          #   pnpm --filter tolom exec tsc --noEmit 2>&1 || FAILED="$FAILED tolom"
-          # fi
           if [ "$WEBSITE" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking website..."
             pnpm --filter website exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
@@ -144,38 +117,8 @@ jobs:
           echo "✅ All deploying apps passed typecheck"
 
   # ─── Deploy only changed apps ───
-
-  deploy-zer:
-    needs: [detect-changes, typecheck]
-    if: |
-      always() && !cancelled() &&
-      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'zer' || needs.detect-changes.outputs.zer == 'true' || needs.detect-changes.outputs.shared == 'true')
-    uses: ./.github/workflows/_deploy-vercel.yml
-    with:
-      app: zer
-      turbo-filter: zer
-      author-email: "yesprice.mn@gmail.com"
-    secrets:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZER }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ZER }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZER }}
-
-  deploy-tolom:
-    needs: [detect-changes, typecheck]
-    if: |
-      always() && !cancelled() &&
-      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'tolom' || needs.detect-changes.outputs.tolom == 'true' || needs.detect-changes.outputs.shared == 'true')
-    uses: ./.github/workflows/_deploy-vercel.yml
-    with:
-      app: tolom
-      turbo-filter: tolom
-      author-email: "themuln.official@gmail.com"
-    secrets:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_TOLOM }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_TOLOM }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TOLOM }}
+  # NOTE: zer and tolom moved to standalone repos (themuuln/zer, themuuln/tolom)
+  # and deploy from their own CI. Remove apps/zer + apps/tolom from this repo.
 
   deploy-website:
     needs: [detect-changes, typecheck]
