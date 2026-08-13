@@ -230,6 +230,8 @@ describe("updateSession", () => {
     });
 
     it("redirects anonymous visitors on / to the landing page", async () => {
+      // Primary host (stubbed as zuiio.mn) — the marketing landing. Custom
+      // (admin) hosts go to /login instead (admin-domain test below).
       const req = createMockRequest("/");
       const { updateSession } = await import("../proxy");
       await updateSession(req);
@@ -602,9 +604,10 @@ describe("updateSession — custom domains", () => {
       expect.anything(),
     );
     expect(mockNextResponseRewrite).not.toHaveBeenCalled();
-    // Anonymous root on the admin host still goes through the auth guard.
+    // Anonymous root on the admin host goes to the login page, not the
+    // marketing landing (custom host ≠ primary host).
     expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
-    expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/landing");
+    expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/login");
     expect(result).toBeDefined();
   });
 

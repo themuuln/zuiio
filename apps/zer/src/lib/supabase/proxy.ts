@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
+import { isCustomHost } from "@/lib/storefront-host";
 import type { Database } from "../database.types";
 import { maybeRewriteStorefrontHost } from "./domain-rewrite";
 import { getSupabaseEnv } from "./env";
@@ -151,7 +152,13 @@ export async function updateSession(request: NextRequest) {
   // root page.tsx would shadow it for everyone.
   if (!userId && request.nextUrl.pathname === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = "/landing";
+    // Admin (ERP) custom domains go straight to the login page — the
+    // marketing landing is only for the primary host. Storefront custom
+    // domains never reach this branch (they were rewritten to /{slug}
+    // earlier by maybeRewriteStorefrontHost).
+    url.pathname = isCustomHost(request.headers.get("host"))
+      ? "/login"
+      : "/landing";
     const response = NextResponse.redirect(url);
     for (const cookie of supabaseResponse.headers.getSetCookie()) {
       response.headers.append("Set-Cookie", cookie);
