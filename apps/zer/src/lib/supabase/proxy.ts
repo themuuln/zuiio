@@ -9,11 +9,12 @@ import { getSupabaseEnv } from "./env";
 /**
  * Storefront subpaths that are public on the default domain under an org
  * slug: /{slug}, /{slug}/products(+/[id]), /{slug}/cart, /{slug}/blog,
- * /{slug}/account (buyer sign-in / register / orders). Dashboard routes
- * (/shop/cart, /products, /settings, /dashboard, …) stay protected
- * because their first segment is not an org slug.
+ * /{slug}/account (buyer sign-in / register / orders), /{slug}/wishlist
+ * (client-side localStorage list — guests must reach it from the header
+ * heart). Dashboard routes (/shop/cart, /products, /settings, /dashboard,
+ * …) stay protected because their first segment is not an org slug.
  */
-const STOREFRONT_SUBPATHS = ["products", "cart", "blog", "account"];
+const STOREFRONT_SUBPATHS = ["products", "cart", "blog", "account", "wishlist"];
 
 /**
  * True when `pathname` looks like a storefront path (single segment or a

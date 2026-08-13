@@ -21,7 +21,7 @@ export async function maybeRewriteStorefrontHost(
 ): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
-  // Never rewrite API, auth, static, or share routes.
+  // Never rewrite API, auth, static, share, or SEO routes.
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/auth/") ||
@@ -31,6 +31,8 @@ export async function maybeRewriteStorefrontHost(
     pathname === "/register" ||
     pathname === "/manifest.json" ||
     pathname === "/favicon.ico" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
     /\.(?:svg|png|jpg|jpeg|gif|webp)$/.test(pathname)
   ) {
     return null;
@@ -42,8 +44,9 @@ export async function maybeRewriteStorefrontHost(
   // Skip the app's own host (localhost, Vercel URL, configured site URL).
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.toLowerCase() ?? "";
   const siteHost =
-    (siteUrl || "https://zuiio.mn").replace(/^https?:\/\//, "").split("/")[0] ??
-    "";
+    (siteUrl || "https://zer.zuiiotech.com")
+      .replace(/^https?:\/\//, "")
+      .split("/")[0] ?? "";
   if (siteHost && host === siteHost) return null;
   if (host === "localhost:3000" || host === "localhost") return null;
   if (host.endsWith(".vercel.app")) return null;

@@ -6,6 +6,12 @@ enabled = true
 port = 54326
 schemas = ["public", "storage", "graphql_public"]
 
+# Analytics disabled: its default port 54327 is held by other projects'
+# stacks on this machine (unegui-deals analytics + an ssh tunnel), and zer
+# doesn't use it. Mirrors the pooler disable below.
+[analytics]
+enabled = false
+
 [db]
 port = 54328
 

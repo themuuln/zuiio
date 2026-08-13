@@ -168,6 +168,8 @@ function createMockResponse() {
 describe("updateSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Fixtures below assume zuiio.mn is the primary host.
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://zuiio.mn");
     mockGetSupabaseEnv.mockReturnValue({
       url: "https://example.supabase.co",
       anonKey: "test-anon-key",
@@ -500,6 +502,8 @@ describe("updateSession", () => {
 describe("updateSession — custom domains", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Fixtures below assume zuiio.mn is the primary host.
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://zuiio.mn");
     mockGetClaims.mockResolvedValue({ data: { claims: { sub: null } } });
     mockGetSupabaseEnv.mockReturnValue({
       url: "https://example.supabase.co",
@@ -520,6 +524,7 @@ describe("updateSession — custom domains", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("rewrites a subdomain of the primary host to /{slug}", async () => {
