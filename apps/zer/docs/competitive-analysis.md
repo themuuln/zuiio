@@ -427,6 +427,9 @@ true contradiction once scoped.
   in repo** (remote-created only), absent from generated types; code casts
   `as unknown as SupabaseClient` (violates zer-coding-rules). Add migration +
   regen types; storefront points display is also absent (admin-only).
+  → ✅ Shipped 2026-08-13 (migration `20260813010000` + `20260813020000`):
+  schema parity + storefront earn/spend/display (`get_public_loyalty`,
+  `submit_shop_order` `p_redeem_points`, `/account/points`, cart redeem).
 - **G-TIMELINE: order timeline is derived from current status** — no
   persisted history table, no per-step timestamps (`order-detail-client.tsx
   buildTimelineSteps`).
@@ -601,3 +604,233 @@ sells a finished product you open and use.
 | ERPNext UX vs Zer (task-time, density) | Drive erpnext-demo.frappe.cloud demo; compare a sale + a report task | Before §12.4 borrow decisions |
 | Does any MN company run ERPNext? | LinkedIn/Facebook ERP groups, discuss.frappe.io search | Quarter |
 | MN ERP price benchmarks for Zer pricing (Odoo partner quotes, 1C, shop.mn ERP) | CoreMind/Cubicsoft RFQs; shop.mn pricing | Before billing product (needs pricing decision) |
+
+---
+
+## 13. Status Update 2026-08-13 — Local + Global Refresh, Verified Gap State
+
+> Fresh research (MN + international) and a codebase re-verification on
+> 2026-08-13. Supersedes the §11 gap list where statuses changed: **G-THEME
+> shipped**, **G-CHAT now partial (Q&A widget shipped)**, related products
+> and price-range filter/sort shipped. QPay/e-Barimt/email-wiring/SMS
+> re-verified still open.
+
+### 13.1 What shipped since §11 (verified in code, 2026-08-13)
+
+| Item | Evidence |
+|---|---|
+| **Storefront theming (G-THEME)** | `brand_config` (theme, radius, custom_colors, fonts) → `generateBrandCSS` injected in `[slug]/layout.tsx` (`<style id="brand-theme">`); test `layout.test.tsx` |
+| **Storefront AI chat widget (G-CHAT partial)** | `components/storefront/ai-chat/ai-chat-widget.tsx` mounted in `[slug]/layout.tsx` — floating MN chat → `/api/ai/chat`; product discovery/recommendations/shop info, linkified product URLs |
+| **AI product-listing tools (G-LISTING-AI)** | `src/lib/ai/product-description.ts` + `/api/ai/product-description` + generate button in product form (`structured-text-fields.tsx`); photo cleanup via `image-enhancer.ts` (`/ai/enhance`) |
+| **Reorder automation (Z-E3)** | `products.min_stock` = reorder point; `LowStockSection` + `RestockDrawer` + `/inventory/restock` prefill suggested qty = min_stock − current_stock |
+| **Related products** | `products/[id]/page.tsx` — same-category ≤4 ("Холбоотой бүтээгдэхүүнүүд"), RPC-backed `product.related` |
+| **Price-range filter + sort** | `products-page-client.tsx` — min/max price, sort (price/name), category filter, mobile filter drawer |
+| **Stock/sold-out + promo badges** | `products-page-client.tsx` — "Дууссан" badge on `current_stock === 0`, promo reward badges |
+| **Buyer address book** | `[slug]/account/addresses/` — save/select addresses |
+| **Order detail + timeline + delivery card** | `[slug]/account/orders/[orderId]/order-detail-client.tsx` — status steps, delivery info, totals (discount/delivery/gift card), contact card |
+
+### 13.2 Still missing — re-verified 2026-08-13 (code)
+
+| ID | Gap | Verified evidence |
+|---|---|---|
+| G-QPAY | **No real payment gateway** — `qpay_qr_url` is TEXT on `organization_public_profiles`; checkout renders it as `<img>` (`cart-client.tsx:394-400`); no invoice creation, no webhook route, no `pending → completed` flip | code |
+| G-EBARIMT | e-Barimt receipt — column + display only (`ebarimt_id` in `r/receipt`, `pdf/route.ts`); no API client | code |
+| G-EMAIL | **Confirmation email unwired** — `submitStoreOrder` (`public-checkout-actions.ts`) exists and calls `sendOrderConfirmationEmail`, but web checkout calls `supabase.rpc("submit_shop_order")` directly (`cart-client.tsx:250-252`); email never fires from the web flow | code |
+| G-SMS | No SMS sender — no provider (sms.mn/sendease) wiring in `src` | code |
+| G-CHAT-ORDER | Chat Q&A only — widget returns text + product links; **no order creation or payment link in chat** (shop.mn flagship: browse → cart → pay in chat) | code |
+| G-LISTING-AI | No AI product-listing tools (description-from-image, photo cleanup) | code |
+| G-BNPL | No installments (StorePay / LendDy / shoppy credit) | code |
+| G-AFFILIATE | No affiliate program | code |
+| G-ABANDONED | **No abandoned-cart recovery** — global platform norm (Shopify all plans, Squarespace Advanced) | code |
+| G-EXPRESS | No express/wallet-style checkout — QR is static; no deep-link pay flow | code |
+| G-LOYALTY-DRIFT | `loyalty_settings`/`loyalty_rewards` still remote-only, absent from types | code |
+| G-TIMELINE | Order timeline derived from current status; no persisted history | code |
+| G-BILLING | Zer unmonetized (no plan/pricing product) | code |
+
+### 13.3 Local (Mongolian) competitor intel — 2026-08-13
+
+**shop.mn — the benchmark, now AI-first.** CEO Sanchir Enkhbold (since Mar 2025) rebuilt the platform around an AI core (sanchir.dev/project/shop, LinkedIn). Verified on shop.mn/pricing (2026-08-13):
+- Plans: Standard (100 products, 2 staff) / Ultimate (1000 products, 10 staff) / **AI Basic 199,000₮/mo (verified)** / AI PRO. All: unlimited orders, 0% commission, QPay auto-payment, product promos, coupons, gift cards, custom domain, reports/finance, AI poster.
+- **AI Basic adds: unlimited products/staff + 3,000 AI credits + AI Chatbot (FB Chat).** Standard/Ultimate explicitly show "AI кредит дагалдахгүй" (no AI credits).
+- Chat commerce (vendor-stated): Messenger + storefront chat — customers browse, add to cart, and pay without leaving chat (QPay/Golomt/Khan Bank payment links).
+- Wallet billing: subscriptions/SMS/domain renewals paid from a built-in wallet. Templates, fonts, colors, AI logos, homepage banners. Subdomains (shop.mn style). 14-day free trial.
+- Implication: **shop.mn monetizes AI as a tier** and has shipped chat→pay commerce. Zer's AI (dashboard Q&A + now storefront widget) is not monetized and stops at Q&A.
+
+**shoppy.mn (CODY LLC) — traffic leader, expanding into AI.** ~75–76K monthly visits June 2026, the #1 MN retail site; nomnom ~61–62K; aliexpress ~50K (Semrush via semu.toolsnovintrend.ir, Medium confidence). 700K+ items / 1,000+ brands; app updated Feb 2026; installments ("shoppy credit") since 2021. CODY also ships **Cody Console (ai.cody.mn)**: omni-channel AI Sales Agent + AI Smart Newsletter for MN merchants — social/AI commerce stack aimed at the same SMBs Zer targets.
+
+**netbot.mn — NEW direct competitor (social commerce).** AI-driven sales automation for Facebook/Instagram with Mongolian-language support + automated CRM (netbot.mn, 2026-08-13). Targets the default MN SMB channel (FB/IG DMs) that Zer's agent-gateway/M-SOCIAL partially addresses.
+
+**easyshop.mn (Greensoft)** — unchanged; phone/SMS-first niche; quote-based pricing (2026-08-10).
+
+**BNPL ecosystem — real and growing (verified on primary sources).**
+- **StorePay**: 100,000–10,000,000₮, 30–75 days, 10+ installment options, 8,000+ partner stores, digital onboarding (storepay.mn, 2026-08-13).
+- **LendMN LendDy**: 1,000–50,000,000₮, 30/60 days, 0% interest, no fees, merchant-initiated via app (lend.mn, 2026-08-13).
+- shoppy credit (4–6 month installments; MWM listing). Zer checkout has none.
+
+**Market context:** online retail still <5% of total MN retail; +30–35% growth forecast 2026 (§1). Mobile-first; QPay/SocialPay QR dominant; COD still needed in rural areas.
+
+### 13.4 Global competitor intel — 2026-08-13
+
+**Shopify Spring '26 — the conversion/AI benchmark (shopify.com/editions/spring2026, shopify.com/checkout, news pages).**
+- **Agentic commerce**: Universal Commerce Protocol (UCP) + global Catalog; product data syndicated to ChatGPT, Copilot, Gemini, Shop app; AI sales associate (Inbox) answers questions, suggests products, handles orders on storefronts.
+- **Shop Pay**: 250M+ shoppers, one-tap checkout, claims 50% higher conversion vs standard; available to brands not on Shopify; **Shop Pay Installments + Klarna/Affirm** (BNPL built in).
+- **Local delivery**: up to 10 delivery zones per location, radius/postal rules, 3 pricing rules each; ship+pickup in one order; delivery confirmation workflows (help.shopify.com).
+- **Checkout**: address autocomplete, bot protection, dynamic totals, express wallets above the fold, A/B tests for store/theme/checkout, POS v11.
+- **Pricing snapshot (2026, multiple third-party sources, Medium-High):** Shopify Basic $29–39/mo (2% tx fee w/o Shopify Payments), Shopify $79–105, Advanced $299–399; BigCommerce from $39, no tx fees, strong B2B, revenue-based upgrades; Squarespace Commerce $23–49, design-first; WooCommerce free + $3–30 hosting.
+- **Zer relevance:** Shopify validates (1) AI assistant on storefront (Zer has it, Q&A-only), (2) BNPL at checkout (Zer missing), (3) delivery-zone config (Zer's `delivery_zones` matches, but buyer-facing zone/pricing UX is per-org config), (4) abandoned-cart recovery (Zer missing), (5) express checkout (Zer's static QR is the weak point).
+
+### 13.5 What's missing in Zer's case — prioritized (2026-08-13)
+
+**P0 — revenue/legal (blocks the complete loop):**
+1. **Real QPay gateway** — invoice at submit + webhook flip to paid. shop.mn sells QPay on every plan; static QR keeps staff manually confirming every online order (G-QPAY).
+2. **e-Barimt receipt API** — legal requirement on paid orders (G-EBARIMT).
+3. **Notification wiring** — route web/mobile checkout through `submitStoreOrder` (email built, 1-day fix, G-EMAIL); add SMS provider for status changes (G-SMS; shop.mn SMSes paid/pickup/delivered).
+
+**P1 — conversion parity:**
+4. **BNPL / installments** (StorePay/LendDy integration) — shoppy, StorePay (8,000+ stores), Shopify all ship it. Checkout option + provider client are prepared (env-gated); partner contract still needed.
+5. **Chat → order + pay in chat** — shop.mn's flagship; Zer's widget is Q&A only (G-CHAT-ORDER).
+6. **Abandoned-cart recovery** — email/reminder flow; global norm (G-ABANDONED; implementation in this batch).
+7. **Affiliate program** (G-AFFILIATE).
+
+**P2 — platform/moat:**
+8. Loyalty schema migration + storefront points (G-LOYALTY-DRIFT; migration + cast cleanup in this batch — storefront points display remains); persisted order timeline (G-TIMELINE; backend now returns `status_history`, UI already renders it — done in this batch); billing product (G-BILLING, needs pricing decision); fixed assets (Z-E1); CRM pipeline (Z-E4); hardware (M-HW); catalog-to-chat social commerce polish (M-SOCIAL). → Loyalty storefront slice + hardware shipped 2026-08-13 (migration `20260813020000`); remaining: billing product, fixed assets, CRM pipeline, M-SOCIAL polish.
+
+**Non-gaps (do not re-plan):** theming, storefront AI Q&A, related products, price filter/sort, wishlist, delivery/pickup + fee config, coupons/gift cards/promotions, order tracking + detail, gallery, stock badges, buyer accounts + address book, SEO/GA4/Pixel, custom domains, offline-first, ERP depth (12.5).
+
+### 13.6 Verified data — 2026-08-13
+
+| Claim | Value | Source | Confidence |
+|---|---|---|---|
+| shop.mn AI Basic price | 199,000₮/mo (visible); Standard/Ultimate/AI PRO number-obfuscated → UNVERIFIED | shop.mn/pricing (2026-08-13) | High / Low |
+| shop.mn AI Basic contents | unlimited products+staff, 3,000 AI credits, AI Chatbot (FB Chat); Standard/Ultimate = no AI credits | shop.mn/pricing (2026-08-13) | High (primary) |
+| shop.mn chat commerce | browse/cart/pay in Messenger + storefront chat; QPay/Golomt/Khan Bank | shop.mn, sanchir.dev/project/shop | Medium (vendor-stated) |
+| shop.mn AI-first leadership | CEO Sanchir Enkhbold since Mar 2025; AI core rebuild | linkedin.com/in/sanchir2011 | Medium |
+| shoppy.mn traffic | ~75–76K visits/mo, #1 MN retail (June 2026); 98.7% desktop | semu.toolsnovintrend.ir (Semrush data) | Medium (third-party aggregator) |
+| Cody Console (CODY) | AI Sales Agent + Smart Newsletter for MN merchants | ai.cody.mn (2026-08-13) | Medium (vendor) |
+| netbot.mn | AI social-commerce sales automation, FB/IG, MN language | netbot.mn (2026-08-13) | Medium (vendor) |
+| StorePay BNPL | 100k–10M₮, 30–75 days, 10+ options, 8,000+ stores | storepay.mn (2026-08-13) | High (primary) |
+| LendDy (LendMN) | 1k–50M₮, 30/60 days, 0% interest, no fees | lend.mn (2026-08-13) | High (primary) |
+| Shopify UCP/Catalog + AI channels | Spring '26 Edition; Catalog syndicated to ChatGPT/Copilot/Gemini/Shop | shopify.com/editions/spring2026 (2026-08-13) | High (primary) |
+| Shop Pay | 250M+ shoppers; 50% higher conversion (vendor claim); installments + Klarna/Affirm | shopify.com/checkout (2026-08-13) | High / Medium (vendor) |
+| Shopify local delivery | 10 zones/location, radius/postal, pricing rules | help.shopify.com | High (primary) |
+| Global platform pricing | Shopify Basic $29–39 etc. | biztoolkit.co, saascompare.net, devtrios.com (2026) | Medium (third-party, conflicting start prices → quoted ranges) |
+| Zer web checkout path | `cart-client.tsx:250-252` calls `submit_shop_order` RPC directly (not `submitStoreOrder`) | code (2026-08-13) | High |
+| Zer QPay | static QR `<img>` from `qpay_qr_url` | `cart-client.tsx:394-400` (2026-08-13) | High |
+| Zer storefront AI chat | Q&A widget → `/api/ai/chat`; no order/pay actions | `ai-chat-widget.tsx` (2026-08-13) | High |
+| Zer theming | `brand_config` → `generateBrandCSS` in `[slug]/layout.tsx` | code (2026-08-13) | High |
+
+**Contradictions:** (1) Shopify Basic price $29 vs $39 — different sources/snapshots; quoted as range. (2) shop.mn AI Basic "3,000 credits" per pricing page vs "10,000 credits" in search summary of shop.mn homepage — homepage summary may describe AI Pro or a newer bundle; flagged UNVERIFIED until an app.shop.mn plan page confirms. (3) shoppy.mn traffic "declining MoM/YoY" vs its "leading" position — both from the same aggregator; traffic leadership ≠ growth.
+
+### 13.7 Research backlog
+
+| Open question | Method | Timing |
+|---|---|---|
+| Exact shop.mn Standard/Ultimate/AI PRO prices | app.shop.mn plan page (authenticated) or JS-rendered capture | Before pricing/billing product |
+| shop.mn live checkout UX walkthrough | Register a test store; record checkout fields, chat-order flow, QPay confirm | Before R-QPAY/G-CHAT-ORDER build |
+| QPay merchant API integration cost | qr.qpay.mn merchant docs; existing apps/sms-pay submodule pattern | Before G-QPAY build |
+| e-Barimt API contract | ebarimt.mn developer docs | Before G-EBARIMT build |
+| StorePay/LendDy partner integration | StorePay/LendMN partner docs | Before G-BNPL build |
+| MN SMS provider pricing (sms.mn/sendease) | vendor pricing pages | Before G-SMS build |
+| Abandoned-cart recovery demand | Analytics: storefront checkout abandonment rate (GA4 funnel) | Before G-ABANDONED build |
+
+---
+
+## 14. Storefront UI / Layout Research — 2026-08-13 (live captures)
+
+> Scope: **public storefront layout** (the buyer-facing surface) — not checkout
+> flow (§5–§11), not ERP depth (§12). Driven by the 2026-08-13 vision shift:
+> Zer's public page is a first-class e-commerce surface. Method: live browser
+> capture (accessibility trees + screenshots) of shop.mn marketing + demo
+> storefront, shoppy.mn, kom.mn + a live kom.mn store, zochil.mn; plus global
+> Shopify 2026 pattern research. Every observation is labeled
+> Observed/Vendor-stated/Inferred + confidence.
+
+### 14.1 Evidence — live captures (2026-08-13)
+
+| # | Competitor | What was captured | Method | Kind |
+|---|---|---|---|---|
+| E1 | shop.mn (marketing) | Hero with product UI demo, plan tiers, feature tabs, 14-day trial CTA | Browser a11y tree + screenshot | Observed (High) |
+| E2 | demo.shop.mn (shop.mn demo store) | **Full storefront home**: utility bar (phone/email) → sticky header (logo, search, wishlist, cart w/ count, login) → nav (categories, all, featured, new, sale-50%-badge, brands, blog, gift cards) → hero banner carousel → sectioned product rows ("Бүгдийг харах") → product cards w/ name + price + strikethrough original + sold-out + discount badges → blog block → footer (platform brand, verified badge, socials, about, branches) | Browser a11y tree + screenshot | Observed (High) |
+| E3 | shoppy.mn (marketplace) | Top utility bar (partner/app/help) → header (logo, search w/ example placeholder, voucher/wallet/viewed/saved/cart icons, login) → category mega-menu → promo section → product cards (name + price) | Browser a11y tree | Observed (High) |
+| E4 | kom.mn (marketing) | Minimal: logo, features, pricing, blog, "Дэлгүүрээ нээх" CTA, live store showcase cards, changelog | Browser a11y tree | Observed (High) |
+| E5 | suren.kom.mn (live kom store) | Header: logo | phone + hours | cart count ("Бараа (0)") | login/register/order-status | nav (all, ambassador, about, blog) | product grid with **"Сагслах" add button per card**, "Дууссан" sold-out states | footer w/ platform credit | Browser a11y tree + screenshot | Observed (High) |
+| E6 | zochil.mn (marketing) | Store-showcase cards, FAQ, app-store links; marketing site, no live store captured | Browser a11y tree | Observed (Medium) |
+| E7 | Shopify 2026 (global) | Sticky nav/mega menus, faceted filters, sticky add-to-cart, on-page reviews, cross-sells, free-shipping banners, fast/AVIF images, "view all" section headers | shopify.com blog, themeprobe (2026-08-13) | Third-party (High) |
+
+### 14.2 Convergent layout patterns (what MN buyers expect)
+
+Counted across E2/E3/E5 (3 storefronts) + E7:
+
+1. **Persistent storefront chrome — 3/3 MN storefronts.** Sticky header with:
+   logo + org name → search → wishlist/favorites → cart (with live count) →
+   login/account. shop.mn and kom add a **top utility bar** (phone, email,
+   hours). **Zer today: NO shared header** — each page renders its own
+   per-page header (home: logo+name+cart; products: type+name+filters+cart;
+   detail: back+name+cart). No search on home; no global cart badge.
+   → **Highest-impact gap.**
+2. **Category navigation row — 3/3.** Nav row below header with category
+   links + "Бүх бараа"; shop.mn highlights sale as a red badge. **Zer:
+   categories only inside the products-page sidebar filter.**
+3. **Hero banner — 2/3 (shop.mn carousel, kom stores).** Full-width
+   lifestyle image above the fold. **Zer: raw banner `<img>` with no
+   overlay/CTA.**
+4. **Sectioned product rows with "view all" — 3/3.** Featured / new / sale
+   sections, each with a "Бүгдийг харах" link to the full catalog. **Zer:
+   single flat grid "Бүтээгдэхүүнүүд".**
+5. **Product card = image + name + price + discount + add-to-cart — 3/3.**
+   shop.mn shows **strikethrough original price + % discount badge**;
+   kom shows a visible **"Сагслах" button per card** (no hover dependency).
+   **Zer card has promo badge + add-to-cart but no original-price
+   strikethrough (data: `PublicProduct` has only `sale_price`), no visible
+   discount %**, and add-to-cart is icon-only until hover.
+6. **Footer with contact + socials + platform credit — 3/3.** shop.mn adds
+   "verified" trust badge; kom credits the platform. **Zer: no footer.**
+7. **Mobile-first density — 3/3.** 2-column product grids on mobile, compact
+   headers, search always reachable.
+
+### 14.3 Zer storefront current-state audit (2026-08-13, code-verified)
+
+| Surface | Current | vs pattern |
+|---|---|---|
+| Header | Per-page, inconsistent; no search on home | ✗ gap 1 |
+| Nav / categories | Products-page sidebar only | ✗ gap 2 |
+| Hero | Plain banner `<img>` (page.tsx) or gradient fallback | ✗ gap 3 |
+| Product sections | One flat grid | ✗ gap 4 |
+| Product card | name, desc, review stars, price, promo badge, add-to-cart, wishlist heart, sold-out overlay | ✓ mostly; ✗ no original-price/discount %, add-to-cart icon-only |
+| Footer | None | ✗ gap 6 |
+| Search | Products page only (debounced URL `q`) | partial |
+| Blog / promotions | Promo strip on products page; blog reachable via its own routes only | partial |
+
+### 14.4 Recommendations → implementation mapping
+
+Adopt = apply now (this batch); Adapt = needs data/config first; Test = A/B
+candidate.
+
+| # | Recommendation | Adopt/Adapt/Test | Map to | Evidence |
+|---|---|---|---|---|
+| U1 | **Shared sticky storefront header** on every `/[slug]` page: logo + org name, search form (GET → `/products?q=`), wishlist, cart w/ count, account link | Adopt | `[slug]/layout.tsx` + new `storefront-header.tsx`; idempotent cart/wishlist providers hoisted to layout | E2, E3, E5 |
+| U2 | **Category nav row** below header: "Бүх бараа" + `getPublicCategories` links → `/products?category=` | Adopt | header nav row; tolerate RPC absence (try/catch) | E2, E5 |
+| U3 | **Hero with overlay + CTA**: banner image, gradient scrim, org name/description overlaid, "Бүтээгдэхүүн үзэх" → `/products` | Adopt | `page.tsx` hero block (replaces raw banner + in-body logo block) | E2 |
+| U4 | **Sectioned products on home**: "Хямдралтай" (promo) section first, then full catalog; both with "Бүгдийг харах" → `/products` | Adopt | `page.tsx` (data already on `PublicProduct.promo`) | E2, E7 |
+| U5 | **Storefront footer**: org info, contact, hours, socials, platform credit | Adopt | new `storefront-footer.tsx` in layout | E2, E5 |
+| U6 | **Visible add-to-cart + discount % on cards** | Adapt | needs `original_price`/compare-at + promo % in `get_public_products`; show reward_label badge meanwhile | E2, E5, E7 |
+| U7 | **De-duplicate per-page headers** (products/detail pages inherit shell header; keep page-local filter/count controls) | Adopt | remove sticky on products/detail headers, drop duplicate cart links | E2 |
+| U8 | Top utility bar (phone/email/hours) | Test | footer already carries it; A/B a slim top bar later | E2, E5 |
+| U9 | Trust badge ("баталгаажсан"), brand filter row, gift-card nav | Test | needs org data (verified status) + gift card public flow | E2 |
+
+### 14.5 Quality gate
+
+- 3 direct UI sources (shop.mn demo store, shoppy.mn, kom storefront) +
+  2 corroborating (zochil, Shopify patterns) — **Standard depth met**.
+- Every Adopt maps to ≥2 evidence ids (U1–U5, U7 → E2+E5+E7).
+- Limitations: captures are desktop-viewport a11y trees + screenshots (no
+  mobile emulation, no click-through flows); marketing sites may lag live
+  product; shoppy.mn is a marketplace (adjacent, not a builder).
+
+### 14.6 Implementation note (2026-08-13)
+
+The Adopt batch (U1–U5, U7) shipped in this session: shared shell in
+`[slug]/layout.tsx` (`storefront-header.tsx`, `storefront-footer.tsx`,
+idempotent providers), home hero + promo/full sections, de-stickified
+products/detail headers. U6 (compare-at price) and U8/U9 remain data-gated
+backlog.

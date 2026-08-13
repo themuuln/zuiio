@@ -47,6 +47,6 @@ Zer ERP-ийн хөгжүүлэлтийн төлөвлөгөө. Хялбараа
 - [x] Худалдан авагчийн нийтийн захиалга — `submit_shop_order` RPC (server-side pricing)
 - [x] Dashboard загварууд — dashboard_template (default/retail/financial/inventory)
 - [x] Олон байршил — stock_transfers + approve_stock_transfer RPC
-- [x] Hardware — wedge баркод сканнер + has_receipt_printer авто-принт
+- [x] Hardware — wedge баркод сканнер + has_receipt_printer авто-принт + **ESC/POS драйвер** (`/api/hardware/escpos` мост, `escpos_host`/`escpos_port`) + **мөнгөн хайрцаг** (`has_cash_drawer`, бэлэн төлбөрт нээгдэнэ) + **терминал** (`/terminal/pos` дэлгэц дүүрэн kiosk)
 - [x] Embeddable analytics — embed_tokens + `/embed/report` iframe
 - [x] Хэрэглэгчийн mobile app — `apps/zer-mobile` (Expo)
