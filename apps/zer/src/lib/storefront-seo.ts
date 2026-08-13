@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { isCustomHost, storefrontBasePath } from "@/lib/storefront-host";
+
+export { isCustomHost, storefrontBasePath };
 
 /**
  * Shared storefront SEO helpers.
@@ -18,10 +21,6 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://zer.zuiiotech.com"
 ).replace(/\/$/, "");
 
-function siteHost(): string {
-  return SITE_URL.replace(/^https?:\/\//, "").split("/")[0] ?? "";
-}
-
 /** The request host (Host header), or null when no HTTP request is active. */
 export async function requestHost(): Promise<string | null> {
   try {
@@ -30,22 +29,6 @@ export async function requestHost(): Promise<string | null> {
     // No request context (tests, static generation) — callers fall back.
     return null;
   }
-}
-
-/**
- * True when `host` is not the app's primary host — a verified custom domain
- * or an org subdomain. Localhost and preview hosts (vercel.app) are excluded
- * so canonicals never point at throwaway origins.
- */
-export function isCustomHost(host: string | null): boolean {
-  if (!host) return false;
-  const normalized = host.toLowerCase();
-  if (normalized === siteHost()) return false;
-  if (normalized === "localhost" || normalized === "localhost:3000") {
-    return false;
-  }
-  if (normalized.endsWith(".vercel.app")) return false;
-  return true;
 }
 
 /**

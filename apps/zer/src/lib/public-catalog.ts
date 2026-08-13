@@ -68,10 +68,10 @@ export type PublicProductDetail = PublicProduct & {
   created_at: string | null;
   variants: Array<{
     id: string;
-    name: string;
     sku: string | null;
-    price: number | null;
-    image_url: string | null;
+    sale_price: number | null;
+    current_stock: number | null;
+    option_labels: string | null;
   }> | null;
   attributes: Array<{
     name: string;

@@ -4,7 +4,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { after } from "next/server";
 import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 
 export type ReviewStatus = "pending" | "approved" | "rejected";
 
@@ -74,6 +74,7 @@ export async function moderateReview(reviewId: string, status: ReviewStatus) {
   );
 
   revalidateEntities(["reviews"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -129,5 +130,6 @@ export async function deleteReview(reviewId: string) {
   );
 
   revalidateEntities(["reviews"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }

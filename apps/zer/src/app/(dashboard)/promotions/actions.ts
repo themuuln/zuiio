@@ -4,7 +4,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { after } from "next/server";
 import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 function _parseFloatSafe(value: FormDataEntryValue | null): number {
@@ -223,6 +223,7 @@ export async function createPromotion(
   );
 
   revalidateEntities(["promotions"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -426,6 +427,7 @@ export async function updatePromotion(
   );
 
   revalidateEntities(["promotions"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -485,6 +487,7 @@ export async function togglePromotionActive(
   );
 
   revalidateEntities(["promotions"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -540,6 +543,7 @@ export async function deletePromotion(promotionId: string) {
   );
 
   revalidateEntities(["promotions"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 

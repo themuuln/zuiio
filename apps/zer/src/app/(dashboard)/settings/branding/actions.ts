@@ -9,7 +9,7 @@ import {
   getTheme,
   isValidColorValue,
 } from "@/lib/branding";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 
 export type BrandingState = {
   error?: string;
@@ -112,5 +112,6 @@ export async function updateBrandConfig(
 
   revalidateEntity("branding");
   revalidateEntity("settings");
+  revalidateEntityTag("storefront", organizationId);
   return { success: true };
 }

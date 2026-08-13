@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { BlogClient } from "./blog-client";
 import type { PublicBlogPost } from "./page";
 
@@ -18,15 +19,23 @@ function makePosts(count: number): PublicBlogPost[] {
   }));
 }
 
+function renderBlog(ui: React.ReactElement) {
+  return render(
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      {ui}
+    </StorefrontBaseProvider>,
+  );
+}
+
 describe("BlogClient", () => {
   it("shows the empty state when there are no posts", () => {
-    render(<BlogClient slug="storefront-e2e-test" posts={[]} />);
+    renderBlog(<BlogClient posts={[]} />);
     expect(screen.getByText("Одоогоор нийтлэл байхгүй.")).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("paginates 8 posts per page", () => {
-    render(<BlogClient slug="storefront-e2e-test" posts={makePosts(10)} />);
+    renderBlog(<BlogClient posts={makePosts(10)} />);
 
     // Page 1: posts 1–8, counter shows range + total
     expect(screen.getByText("Нийтлэл 1")).toBeInTheDocument();
@@ -51,12 +60,12 @@ describe("BlogClient", () => {
   });
 
   it("renders exactly 8 posts when the total is a multiple of 8", () => {
-    render(<BlogClient slug="s" posts={makePosts(16)} />);
+    renderBlog(<BlogClient posts={makePosts(16)} />);
     expect(screen.getByText("1 – 8 / 16")).toBeInTheDocument();
   });
 
   it("links each post to its public detail page", () => {
-    render(<BlogClient slug="storefront-e2e-test" posts={makePosts(2)} />);
+    renderBlog(<BlogClient posts={makePosts(2)} />);
     const link = screen.getByRole("link", { name: /Нийтлэл 1/ });
     expect(link).toHaveAttribute("href", "/storefront-e2e-test/blog/post-1");
     // Published date is formatted and rendered for each post
@@ -64,7 +73,7 @@ describe("BlogClient", () => {
   });
 
   it("clamps the page counter when posts is empty of extras (1 post)", () => {
-    render(<BlogClient slug="s" posts={makePosts(1)} />);
+    renderBlog(<BlogClient posts={makePosts(1)} />);
     expect(screen.getByText("1 – 1 / 1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Дараах/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Өмнөх/ })).toBeDisabled();

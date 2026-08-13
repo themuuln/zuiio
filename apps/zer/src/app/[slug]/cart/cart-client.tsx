@@ -15,6 +15,7 @@ import {
   StorefrontCartProvider,
   useStorefrontCart,
 } from "@/components/storefront/cart-context";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -157,6 +158,7 @@ function CartView({
   branches: StorefrontBranch[];
   bnplAvailable: boolean;
 }) {
+  const base = useStorefrontBase();
   const { items, total, removeItem, updateQuantity, clear } =
     useStorefrontCart();
   const [name, setName] = useState("");
@@ -542,10 +544,10 @@ function CartView({
               <Separator />
               <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button asChild>
-                  <Link href={`/${slug}/account/orders`}>Захиалгын түүх</Link>
+                  <Link href={`${base}/account/orders`}>Захиалгын түүх</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href={`/${slug}/products`}>Худалдаа үргэлжлүүлэх</Link>
+                  <Link href={`${base}/products`}>Худалдаа үргэлжлүүлэх</Link>
                 </Button>
               </div>
             </CardContent>
@@ -571,7 +573,7 @@ function CartView({
               <Package className="size-12 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">Сагс хоосон байна</p>
               <Button asChild variant="outline">
-                <Link href={`/${slug}/products`}>Бүтээгдэхүүн үзэх</Link>
+                <Link href={`${base}/products`}>Бүтээгдэхүүн үзэх</Link>
               </Button>
             </CardContent>
           </Card>

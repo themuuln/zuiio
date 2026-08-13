@@ -1,17 +1,20 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { isCustomHost, normalizeHost, siteHost } from "@/lib/storefront-host";
 
 /**
  * Resolves the effective org slug for a public storefront request that
  * arrived on a custom domain or an org subdomain, and returns a rewrite
  * to the /[slug] route when applicable.
  *
- * Three cases:
+ * Four cases:
  * 1. Host IS the app's primary host → no rewrite.
  * 2. Host is a subdomain of the primary host (`{slug}.example.com`) →
  *    rewrite to `/{slug}{path}` directly (wildcard DNS required at the host).
  * 3. Host is a verified custom domain → resolve via the domain-resolve API
  *    route, then rewrite to `/{slug}{path}`.
+ * 4. Host is a verified admin (ERP) domain → no rewrite: the dashboard and
+ *    auth pages render under the admin host.
  *
  * Rewrites preserve the original host, so `[slug]` pages render under the
  * custom domain and generateMetadata sees the canonical host.
@@ -38,29 +41,20 @@ export async function maybeRewriteStorefrontHost(
     return null;
   }
 
-  const host = request.headers?.get?.("host")?.toLowerCase() ?? "";
-  if (!host) return null;
-
-  // Skip the app's own host (localhost, Vercel URL, configured site URL).
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.toLowerCase() ?? "";
-  const siteHost =
-    (siteUrl || "https://zer.zuiiotech.com")
-      .replace(/^https?:\/\//, "")
-      .split("/")[0] ?? "";
-  if (siteHost && host === siteHost) return null;
-  if (host === "localhost:3000" || host === "localhost") return null;
-  if (host.endsWith(".vercel.app")) return null;
+  const rawHost = request.headers?.get?.("host")?.toLowerCase() ?? "";
+  const host = normalizeHost(rawHost) ?? "";
+  // Skip the app's own host (localhost, Vercel URL, configured site URL) and
+  // preview hosts — everything else is a custom domain or org subdomain.
+  if (!host || !isCustomHost(host)) return null;
 
   // Subdomain of the primary host: `{slug}.{siteHost}` → /{slug}/…
-  if (siteHost) {
-    const subdomainSuffix = `.${siteHost}`;
-    if (host.endsWith(subdomainSuffix)) {
-      const sub = host.slice(0, -subdomainSuffix.length);
-      if (sub && !sub.includes(".") && /^[a-z0-9-]+$/.test(sub)) {
-        const rewriteUrl = request.nextUrl.clone();
-        rewriteUrl.pathname = `/${sub}${pathname === "/" ? "" : pathname}`;
-        return NextResponse.rewrite(rewriteUrl, { request });
-      }
+  const subdomainSuffix = `.${siteHost()}`;
+  if (host.endsWith(subdomainSuffix)) {
+    const sub = host.slice(0, -subdomainSuffix.length);
+    if (sub && !sub.includes(".") && /^[a-z0-9-]+$/.test(sub)) {
+      const rewriteUrl = request.nextUrl.clone();
+      rewriteUrl.pathname = `/${sub}${pathname === "/" ? "" : pathname}`;
+      return NextResponse.rewrite(rewriteUrl, { request });
     }
   }
 
@@ -72,7 +66,10 @@ export async function maybeRewriteStorefrontHost(
       { next: { revalidate: 60 } },
     );
     if (!res.ok) return null;
-    const data = (await res.json()) as { slug?: string };
+    const data = (await res.json()) as { slug?: string; admin?: boolean };
+    // Admin (ERP) domain — the dashboard and auth pages render under it,
+    // never rewritten to the storefront.
+    if (data.admin) return null;
     if (!data.slug) return null;
 
     const rewriteUrl = request.nextUrl.clone();

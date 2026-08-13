@@ -45,6 +45,7 @@ vi.mock("@/lib/action-utils", () => ({
 
 vi.mock("@/lib/revalidate", () => ({
   revalidateEntity: vi.fn(),
+  revalidateEntityTag: vi.fn(),
 }));
 
 vi.mock("node:dns/promises", () => ({
@@ -69,8 +70,10 @@ vi.mock("@/lib/vercel-domains", async (importOriginal) => {
 });
 
 import {
+  checkAdminDomainDns,
   checkCustomDomainDns,
   updatePublicProfile,
+  verifyAdminDomain,
   verifyCustomDomain,
 } from "@/app/(dashboard)/settings/organization/actions";
 
@@ -354,5 +357,174 @@ describe("updatePublicProfile", () => {
       domain_verified: true,
     });
     expect(mockDetach).not.toHaveBeenCalled();
+  });
+
+  it("detaches the old verified admin domain when the admin domain changes", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            custom_domain: null,
+            domain_verified: false,
+            admin_domain: "old-erp.example.mn",
+            admin_domain_verified: true,
+          },
+          error: null,
+        },
+        { data: null, error: null },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+
+    const fd = new FormData();
+    fd.set("admin_domain", "new-erp.example.mn");
+    const result = await updatePublicProfile(undefined, fd);
+
+    expect(result.success).toBe(true);
+    expect(mockDetach).toHaveBeenCalledWith("old-erp.example.mn");
+  });
+
+  it("keeps admin domain verification when the admin domain is unchanged", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            custom_domain: null,
+            domain_verified: false,
+            admin_domain: "erp.example.mn",
+            admin_domain_verified: true,
+          },
+          error: null,
+        },
+        { data: null, error: null },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+
+    const fd = new FormData();
+    fd.set("admin_domain", "erp.example.mn");
+    await updatePublicProfile(undefined, fd);
+
+    const upsertChain = supabase.from.mock.results[1]?.value as
+      | { upsert?: { mock: { calls: Array<[unknown]> } } }
+      | undefined;
+    const payload = upsertChain?.upsert?.mock?.calls[0]?.[0] ?? null;
+    expect(payload).toMatchObject({
+      admin_domain: "erp.example.mn",
+      admin_domain_verified: true,
+    });
+    expect(mockDetach).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifyAdminDomain", () => {
+  it("marks admin_domain verified and attaches the domain to Vercel on TXT match", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            admin_domain: "erp.example.mn",
+            admin_domain_verified: false,
+          },
+          error: null,
+        },
+        { data: null, error: null },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+    mockResolveTxt.mockResolvedValue([[`zer-verify=${EXPECTED_TOKEN}`]]);
+    mockAttach.mockResolvedValue({
+      configured: true,
+      attached: true,
+      alreadyPresent: false,
+    });
+
+    const result = await verifyAdminDomain(undefined, new FormData());
+
+    expect(result).toMatchObject({
+      success: true,
+      verified: true,
+      token: EXPECTED_TOKEN,
+      vercelAttached: true,
+      dnsRecord: { type: "CNAME", name: "erp", value: "cname.vercel-dns.com" },
+    });
+    expect(mockAttach).toHaveBeenCalledWith("erp.example.mn");
+
+    // The verified flag lands on admin_domain_verified, not domain_verified.
+    const updateCall = (
+      supabase.from.mock.results[1]?.value as
+        | { update?: { mock: { calls: Array<[unknown]> } } }
+        | undefined
+    )?.update?.mock?.calls[0]?.[0];
+    expect(updateCall).toMatchObject({ admin_domain_verified: true });
+  });
+
+  it("reports the token and skips the update when TXT does not match", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            admin_domain: "erp.example.mn",
+            admin_domain_verified: false,
+          },
+          error: null,
+        },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+    mockResolveTxt.mockResolvedValue([["something-else"]]);
+
+    const result = await verifyAdminDomain(undefined, new FormData());
+
+    expect(result.success).toBeUndefined();
+    expect(result.error).toContain(EXPECTED_TOKEN);
+    expect(result.token).toBe(EXPECTED_TOKEN);
+    expect(mockAttach).not.toHaveBeenCalled();
+  });
+
+  it("errors when no admin domain is saved", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            admin_domain: null,
+            admin_domain_verified: false,
+          },
+          error: null,
+        },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+
+    const result = await verifyAdminDomain(undefined, new FormData());
+    expect(result.error).toContain("домэйн");
+  });
+});
+
+describe("checkAdminDomainDns", () => {
+  it("reports live when the admin domain CNAME points at Vercel", async () => {
+    const supabase = supabaseMock({
+      organization_public_profiles: [
+        {
+          data: {
+            admin_domain: "erp.example.mn",
+            admin_domain_verified: true,
+          },
+          error: null,
+        },
+      ],
+    });
+    mockRequireActionContext.mockResolvedValue(authedCtx(supabase));
+    mockResolve4.mockRejectedValue(new Error("no A"));
+    mockResolveCname.mockResolvedValue(["cname.vercel-dns.com"]);
+    mockGetStatus.mockResolvedValue({
+      configured: true,
+      present: true,
+      verified: true,
+    });
+
+    const result = await checkAdminDomainDns(undefined, new FormData());
+
+    expect(result).toMatchObject({ pointing: true, live: true });
   });
 });

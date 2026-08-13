@@ -1,9 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import {
+  getPublicBranchesCached,
+  getStorefrontShell,
+} from "@/lib/storefront-cache";
 import { CartClient, type StorefrontBranch } from "./cart-client";
 
 export default function CartPage({
@@ -24,14 +25,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("name")
-    .eq("slug", slug)
-    .maybeSingle();
+  const shell = await getStorefrontShell(slug);
+  const orgName = shell?.org?.name ?? null;
   return {
-    title: org?.name ? `${org.name} — Сагс` : "Сагс",
+    title: orgName ? `${orgName} — Сагс` : "Сагс",
     robots: { index: false, follow: true },
   };
 }
@@ -42,45 +39,19 @@ async function CartDataFetcher({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
 
   try {
-    // Delivery config columns (delivery_enabled, pickup_enabled, ...) and the
-    // get_public_branches RPC were added by the backend migration after the
-    // generated types snapshot; query through the untyped client until types
-    // regenerate (repo pattern for schema that landed ahead of typegen).
-    const untyped = supabase as SupabaseClient;
-    const { data: org } = await untyped
-      .from("organizations")
-      .select(
-        "name, slug, currency, public_profile:organization_public_profiles(delivery_enabled, pickup_enabled, delivery_fee_amount, free_delivery_threshold, estimated_delivery_hours)",
-      )
-      .eq("slug", slug)
-      .maybeSingle();
+    const shell = await getStorefrontShell(slug);
+    const org = shell?.org ?? null;
+    const profile = shell?.profile ?? null;
 
     if (!org) {
       notFound();
     }
 
-    const rawProfile = org.public_profile;
-    const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-
-    let branches: StorefrontBranch[] = [];
-    try {
-      const { data: branchRows, error: branchError } = await untyped.rpc(
-        "get_public_branches",
-        { p_slug: slug },
-      );
-      if (branchError) {
-        capture(branchError, { context: "storefront cart: fetch branches" });
-      }
-      branches = Array.isArray(branchRows)
-        ? (branchRows as StorefrontBranch[])
-        : [];
-    } catch (err) {
-      // Branch listing is optional UI — never fail the whole cart page.
-      capture(err, { context: "storefront cart: fetch branches" });
-    }
+    const branches = (await getPublicBranchesCached(
+      slug,
+    )) as unknown as StorefrontBranch[];
 
     return (
       <CartClient

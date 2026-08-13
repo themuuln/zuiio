@@ -3,6 +3,7 @@
 import { ShoppingCart } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useStorefrontCart } from "@/components/storefront/cart-context";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,12 +11,13 @@ import { cn } from "@/lib/utils";
  * Cart link with live item count for storefront page headers. Must be
  * rendered inside a `StorefrontCartProvider`.
  */
-export function StorefrontCartLink({ slug }: { slug: string }) {
+export function StorefrontCartLink() {
   const { count } = useStorefrontCart();
+  const base = useStorefrontBase();
 
   return (
     <Link
-      href={`/${slug}/cart`}
+      href={`${base}/cart`}
       aria-label={`Сагс (${count})`}
       className={cn(
         buttonVariants({ variant: "outline", size: "default" }),

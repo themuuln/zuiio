@@ -3,6 +3,7 @@
 import { Heart, MagnifyingGlass, User } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
 import { useWishlist } from "@/components/storefront/wishlist-context";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,12 +37,15 @@ export function StorefrontHeader({
 }) {
   const { count: wishlistCount } = useWishlist();
   const pathname = usePathname();
+  // Root-relative on custom domains/subdomains (proxy rewrites the domain
+  // root to /{slug}), "/{slug}" on the primary host.
+  const base = useStorefrontBase();
 
   // The buyer account area (sign-in, orders, addresses, points) renders its
   // own AccountHeader with a back link and section nav — the full storefront
   // chrome (search, wishlist, cart, account, category nav) is redundant
   // there. Hooks stay unconditional; this return comes after all of them.
-  if (pathname?.startsWith(`/${slug}/account`)) return null;
+  if (pathname?.startsWith(`${base}/account`)) return null;
 
   const searchField = (className?: string) => (
     <div className={cn("relative w-full", className)}>
@@ -61,7 +65,7 @@ export function StorefrontHeader({
         {/* Row 1 — logo + name, search, actions */}
         <div className="flex items-center gap-3 py-3">
           <Link
-            href={`/${slug}`}
+            href={`${base}`}
             className="flex min-w-0 items-center gap-2.5"
             aria-label={name ?? slug}
           >
@@ -90,7 +94,7 @@ export function StorefrontHeader({
           {/* Desktop search */}
           <search className="hidden min-w-0 flex-1 justify-center sm:flex">
             <form
-              action={`/${slug}/products`}
+              action={`${base}/products`}
               method="get"
               className="w-full max-w-md"
             >
@@ -101,7 +105,7 @@ export function StorefrontHeader({
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
             {/* Wishlist */}
             <Link
-              href={`/${slug}/wishlist`}
+              href={`${base}/wishlist`}
               aria-label={`Хадгалсан (${wishlistCount})`}
               className={cn(
                 buttonVariants({ variant: "outline", size: "default" }),
@@ -120,10 +124,10 @@ export function StorefrontHeader({
               )}
             </Link>
             {/* Cart */}
-            <StorefrontCartLink slug={slug} />
+            <StorefrontCartLink />
             {/* Account */}
             <Link
-              href={`/${slug}/account`}
+              href={`${base}/account`}
               aria-label="Нэвтрэх / Бүртгэл"
               className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
             >
@@ -134,7 +138,7 @@ export function StorefrontHeader({
 
         {/* Mobile search */}
         <search className="block pb-3 sm:hidden">
-          <form action={`/${slug}/products`} method="get">
+          <form action={`${base}/products`} method="get">
             {searchField()}
           </form>
         </search>
@@ -145,7 +149,7 @@ export function StorefrontHeader({
           className="flex items-center gap-1 overflow-x-auto border-t border-border/40 py-2"
         >
           <Link
-            href={`/${slug}/products`}
+            href={`${base}/products`}
             className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-muted"
           >
             Бүх бараа
@@ -153,7 +157,7 @@ export function StorefrontHeader({
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/${slug}/products?category=${category.id}`}
+              href={`${base}/products?category=${category.id}`}
               className="shrink-0 rounded-full px-3 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {category.name}

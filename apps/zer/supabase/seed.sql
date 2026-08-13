@@ -26,18 +26,21 @@ ON CONFLICT (id) DO UPDATE SET
 
 INSERT INTO organization_public_profiles (
   organization_id, catalog_enabled, display_name, description,
-  contact_email, contact_phone, address, website_url, business_hours
+  contact_email, contact_phone, address, website_url, business_hours,
+  custom_domain, domain_verified
 ) VALUES (
   '10000000-0000-4000-8000-000000000001', true, 'Storefront E2E Shop',
   'Нийтийн дэлгүүрийн E2E тестийн дэлгүүр. Бүтээгдэхүүн, вариант, блог зэргийг шалгана.',
   'shop@example.mn', '99112233', 'Улаанбаатар, Чингэлтэй дүүрэг', 'https://example.mn',
-  '{"Monday":"09:00-18:00","Tuesday":"09:00-18:00","Saturday":"10:00-15:00"}'::jsonb
+  '{"Monday":"09:00-18:00","Tuesday":"09:00-18:00","Saturday":"10:00-15:00"}'::jsonb,
+  'e2e-custom.localhost', true
 )
 ON CONFLICT (organization_id) DO UPDATE SET
   catalog_enabled = EXCLUDED.catalog_enabled, display_name = EXCLUDED.display_name,
   description = EXCLUDED.description, contact_email = EXCLUDED.contact_email,
   contact_phone = EXCLUDED.contact_phone, address = EXCLUDED.address,
-  website_url = EXCLUDED.website_url, business_hours = EXCLUDED.business_hours;
+  website_url = EXCLUDED.website_url, business_hours = EXCLUDED.business_hours,
+  custom_domain = EXCLUDED.custom_domain, domain_verified = EXCLUDED.domain_verified;
 
 -- ── Branch (required by submit_shop_order) ──────────────────
 INSERT INTO branches (id, organization_id, name, slug, is_default)

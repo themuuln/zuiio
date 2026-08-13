@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { StorefrontHeader } from "./storefront-header";
 
 const mockPathname = vi.hoisted(() => vi.fn());
@@ -16,6 +17,16 @@ vi.mock("@/components/storefront/cart-context", () => ({
   useStorefrontCart: () => ({ count: 3 }),
 }));
 
+/**
+ * Header links are storefront-relative — tests render on the primary host
+ * (base "/test-shop"), so hrefs keep the slug prefix.
+ */
+function renderHeader(ui: React.ReactElement) {
+  return render(
+    <StorefrontBaseProvider basePath="/test-shop">{ui}</StorefrontBaseProvider>,
+  );
+}
+
 describe("StorefrontHeader", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -23,7 +34,7 @@ describe("StorefrontHeader", () => {
   });
 
   it("renders the org identity (name + logo fallback initial)", () => {
-    render(
+    renderHeader(
       <StorefrontHeader
         slug="test-shop"
         name="Test Shop"
@@ -40,7 +51,7 @@ describe("StorefrontHeader", () => {
   });
 
   it("renders a search form that GETs to the products page", () => {
-    render(
+    renderHeader(
       <StorefrontHeader
         slug="test-shop"
         name="Test Shop"
@@ -64,7 +75,7 @@ describe("StorefrontHeader", () => {
   });
 
   it("links to wishlist (with count), cart, and account", () => {
-    render(
+    renderHeader(
       <StorefrontHeader
         slug="test-shop"
         name="Test Shop"
@@ -89,7 +100,7 @@ describe("StorefrontHeader", () => {
   it("renders nothing on buyer account routes (own AccountHeader there)", () => {
     mockPathname.mockReturnValue("/test-shop/account/orders");
 
-    const { container } = render(
+    const { container } = renderHeader(
       <StorefrontHeader
         slug="test-shop"
         name="Test Shop"
@@ -102,7 +113,7 @@ describe("StorefrontHeader", () => {
   });
 
   it("renders the category nav with a link to all products", () => {
-    render(
+    renderHeader(
       <StorefrontHeader
         slug="test-shop"
         name="Test Shop"

@@ -20,11 +20,6 @@ export async function generateMetadata({
   };
 }
 
-export default async function StoreAccountAddressesPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  return <AddressesClient slug={slug} />;
+export default async function StoreAccountAddressesPage() {
+  return <AddressesClient />;
 }

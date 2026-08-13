@@ -66,6 +66,7 @@ beforeAll(() => {
   });
 });
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { I18nProvider } from "@/lib/i18n";
 import type { StoreSessionState } from "../../use-store-session";
 import { type OrderDetail, OrderDetailClient } from "./order-detail-client";
@@ -124,9 +125,11 @@ const ORDER: OrderDetail = {
 
 function renderDetail(order: OrderDetail = ORDER) {
   return render(
-    <I18nProvider>
-      <OrderDetailClient slug="storefront-e2e-test" order={order} />
-    </I18nProvider>,
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      <I18nProvider>
+        <OrderDetailClient slug="storefront-e2e-test" order={order} />
+      </I18nProvider>
+    </StorefrontBaseProvider>,
   );
 }
 

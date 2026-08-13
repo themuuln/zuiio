@@ -4,7 +4,7 @@ import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { validateCategoryInput } from "@/lib/domain-rules";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createCategory(
@@ -51,6 +51,7 @@ export async function createCategory(
   }
 
   revalidateEntity("categories");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -104,6 +105,7 @@ export async function updateCategory(
   }
 
   revalidateEntity("categories");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -151,6 +153,7 @@ export async function deleteCategory(
   }
 
   revalidateEntity("categories");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -204,5 +207,6 @@ export async function seedPresetCategories(): Promise<{
   }
 
   revalidateEntity("categories");
+  revalidateEntityTag("products", organizationId);
   return { seeded: newCategories.length };
 }

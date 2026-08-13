@@ -3,7 +3,7 @@
 import { capture, withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { requireActionContext, requireAppContext } from "@/lib/action-utils";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import type { Database } from "@/lib/supabase/types";
 
@@ -250,6 +250,7 @@ export async function importBrandPresets(formData: FormData) {
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   revalidateEntity("settings");
   return { success: true as const, count: importedCount };
 }
@@ -373,6 +374,7 @@ export async function importProductPreset(formData: FormData) {
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   revalidateEntity("settings");
   return { success: true as const, name: preset.product_name };
 }
@@ -505,6 +507,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   revalidateEntity("settings");
   return { success: true as const, count };
 }
@@ -751,5 +754,6 @@ export async function updateOrgLogo(logoUrl: string | null) {
 
   revalidateEntity("settings");
   revalidateEntity("branding");
+  revalidateEntityTag("storefront", organizationId);
   return { success: true as const };
 }

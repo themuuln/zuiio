@@ -61,15 +61,18 @@ vi.mock("sonner", () => ({
   toast: { success: mockToastSuccess },
 }));
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { I18nProvider } from "@/lib/i18n";
 import { AccountClient } from "./account-client";
 import type { StoreSessionState } from "./use-store-session";
 
 function renderAccount() {
   return render(
-    <I18nProvider>
-      <AccountClient slug="storefront-e2e-test" />
-    </I18nProvider>,
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      <I18nProvider>
+        <AccountClient slug="storefront-e2e-test" />
+      </I18nProvider>
+    </StorefrontBaseProvider>,
   );
 }
 

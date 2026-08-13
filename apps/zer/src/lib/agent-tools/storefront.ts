@@ -11,6 +11,7 @@ import {
   getPublicPromotions,
   getPublicReviews,
 } from "@/lib/public-catalog";
+import { storefrontUrl } from "@/lib/storefront-host";
 import type { Database } from "@/lib/supabase/types";
 
 /**
@@ -30,7 +31,7 @@ export function createStorefrontAgentTools(
   baseUrl: string,
 ): Tool[] {
   const productUrl = (productId: string) =>
-    `${baseUrl}/${slug}/products/${productId}`;
+    storefrontUrl(baseUrl, slug, `/products/${productId}`);
 
   return [
     {
@@ -252,7 +253,7 @@ export function createStorefrontAgentTools(
             title: p.title,
             excerpt: p.excerpt,
             published_at: p.published_at,
-            url: `${baseUrl}/${slug}/blog/${p.slug}`,
+            url: storefrontUrl(baseUrl, slug, `/blog/${p.slug}`),
           }));
         if (posts.length === 0) {
           return { posts: [], note: "Мэдээ, нийтлэл байхгүй." };

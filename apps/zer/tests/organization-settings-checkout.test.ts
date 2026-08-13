@@ -21,6 +21,7 @@ mockMod("@zuiio/capture", {
 });
 mockMod("@/lib/revalidate", {
   revalidateEntity: mock.fn(),
+  revalidateEntityTag: mock.fn(),
 });
 
 let currentSupabase: unknown = null;

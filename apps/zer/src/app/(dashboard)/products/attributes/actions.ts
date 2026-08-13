@@ -2,7 +2,7 @@
 
 import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -150,6 +150,7 @@ export async function createAttributeDefinition(
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -201,6 +202,7 @@ export async function updateAttributeDefinition(
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -221,6 +223,7 @@ export async function deleteAttributeDefinition(id: string) {
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -267,6 +270,7 @@ export async function setAttributeCategories(
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 /**
@@ -499,6 +503,7 @@ export async function seedBuddhistAttributeTemplate() {
     }
   }
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, created };
 }
 /**
@@ -560,6 +565,7 @@ export async function seedBuddhistCategories() {
     }
   }
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, created };
 }
 /* ------------------------------------------------------------------ */
@@ -626,6 +632,7 @@ export async function seedReligiousCategories() {
     }
   }
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, created };
 }
 
@@ -861,5 +868,6 @@ export async function seedReligiousProducts() {
     }
   }
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, created };
 }

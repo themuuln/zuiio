@@ -6,6 +6,7 @@ import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -35,6 +36,7 @@ export type MyOrder = {
 export function OrdersClient({ slug }: { slug: string }) {
   const { t } = useI18n();
   const { state } = useStoreSession();
+  const base = useStorefrontBase();
   const [orders, setOrders] = useState<MyOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -112,7 +114,7 @@ export function OrdersClient({ slug }: { slug: string }) {
           {t("storeAccount.orders.loginRequired")}
         </p>
         <Button asChild size="lg">
-          <Link href={`/${slug}/account`}>
+          <Link href={`${base}/account`}>
             {t("storeAccount.orders.loginCta")}
           </Link>
         </Button>
@@ -204,7 +206,7 @@ export function OrdersClient({ slug }: { slug: string }) {
                 </Button>
               )}
               <Button asChild size="sm" variant="outline">
-                <Link href={`/${slug}/account/orders/${order.id}`}>
+                <Link href={`${base}/account/orders/${order.id}`}>
                   {t("storeAccount.orders.detail")}
                 </Link>
               </Button>

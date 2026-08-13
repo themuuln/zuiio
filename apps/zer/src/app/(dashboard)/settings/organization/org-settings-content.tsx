@@ -96,6 +96,8 @@ export function OrgSettingsContent() {
         og_image_url: string | null;
         custom_domain: string | null;
         domain_verified: boolean;
+        admin_domain: string | null;
+        admin_domain_verified: boolean;
         policies: string | null;
         social_links: Record<string, string> | null;
       } | null;

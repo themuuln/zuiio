@@ -6,14 +6,17 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { getPublicCatalog } from "@/lib/public-catalog";
+import {
+  getPublicCatalogCached,
+  getStorefrontShell,
+  type StorefrontCatalog,
+} from "@/lib/storefront-cache";
 import {
   absoluteImageUrl,
   requestHost,
   storefrontCanonical,
   storefrontSocialMetadata,
 } from "@/lib/storefront-seo";
-import { createClient } from "@/lib/supabase/server";
 import type { OrgMeta, PublicProduct } from "./products/page";
 import { ProductDetailDrawer } from "./products/product-detail-drawer";
 import { ProductCard } from "./products/products-page-client";
@@ -103,25 +106,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("name, slug, public_profile:organization_public_profiles(*) ")
-    .eq("slug", slug)
-    .single();
-
+  const shell = await getStorefrontShell(slug);
+  const org = shell?.org ?? null;
   if (!org) {
     return { title: "Байгууллага" };
   }
 
-  const profile = org.public_profile as {
-    meta_title?: string | null;
-    meta_description?: string | null;
-    og_image_url?: string | null;
-    logo_url?: string | null;
-    banner_url?: string | null;
-  } | null;
+  const profile = shell?.profile as unknown as
+    | OrgProfileData["public_profile"]
+    | null;
 
   const title = profile?.meta_title || org.name;
   const description =
@@ -166,29 +159,19 @@ async function OrgProfileDataFetcher({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
 
   try {
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .select("id, name, slug, currency, company_type")
-      .eq("slug", slug)
-      .single();
-
-    if (orgError || !org) {
-      capture(orgError ?? "Organization not found", {
+    const shell = await getStorefrontShell(slug);
+    const org = shell?.org ?? null;
+    if (!org) {
+      capture("Organization not found", {
         context: "org profile: org lookup",
       });
       notFound();
     }
 
-    const profileResult = (await supabase
-      .from("organization_public_profiles")
-      .select("*")
-      .eq("organization_id", org.id)
-      .maybeSingle()) as { data: OrgProfileData["public_profile"] };
-
-    const publicProfile = profileResult.data;
+    const publicProfile = (shell?.profile ??
+      null) as unknown as OrgProfileData["public_profile"];
 
     if (!publicProfile?.catalog_enabled) {
       notFound();
@@ -196,10 +179,12 @@ async function OrgProfileDataFetcher({
 
     // Fetch ALL public products — the storefront shows the full catalog
     // inline instead of a CTA button to the products page. First page
-    // returns the total, so remaining pages are fetched in parallel.
+    // returns the total, so remaining pages are fetched in parallel. Every
+    // page is cached (stale-while-revalidate), so repeat visits skip the
+    // database entirely.
     const products: PublicProduct[] = [];
     let catalogTotal = 0;
-    const firstPage = await getPublicCatalog(supabase, slug, {
+    const firstPage = await getPublicCatalogCached(slug, {
       page: 1,
       pageSize: 100,
     });
@@ -214,13 +199,13 @@ async function OrgProfileDataFetcher({
           { length: pagesRemaining },
           (_, i) => i + 2,
         );
-        const rest: Awaited<ReturnType<typeof getPublicCatalog>>[] = [];
+        const rest: (StorefrontCatalog | null)[] = [];
         for (let i = 0; i < pageNumbers.length; i += 4) {
           const batch = await Promise.all(
             pageNumbers
               .slice(i, i + 4)
               .map((p) =>
-                getPublicCatalog(supabase, slug, { page: p, pageSize: 100 }),
+                getPublicCatalogCached(slug, { page: p, pageSize: 100 }),
               ),
           );
           rest.push(...batch);
@@ -242,7 +227,7 @@ async function OrgProfileDataFetcher({
       name: org.name,
       slug: org.slug,
       currency: org.currency ?? "",
-      company_type: org.company_type,
+      company_type: org.company_type ?? "",
       public_profile: publicProfile,
     };
 

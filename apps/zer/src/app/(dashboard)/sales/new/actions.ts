@@ -15,7 +15,7 @@ import {
   notifyWebPushEvent,
   sendTelegramNotification,
 } from "@/lib/notification";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 import {
   createStockMovements,
   fetchProductsForStock,
@@ -508,6 +508,7 @@ export async function createSale(
   }
 
   revalidateEntities(["sales", "inventory", "products"]);
+  revalidateEntityTag("products", organizationId);
   return {
     success: true as const,
     error: undefined,

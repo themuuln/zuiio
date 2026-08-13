@@ -271,7 +271,7 @@ describe("StorefrontAiChat", () => {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ token: "Эхний " })}\n\n`),
         );
-        await new Promise((r) => setTimeout(r, 60));
+        await new Promise((r) => setTimeout(r, 250));
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ token: "хэсэг" })}\n\n`),
         );

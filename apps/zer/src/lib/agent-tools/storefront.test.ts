@@ -111,7 +111,7 @@ describe("createStorefrontAgentTools", () => {
           unit: "ширхэг",
           category_name: "Утас",
           current_stock: null,
-          url: `${BASE_URL}/${SLUG}/products/p-1`,
+          url: `${BASE_URL}/products/p-1`,
         },
       ],
     });
@@ -202,7 +202,7 @@ describe("createStorefrontAgentTools", () => {
       name: "Утас A",
       description: "Сайн утас",
       attributes: [{ name: "Өнгө", value: "хар" }],
-      url: `${BASE_URL}/${SLUG}/products/p-1`,
+      url: `${BASE_URL}/products/p-1`,
     });
   });
 
@@ -484,14 +484,14 @@ describe("createStorefrontAgentTools", () => {
           title: "Шинэ ирэлт",
           excerpt: "…",
           published_at: "2026-08-11T00:00:00Z",
-          url: `${BASE_URL}/${SLUG}/blog/shine-irelt`,
+          url: `${BASE_URL}/blog/shine-irelt`,
         },
         {
           id: "b-2",
           title: "Хямдрал зарлалаа",
           excerpt: "…",
           published_at: "2026-08-12T00:00:00Z",
-          url: `${BASE_URL}/${SLUG}/blog/khiamdral`,
+          url: `${BASE_URL}/blog/khiamdral`,
         },
       ],
     });

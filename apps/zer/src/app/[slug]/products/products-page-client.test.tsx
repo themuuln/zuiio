@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
 import { ProductsPageClient } from "./products-page-client";
 
@@ -88,7 +89,11 @@ function renderProducts(
     maxPrice: "",
     sort: "newest",
   };
-  return render(<ProductsPageClient {...defaults} {...props} />);
+  return render(
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      <ProductsPageClient {...defaults} {...props} />
+    </StorefrontBaseProvider>,
+  );
 }
 
 describe("ProductsPageClient", () => {

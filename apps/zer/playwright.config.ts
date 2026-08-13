@@ -1,6 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 
+// Snapshot the shell env BEFORE .env.local is loaded. The app's .env.local
+// points NEXT_PUBLIC_SUPABASE_URL at the remote project (dev config) — that
+// must never leak into the auto-started E2E dev server, which has to run
+// against the LOCAL Supabase stack (the committed seed lives there). An
+// explicit shell export still wins; .env.local only supplies non-Supabase
+// test vars (e.g. PLAYWRIGHT_BASE_URL).
+const shellEnv = { ...process.env };
 dotenv.config({ path: ".env.local" });
 
 // Midscene model config — set these env vars to point at your AI model
@@ -50,12 +57,12 @@ export default defineConfig({
         timeout: 120_000,
         env: {
           NEXT_PUBLIC_SUPABASE_URL:
-            process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54326",
+            shellEnv.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54326",
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
-            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+            shellEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
             "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
           SUPABASE_SERVICE_ROLE_KEY:
-            process.env.SUPABASE_SERVICE_ROLE_KEY ??
+            shellEnv.SUPABASE_SERVICE_ROLE_KEY ??
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
         },
       },

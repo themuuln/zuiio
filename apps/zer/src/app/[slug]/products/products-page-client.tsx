@@ -14,6 +14,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { useWishlist } from "@/components/storefront/wishlist-context";
@@ -58,6 +59,7 @@ export function ProductsPageClient({
   const pathname = usePathname();
   const urlSearchParams = useSearchParams();
   const { count: wishlistCount } = useWishlist();
+  const base = useStorefrontBase();
 
   // Local input state drives the debounced URL update for `q` and prices.
   const [searchInput, setSearchInput] = useState(search);
@@ -206,7 +208,7 @@ export function ProductsPageClient({
               </button>
               {/* Wishlist link */}
               <Link
-                href={`/${organization.slug}/wishlist`}
+                href={`${base}/wishlist`}
                 aria-label={`Хадгалсан (${wishlistCount})`}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "default" }),
@@ -225,7 +227,7 @@ export function ProductsPageClient({
                 )}
               </Link>
               {/* Cart link */}
-              <StorefrontCartLink slug={organization.slug} />
+              <StorefrontCartLink />
               <div className="hidden text-right sm:block">
                 <p className="text-2xl font-bold tabular-nums">{total}</p>
                 <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>

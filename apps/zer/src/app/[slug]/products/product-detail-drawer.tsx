@@ -4,6 +4,7 @@ import { ArrowRight, Info } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -29,6 +30,7 @@ export function ProductDetailDrawer({
 }) {
   const [open, setOpen] = useState(false);
   const price = Number(product.sale_price ?? 0);
+  const base = useStorefrontBase();
 
   return (
     <>
@@ -61,7 +63,7 @@ export function ProductDetailDrawer({
         footer={
           <div className="flex items-center gap-3">
             <Link
-              href={`/${organization.slug}/products/${product.id}`}
+              href={`${base}/products/${product.id}`}
               onClick={() => setOpen(false)}
               className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
             >

@@ -278,21 +278,24 @@ describe("updateSession", () => {
       "/my-org/account",
       "/my-org/account/orders",
     ])("allows unauthenticated access to storefront path %s", async (path) => {
-      mockOrgSlugMaybeSingle.mockResolvedValue({ data: { slug: "my-org" } });
       const req = createMockRequest(path);
       const { updateSession } = await import("../proxy");
       await updateSession(req);
 
+      // Non-reserved first segment — classified as a storefront without a
+      // DB lookup; the server renders it or 404s.
+      expect(mockOrgSlugMaybeSingle).not.toHaveBeenCalled();
       expect(mockNextResponseRedirect).not.toHaveBeenCalled();
     });
 
-    it("still redirects when the first segment is not an org slug", async () => {
-      // No org with slug "shop"/"products" — dashboard routes stay protected.
-      mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
+    it("still redirects when the first segment is a reserved dashboard route", async () => {
+      // "shop" is a reserved ERP segment — dashboard cart stays protected
+      // at the edge, with no org lookup.
       const req = createMockRequest("/shop/cart");
       const { updateSession } = await import("../proxy");
       await updateSession(req);
 
+      expect(mockOrgSlugMaybeSingle).not.toHaveBeenCalled();
       expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
       expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/login");
     });
@@ -300,7 +303,6 @@ describe("updateSession", () => {
     it.each(["/products", "/settings", "/dashboard", "/shop/cart"])(
       "denies unauthenticated access to dashboard route %s",
       async (path) => {
-        mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
         const req = createMockRequest(path);
         const { updateSession } = await import("../proxy");
         await updateSession(req);
@@ -312,21 +314,24 @@ describe("updateSession", () => {
       },
     );
 
-    it("denies storefront-looking paths when the org does not exist", async () => {
-      mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
+    it("allows unknown storefront-looking slugs through — the server 404s", async () => {
+      // No org lookup in the proxy: an unknown slug reaches the [slug]
+      // route, which renders notFound() instead of a login redirect.
       const req = createMockRequest("/unknown-org/cart");
       const { updateSession } = await import("../proxy");
       await updateSession(req);
 
-      expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+      expect(mockOrgSlugMaybeSingle).not.toHaveBeenCalled();
+      expect(mockNextResponseRedirect).not.toHaveBeenCalled();
     });
 
     it("denies org paths under non-storefront subpaths", async () => {
-      mockOrgSlugMaybeSingle.mockResolvedValue({ data: { slug: "my-org" } });
+      // "settings" is not a storefront subpath — the second segment decides.
       const req = createMockRequest("/my-org/settings");
       const { updateSession } = await import("../proxy");
       await updateSession(req);
 
+      expect(mockOrgSlugMaybeSingle).not.toHaveBeenCalled();
       expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
     });
 
@@ -347,7 +352,8 @@ describe("updateSession", () => {
     });
 
     it("increments __redirect_count on redirect", async () => {
-      const req = createMockRequest("/protected-page");
+      // A reserved dashboard route redirects at the edge (no storefront pass-through).
+      const req = createMockRequest("/settings");
       const { updateSession } = await import("../proxy");
 
       await updateSession(req);
@@ -580,5 +586,42 @@ describe("updateSession — custom domains", () => {
 
     expect(mockNextResponseRewrite).not.toHaveBeenCalled();
     expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1); // unauth → login
+  });
+
+  it("does not rewrite a verified admin (ERP) domain — dashboard serves it", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ admin: true }),
+    });
+    const req = createMockRequest("/", "", {}, "erp.example.com");
+    const { updateSession } = await import("../proxy");
+    const result = await updateSession(req);
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/domain-resolve?host=erp.example.com"),
+      expect.anything(),
+    );
+    expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+    // Anonymous root on the admin host still goes through the auth guard.
+    expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+    expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/landing");
+    expect(result).toBeDefined();
+  });
+
+  it("keeps dashboard routes protected on an admin domain", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ admin: true }),
+    });
+    const req = createMockRequest("/dashboard", "", {}, "erp.example.com");
+    const { updateSession } = await import("../proxy");
+    await updateSession(req);
+
+    expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+    expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+    expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/login");
+    expect(
+      mockNextResponseRedirect.mock.calls[0][0].searchParams.get("next"),
+    ).toBe("/dashboard");
   });
 });

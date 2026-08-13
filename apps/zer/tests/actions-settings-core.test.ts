@@ -33,7 +33,10 @@ const redirectMock = mock.fn(() => {
 mockMod("next/navigation", { redirect: redirectMock });
 
 const revalidateEntityMock = mock.fn(() => {});
-mockMod("@/lib/revalidate", { revalidateEntity: revalidateEntityMock });
+mockMod("@/lib/revalidate", {
+  revalidateEntity: revalidateEntityMock,
+  revalidateEntityTag: mock.fn(() => {}),
+});
 mockMod("@/lib/audit", {
   logAuditEventWithClient: mock.fn(async () => {}),
 });

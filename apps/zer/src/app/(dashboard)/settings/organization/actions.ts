@@ -2,14 +2,14 @@
 import { resolve4, resolveCname, resolveTxt } from "node:dns/promises";
 import { capture, withDbCapture } from "@zuiio/capture";
 
-import { requireActionContext } from "@/lib/action-utils";
+import { type ActionContext, requireActionContext } from "@/lib/action-utils";
 import {
   deriveDomainVerificationToken,
   expectedTxtValue,
   hasMatchingTxt,
   isValidDomain,
 } from "@/lib/domain-verify";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import {
   attachDomainToVercel,
@@ -134,6 +134,7 @@ export async function updatePublicProfile(
   const metaDescription = (formData.get("meta_description") as string) || null;
   const ogImageUrl = formData.get("og_image_url") as string | null;
   const customDomain = (formData.get("custom_domain") as string) || null;
+  const adminDomain = (formData.get("admin_domain") as string) || null;
 
   // Storefront checkout configuration (public profile).
   const deliveryEnabled = formData.get("delivery_enabled") === "on";
@@ -212,11 +213,20 @@ export async function updatePublicProfile(
     };
   }
   const normalizedCustomDomain = rawCustomDomain;
+  const rawAdminDomain = adminDomain?.trim().toLowerCase() || null;
+  if (rawAdminDomain && !isValidDomain(rawAdminDomain)) {
+    return {
+      error: "Домэйн формат буруу байна. Жишээ: erp.mydomain.mn",
+    };
+  }
+  const normalizedAdminDomain = rawAdminDomain;
   const { data: existingProfile } = await withDbCapture(
     "updatePublicProfile: fetch existing",
     supabase
       .from("organization_public_profiles")
-      .select("custom_domain, domain_verified")
+      .select(
+        "custom_domain, domain_verified, admin_domain, admin_domain_verified",
+      )
       .eq("organization_id", organizationId)
       .maybeSingle(),
   );
@@ -226,6 +236,12 @@ export async function updatePublicProfile(
     !!normalizedCustomDomain &&
     existingCustomDomain === normalizedCustomDomain &&
     existingProfile?.domain_verified === true;
+  const existingAdminDomain =
+    existingProfile?.admin_domain?.toLowerCase() ?? null;
+  const adminDomainVerified =
+    !!normalizedAdminDomain &&
+    existingAdminDomain === normalizedAdminDomain &&
+    existingProfile?.admin_domain_verified === true;
 
   const payload: Database["public"]["Tables"]["organization_public_profiles"]["Insert"] =
     {
@@ -247,6 +263,8 @@ export async function updatePublicProfile(
       og_image_url: ogImageUrl,
       custom_domain: normalizedCustomDomain,
       domain_verified: domainVerified,
+      admin_domain: normalizedAdminDomain,
+      admin_domain_verified: adminDomainVerified,
       business_hours:
         Object.keys(businessHours ?? {}).length > 0 ? businessHours : null,
       social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
@@ -289,36 +307,127 @@ export async function updatePublicProfile(
     }
   }
 
+  // Same for the admin (ERP) domain.
+  if (
+    existingAdminDomain &&
+    existingProfile?.admin_domain_verified === true &&
+    existingAdminDomain !== normalizedAdminDomain
+  ) {
+    try {
+      await detachDomainFromVercel(existingAdminDomain);
+    } catch (e) {
+      capture(e, { context: "updatePublicProfile: detach old admin domain" });
+    }
+  }
+
   revalidateEntity("settings");
+  revalidateEntityTag("storefront", organizationId);
   return { success: true };
 }
 
 /**
- * Verifies ownership of the organization's custom domain by checking
- * that the derived TXT record is published in DNS. The token is derived
- * from the organization id (never stored); on a match the profile's
- * domain_verified flag is set server-side.
+ * Column pair on organization_public_profiles for a domain role. The
+ * storefront domain (custom_domain) serves the public shop; the admin
+ * domain (admin_domain) serves the ERP dashboard. The verification and
+ * DNS-check flows are identical — only the columns differ.
  */
-export async function verifyCustomDomain(
-  _prevState: VerifyDomainState | undefined,
-  _formData: FormData,
-): Promise<VerifyDomainState> {
-  const ctx = await requireActionContext("settings.manage");
-  if ("error" in ctx) return ctx;
-  const { supabase, organizationId } = ctx;
+const DOMAIN_ROLES = {
+  storefront: {
+    domainColumn: "custom_domain",
+    verifiedColumn: "domain_verified",
+  },
+  admin: {
+    domainColumn: "admin_domain",
+    verifiedColumn: "admin_domain_verified",
+  },
+} as const;
 
-  const { data: profile, error: profileError } = await supabase
+type DomainRole = keyof typeof DOMAIN_ROLES;
+
+type DomainSpec = (typeof DOMAIN_ROLES)[DomainRole];
+
+/** Loads the org's saved domain + verified flag for the given role. */
+async function loadProfileDomain(
+  supabase: ActionContext["supabase"],
+  organizationId: string,
+  spec: DomainSpec,
+): Promise<{ domain: string | null; verified: boolean } | { error: string }> {
+  const columns =
+    spec.domainColumn === "custom_domain"
+      ? "custom_domain, domain_verified"
+      : "admin_domain, admin_domain_verified";
+  const { data, error } = await supabase
     .from("organization_public_profiles")
-    .select("custom_domain, domain_verified")
+    .select(columns)
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  if (profileError) {
-    capture(profileError, { context: "verifyCustomDomain: load profile" });
-    return { error: `Хадгалахад алдаа гарлаа: ${profileError.message}` };
+  if (error) {
+    capture(error, { context: "loadProfileDomain" });
+    return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
   }
 
-  const domain = profile?.custom_domain?.trim().toLowerCase();
+  const row = data as
+    | { custom_domain: string | null; domain_verified: boolean }
+    | { admin_domain: string | null; admin_domain_verified: boolean }
+    | null;
+  const domain =
+    spec.domainColumn === "custom_domain"
+      ? (row as { custom_domain: string | null } | null)?.custom_domain
+      : (row as { admin_domain: string | null } | null)?.admin_domain;
+  const verified =
+    spec.verifiedColumn === "domain_verified"
+      ? (row as { domain_verified: boolean } | null)?.domain_verified
+      : (row as { admin_domain_verified: boolean } | null)
+          ?.admin_domain_verified;
+  return {
+    domain: domain?.trim().toLowerCase() ?? null,
+    verified: verified === true,
+  };
+}
+
+/** Marks the role's verified flag on the profile. */
+async function markDomainVerified(
+  supabase: ActionContext["supabase"],
+  organizationId: string,
+  spec: DomainSpec,
+): Promise<{ error?: string }> {
+  const patch =
+    spec.verifiedColumn === "domain_verified"
+      ? { domain_verified: true, updated_at: new Date().toISOString() }
+      : {
+          admin_domain_verified: true,
+          updated_at: new Date().toISOString(),
+        };
+  const { error } = await supabase
+    .from("organization_public_profiles")
+    .update(patch)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    capture(error, { context: "markDomainVerified" });
+    return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
+  }
+  return {};
+}
+
+/**
+ * Shared TXT ownership verification: checks the derived TXT record in DNS
+ * for the org's saved domain of the given role; on a match sets the role's
+ * verified flag and attaches the domain to the Zer Vercel project so the
+ * storefront/dashboard actually serves on it. Best-effort: verification
+ * stays recorded even if the attach fails (retried via the DNS check step).
+ */
+async function verifyDomainForRole(
+  ctx: ActionContext,
+  spec: DomainSpec,
+): Promise<VerifyDomainState> {
+  const { supabase, organizationId } = ctx;
+
+  const loaded = await loadProfileDomain(supabase, organizationId, spec);
+  if ("error" in loaded) return { error: loaded.error };
+
+  const domain = loaded.domain;
   if (!domain) {
     return { error: "Эхлээд домэйнээ оруулна уу." };
   }
@@ -338,7 +447,7 @@ export async function verifyCustomDomain(
       ),
     ]);
   } catch (err) {
-    capture(err, { context: "verifyCustomDomain: resolveTxt" });
+    capture(err, { context: "verifyDomainForRole: resolveTxt" });
     return {
       error: `DNS бичлэг шалгахад алдаа гарлаа: ${
         err instanceof Error ? err.message : "DNS query failed"
@@ -354,29 +463,16 @@ export async function verifyCustomDomain(
     };
   }
 
-  const { error: updateError } = await supabase
-    .from("organization_public_profiles")
-    .update({
-      domain_verified: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("organization_id", organizationId);
-
-  if (updateError) {
-    capture(updateError, { context: "verifyCustomDomain: update" });
-    return {
-      error: `Хадгалахад алдаа гарлаа: ${updateError.message}`,
-      token,
-    };
+  const updated = await markDomainVerified(supabase, organizationId, spec);
+  if (updated.error) {
+    return { error: updated.error, token };
   }
 
-  // Ownership proven — attach the domain to the Zer Vercel project so the
-  // storefront actually serves on it. Best-effort: verification stays
-  // recorded even if the attach fails (retried via the DNS check step).
   const vercel = await attachDomainToVercel(domain);
   const vercelAttached = vercel.configured && vercel.attached;
 
   revalidateEntity("settings");
+  revalidateEntityTag("storefront", organizationId);
   return {
     success: true,
     verified: true,
@@ -389,30 +485,19 @@ export async function verifyCustomDomain(
 }
 
 /**
- * Checks whether the org's custom domain currently points at Vercel:
- * resolves the A/CNAME records and compares them with Vercel's targets,
- * then reads Vercel's own verification flag for the domain.
+ * Shared DNS-pointing check: resolves the A/CNAME records and compares
+ * them with Vercel's targets, then reads Vercel's own verification flag.
  */
-export async function checkCustomDomainDns(
-  _prevState: CheckDnsState | undefined,
-  _formData: FormData,
+async function checkDomainDnsForRole(
+  ctx: ActionContext,
+  spec: DomainSpec,
 ): Promise<CheckDnsState> {
-  const ctx = await requireActionContext("settings.manage");
-  if ("error" in ctx) return ctx;
   const { supabase, organizationId } = ctx;
 
-  const { data: profile, error: profileError } = await supabase
-    .from("organization_public_profiles")
-    .select("custom_domain, domain_verified")
-    .eq("organization_id", organizationId)
-    .maybeSingle();
+  const loaded = await loadProfileDomain(supabase, organizationId, spec);
+  if ("error" in loaded) return { error: loaded.error };
 
-  if (profileError) {
-    capture(profileError, { context: "checkCustomDomainDns: load profile" });
-    return { error: `Хадгалахад алдаа гарлаа: ${profileError.message}` };
-  }
-
-  const domain = profile?.custom_domain?.trim().toLowerCase();
+  const domain = loaded.domain;
   if (!domain) {
     return { error: "Эхлээд домэйнээ оруулна уу." };
   }
@@ -452,4 +537,58 @@ export async function checkCustomDomainDns(
         ? "Домэйн Vercel төсөлд холбогдоогүй байна. 'Баталгаажуулах' товчийг дахин дарна уу."
         : undefined,
   };
+}
+
+/**
+ * Verifies ownership of the organization's custom (storefront) domain by
+ * checking that the derived TXT record is published in DNS. The token is
+ * derived from the organization id (never stored); on a match the
+ * profile's domain_verified flag is set server-side.
+ */
+export async function verifyCustomDomain(
+  _prevState: VerifyDomainState | undefined,
+  _formData: FormData,
+): Promise<VerifyDomainState> {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  return verifyDomainForRole(ctx, DOMAIN_ROLES.storefront);
+}
+
+/**
+ * Verifies ownership of the organization's admin (ERP) domain — same TXT
+ * flow as the storefront domain, recorded in admin_domain_verified.
+ */
+export async function verifyAdminDomain(
+  _prevState: VerifyDomainState | undefined,
+  _formData: FormData,
+): Promise<VerifyDomainState> {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  return verifyDomainForRole(ctx, DOMAIN_ROLES.admin);
+}
+
+/**
+ * Checks whether the org's custom (storefront) domain currently points at
+ * Vercel: resolves the A/CNAME records and compares them with Vercel's
+ * targets, then reads Vercel's own verification flag for the domain.
+ */
+export async function checkCustomDomainDns(
+  _prevState: CheckDnsState | undefined,
+  _formData: FormData,
+): Promise<CheckDnsState> {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  return checkDomainDnsForRole(ctx, DOMAIN_ROLES.storefront);
+}
+
+/**
+ * Checks whether the org's admin (ERP) domain currently points at Vercel.
+ */
+export async function checkAdminDomainDns(
+  _prevState: CheckDnsState | undefined,
+  _formData: FormData,
+): Promise<CheckDnsState> {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  return checkDomainDnsForRole(ctx, DOMAIN_ROLES.admin);
 }

@@ -21,6 +21,7 @@ import {
   StorefrontCartProvider,
   useStorefrontCart,
 } from "@/components/storefront/cart-context";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -151,15 +152,10 @@ function buildHistorySteps(order: OrderDetail): TimelineStep[] {
  * awareness is intentionally skipped — the server rejects the order at
  * submit time if an item is unavailable.
  */
-function ReorderButton({
-  slug,
-  items,
-}: {
-  slug: string;
-  items: OrderDetailItem[];
-}) {
+function ReorderButton({ items }: { items: OrderDetailItem[] }) {
   const { addItem } = useStorefrontCart();
   const router = useRouter();
+  const base = useStorefrontBase();
 
   // Items whose product was deleted have a null product_id and cannot be
   // re-added — drop them and narrow the type for the loop below.
@@ -186,7 +182,7 @@ function ReorderButton({
             : undefined,
       });
     }
-    router.push(`/${slug}/cart`);
+    router.push(`${base}/cart`);
   };
 
   return (
@@ -205,6 +201,7 @@ export function OrderDetailClient({
 }) {
   const { t } = useI18n();
   const { state } = useStoreSession();
+  const base = useStorefrontBase();
   // Local copy so cancellation can refetch and re-render the detail.
   const [order, setOrder] = useState<OrderDetail>(initialOrder);
   const [cancelling, setCancelling] = useState(false);
@@ -265,7 +262,7 @@ export function OrderDetailClient({
           {t("storeAccount.orders.loginRequired")}
         </p>
         <Button asChild size="lg">
-          <Link href={`/${slug}/account`}>
+          <Link href={`${base}/account`}>
             {t("storeAccount.orders.loginCta")}
           </Link>
         </Button>
@@ -291,7 +288,7 @@ export function OrderDetailClient({
   return (
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
-        <Link href={`/${slug}/account/orders`}>
+        <Link href={`${base}/account/orders`}>
           <ArrowLeft className="size-4" />
           {t("storeAccount.orderDetail.backToOrders")}
         </Link>
@@ -333,7 +330,7 @@ export function OrderDetailClient({
             </Button>
           )}
           <StorefrontCartProvider>
-            <ReorderButton slug={slug} items={order.items} />
+            <ReorderButton items={order.items} />
           </StorefrontCartProvider>
         </div>
       </div>

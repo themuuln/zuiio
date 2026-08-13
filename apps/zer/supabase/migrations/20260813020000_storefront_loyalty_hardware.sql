@@ -1026,3 +1026,10 @@ BEGIN
            points_discount, points_redeemed, points_earned;
 END;
 $$;
+
+-- The 16-arg signature is a NEW function (old signatures dropped), so the
+-- historical grants do not carry over. Explicit REVOKE + grant keeps the
+-- repo convention (no PUBLIC execute on SECURITY DEFINER functions) and
+-- matches every prior submit_shop_order migration.
+REVOKE ALL ON FUNCTION public.submit_shop_order(TEXT, JSONB, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.submit_shop_order(TEXT, JSONB, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER) TO anon, authenticated;

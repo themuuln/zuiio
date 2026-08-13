@@ -4,11 +4,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
+  getPublicBlogPostsCached,
+  getStorefrontShell,
+} from "@/lib/storefront-cache";
+import {
   requestHost,
+  storefrontBasePath,
   storefrontCanonical,
   storefrontSocialMetadata,
 } from "@/lib/storefront-seo";
-import { createClient } from "@/lib/supabase/server";
 import { BlogClient } from "./blog-client";
 
 export type PublicBlogPost = {
@@ -38,16 +42,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("name")
-    .eq("slug", slug)
-    .single();
+  const shell = await getStorefrontShell(slug);
+  const orgName = shell?.org?.name ?? null;
 
   const canonical = storefrontCanonical(await requestHost(), slug, "/blog");
-  const title = org ? `${org.name} — Блог` : "Блог";
-  const description = org ? `${org.name}-ийн блог, нийтлэлүүд` : "Блог";
+  const title = orgName ? `${orgName} — Блог` : "Блог";
+  const description = orgName ? `${orgName}-ийн блог, нийтлэлүүд` : "Блог";
 
   return {
     title,
@@ -58,7 +58,7 @@ export async function generateMetadata({
       title,
       description,
       canonical,
-      siteName: org?.name ?? null,
+      siteName: orgName,
     }),
   };
 }
@@ -69,23 +69,19 @@ async function BlogDataFetcher({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("get_public_blog_posts", {
-    p_slug: slug,
-  });
+  const posts = await getPublicBlogPostsCached(slug);
+  const base = storefrontBasePath(await requestHost(), slug);
 
-  if (error) {
+  if (posts === null) {
     notFound();
   }
-
-  const posts = (data ?? []) as PublicBlogPost[];
 
   return (
     <div className="min-h-dvh bg-background">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
-          href={`/${slug}`}
+          href={`${base}`}
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           ← Буцах
@@ -99,7 +95,7 @@ async function BlogDataFetcher({
           <p className="text-sm text-muted-foreground">Мэдээ, нийтлэлүүд</p>
         </div>
 
-        <BlogClient slug={slug} posts={posts} />
+        <BlogClient posts={posts} />
       </div>
     </div>
   );

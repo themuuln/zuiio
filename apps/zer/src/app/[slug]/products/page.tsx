@@ -3,18 +3,18 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
 import { WishlistProvider } from "@/components/storefront/wishlist-context";
+import type { PublicProductSort } from "@/lib/public-catalog";
 import {
-  getPublicCatalog,
-  getPublicCategories,
-  getPublicPromotions,
-  type PublicProductSort,
-} from "@/lib/public-catalog";
+  getPublicCatalogCached,
+  getPublicCategoriesCached,
+  getPublicPromotionsCached,
+  type StorefrontCatalogOptions,
+} from "@/lib/storefront-cache";
 import {
   requestHost,
   storefrontCanonical,
   storefrontSocialMetadata,
 } from "@/lib/storefront-seo";
-import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
 // Types for client components — match the public catalog RPC shape exactly.
@@ -109,8 +109,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
-  const catalog = await getPublicCatalog(supabase, slug);
+  const catalog = await getPublicCatalogCached(slug);
 
   if (!catalog?.organization) {
     return { title: "Каталог" };
@@ -150,7 +149,6 @@ async function ProductsDataFetcher({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const supabase = await createClient();
 
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const search = sp.q?.trim() || undefined;
@@ -169,18 +167,19 @@ async function ProductsDataFetcher({
   const sort = parseSort(sp.sort) ?? "newest";
 
   try {
+    const catalogOptions: StorefrontCatalogOptions = {
+      page,
+      pageSize: PAGE_SIZE,
+      search,
+      categoryId,
+      minPrice,
+      maxPrice,
+      sort,
+    };
     const [catalog, categories, promotions] = await Promise.all([
-      getPublicCatalog(supabase, slug, {
-        page,
-        pageSize: PAGE_SIZE,
-        search,
-        categoryId,
-        minPrice,
-        maxPrice,
-        sort,
-      }),
-      getPublicCategories(supabase, slug),
-      getPublicPromotions(supabase, slug),
+      getPublicCatalogCached(slug, catalogOptions),
+      getPublicCategoriesCached(slug),
+      getPublicPromotionsCached(slug),
     ]);
 
     if (!catalog?.organization) {

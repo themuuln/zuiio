@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { WishlistProvider } from "@/components/storefront/wishlist-context";
 import type { PublicProduct } from "../products/page";
 import { WishlistApp } from "./page";
@@ -92,9 +93,11 @@ function rpcResult(products: PublicProduct[]) {
 
 function renderWishlist(slug = "test-shop") {
   return render(
-    <WishlistProvider slug={slug}>
-      <WishlistApp slug={slug} />
-    </WishlistProvider>,
+    <StorefrontBaseProvider basePath={`/${slug}`}>
+      <WishlistProvider slug={slug}>
+        <WishlistApp slug={slug} />
+      </WishlistProvider>
+    </StorefrontBaseProvider>,
   );
 }
 

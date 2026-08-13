@@ -28,6 +28,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { PointsBalanceCard } from "./points-balance-card";
 
 function loyalty(overrides: { enabled?: boolean; balance?: number } = {}) {
@@ -47,11 +48,17 @@ beforeEach(() => {
   mockCreateClient.mockReturnValue({});
 });
 
+function renderPoints(ui: React.ReactElement) {
+  return render(
+    <StorefrontBaseProvider basePath="/my-shop">{ui}</StorefrontBaseProvider>,
+  );
+}
+
 describe("PointsBalanceCard", () => {
   it("renders the balance link when the buyer has points", async () => {
     mockFetchLoyalty.mockResolvedValue(loyalty({ balance: 5000 }));
 
-    render(<PointsBalanceCard slug="my-shop" />);
+    renderPoints(<PointsBalanceCard slug="my-shop" />);
 
     await waitFor(() => {
       expect(screen.getByText("Миний оноо")).toBeInTheDocument();
@@ -64,14 +71,16 @@ describe("PointsBalanceCard", () => {
 
   it("renders nothing when the program is disabled or balance is zero", async () => {
     mockFetchLoyalty.mockResolvedValue(loyalty({ enabled: false }));
-    const { container: disabled } = render(
+    const { container: disabled } = renderPoints(
       <PointsBalanceCard slug="my-shop" />,
     );
     await waitFor(() => expect(mockFetchLoyalty).toHaveBeenCalled());
     expect(disabled.firstChild).toBeNull();
 
     mockFetchLoyalty.mockResolvedValue(loyalty({ balance: 0 }));
-    const { container: zero } = render(<PointsBalanceCard slug="my-shop" />);
+    const { container: zero } = renderPoints(
+      <PointsBalanceCard slug="my-shop" />,
+    );
     await waitFor(() => expect(mockFetchLoyalty).toHaveBeenCalledTimes(2));
     expect(zero.firstChild).toBeNull();
   });
@@ -80,7 +89,7 @@ describe("PointsBalanceCard", () => {
     const err = new Error("rpc failed");
     mockFetchLoyalty.mockRejectedValue(err);
 
-    const { container } = render(<PointsBalanceCard slug="my-shop" />);
+    const { container } = renderPoints(<PointsBalanceCard slug="my-shop" />);
 
     await waitFor(() => expect(mockCapture).toHaveBeenCalledTimes(1));
     expect(mockCapture).toHaveBeenCalledWith(err, {
@@ -92,7 +101,7 @@ describe("PointsBalanceCard", () => {
   it("renders nothing when the RPC returns null (unknown org)", async () => {
     mockFetchLoyalty.mockResolvedValue(null);
 
-    const { container } = render(<PointsBalanceCard slug="my-shop" />);
+    const { container } = renderPoints(<PointsBalanceCard slug="my-shop" />);
 
     await waitFor(() => expect(mockFetchLoyalty).toHaveBeenCalled());
     expect(container.firstChild).toBeNull();

@@ -27,6 +27,7 @@ mockMod("@/lib/audit", {
 mockMod("@/lib/revalidate", {
   revalidateEntity: mock.fn(),
   revalidateEntities: mock.fn(),
+  revalidateEntityTag: mock.fn(),
 });
 mockMod("@/lib/supabase/server", {
   createClient: mock.fn(async () => ({

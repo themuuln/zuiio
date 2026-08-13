@@ -1,6 +1,8 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { revalidateEntityTag } from "@/lib/revalidate";
+import { getStorefrontShell } from "@/lib/storefront-cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type StoreOrderItemInput = {
@@ -125,6 +127,13 @@ export async function submitStoreOrder(
   };
   if (!row.order_id) {
     return { ok: false, message: "Захиалга үүсгэхэд алдаа гарлаа." };
+  }
+
+  // The order decremented stock — refresh the public catalog (when the org
+  // opted into public stock) so product cards don't show stale counts.
+  const shell = await getStorefrontShell(input.slug);
+  if (shell) {
+    revalidateEntityTag("products", shell.org.id);
   }
 
   return {

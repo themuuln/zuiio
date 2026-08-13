@@ -23,7 +23,10 @@ const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", { capture: captureMock });
 
 const revalidateEntitiesMock = mock.fn(() => {});
-mockMod("@/lib/revalidate", { revalidateEntities: revalidateEntitiesMock });
+mockMod("@/lib/revalidate", {
+  revalidateEntities: revalidateEntitiesMock,
+  revalidateEntityTag: mock.fn(() => {}),
+});
 
 mockMod("@/lib/action-utils", {
   requireActionContext: mock.fn(async () => mockCtx),

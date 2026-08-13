@@ -12,6 +12,7 @@ import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ function isValidPhone(phone: string): boolean {
 export function AccountClient({ slug }: { slug: string }) {
   const { t } = useI18n();
   const { state, reload } = useStoreSession();
+  const base = useStorefrontBase();
 
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginPending, setLoginPending] = useState(false);
@@ -111,7 +113,7 @@ export function AccountClient({ slug }: { slug: string }) {
         password,
         options: {
           data: { store_account: true, display_name: displayName, phone },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/${slug}/account`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${base}/account`,
         },
       });
       if (error) {
@@ -194,13 +196,13 @@ export function AccountClient({ slug }: { slug: string }) {
 
         <div className="flex flex-col gap-2">
           <Button asChild size="lg">
-            <Link href={`/${slug}/account/orders`}>
+            <Link href={`${base}/account/orders`}>
               <Receipt className="size-4" />
               {t("storeAccount.ordersLink")}
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href={`/${slug}/account/addresses`}>
+            <Link href={`${base}/account/addresses`}>
               <MapPin className="size-4" />
               Хаягийн дэвтэр
             </Link>
@@ -366,7 +368,7 @@ export function AccountClient({ slug }: { slug: string }) {
       </Tabs>
 
       <Link
-        href={`/${slug}`}
+        href={`${base}`}
         className="text-center text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         {t("storeAccount.backToStore")}

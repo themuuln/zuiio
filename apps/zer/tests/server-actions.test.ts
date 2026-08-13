@@ -80,6 +80,7 @@ mockMod("@zuiio/capture", {
 
 mockMod("@/lib/revalidate", {
   revalidateEntities: mock.fn(() => {}),
+  revalidateEntityTag: mock.fn(() => {}),
 });
 
 mockMod("@/lib/accounting", {

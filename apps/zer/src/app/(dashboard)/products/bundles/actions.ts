@@ -2,7 +2,7 @@
 
 import { capture } from "@zuiio/capture";
 import { requireWriteAction } from "@/lib/action-utils";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 
 interface BundleItemInput {
   product_id: string;
@@ -128,6 +128,7 @@ export async function createBundle(
   }
 
   revalidateEntities(["products"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true, error: undefined };
 }
 
@@ -148,6 +149,7 @@ export async function deleteBundle(bundleId: string) {
   }
 
   revalidateEntities(["products"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true, error: undefined };
 }
 
@@ -295,5 +297,6 @@ export async function updateBundle(
   }
 
   revalidateEntities(["products"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true, error: undefined };
 }

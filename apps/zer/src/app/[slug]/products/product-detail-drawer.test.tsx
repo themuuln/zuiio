@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import type { OrgMeta, PublicProduct } from "./page";
 import { ProductDetailDrawer } from "./product-detail-drawer";
 
@@ -63,9 +64,11 @@ function makeProduct(overrides: Partial<PublicProduct> = {}): PublicProduct {
 
 function renderDrawer(product: PublicProduct = makeProduct()) {
   return render(
-    <ProductDetailDrawer product={product} organization={ORG}>
-      <div>card</div>
-    </ProductDetailDrawer>,
+    <StorefrontBaseProvider basePath="/test-shop">
+      <ProductDetailDrawer product={product} organization={ORG}>
+        <div>card</div>
+      </ProductDetailDrawer>
+    </StorefrontBaseProvider>,
   );
 }
 

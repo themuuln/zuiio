@@ -35,7 +35,10 @@ mockMod("server-only", {});
 mockMod("next/navigation", { redirect: mock.fn(() => {}) });
 
 const revalidateEntityMock = mock.fn((_entity: string) => {});
-mockMod("@/lib/revalidate", { revalidateEntity: revalidateEntityMock });
+mockMod("@/lib/revalidate", {
+  revalidateEntity: revalidateEntityMock,
+  revalidateEntityTag: mock.fn(() => {}),
+});
 const mockCtx = mockActionCtx();
 mockMod("@/lib/action-utils", {
   requireActionContext: mock.fn(async () => mockCtx),

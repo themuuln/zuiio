@@ -4,6 +4,7 @@ import { Coins } from "@phosphor-icons/react";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { formatPoints } from "@/lib/loyalty";
 import { fetchPublicLoyalty } from "@/lib/storefront-loyalty";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
  */
 export function PointsBalanceCard({ slug }: { slug: string }) {
   const [balance, setBalance] = useState<number | null>(null);
+  const base = useStorefrontBase();
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +38,7 @@ export function PointsBalanceCard({ slug }: { slug: string }) {
 
   return (
     <Link
-      href={`/${slug}/account/points`}
+      href={`${base}/account/points`}
       className="flex items-center justify-between rounded-xl border bg-primary/5 p-4 transition-colors hover:bg-primary/10"
     >
       <div className="flex items-center gap-3">

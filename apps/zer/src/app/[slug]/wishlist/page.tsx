@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import {
   useWishlist,
   WishlistProvider,
@@ -42,6 +43,7 @@ export default function WishlistPage({
  */
 export function WishlistApp({ slug }: { slug: string }) {
   const { items, count } = useWishlist();
+  const base = useStorefrontBase();
   const [products, setProducts] = useState<PublicProduct[] | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
   const [orgCurrency, setOrgCurrency] = useState("");
@@ -99,7 +101,7 @@ export function WishlistApp({ slug }: { slug: string }) {
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
               <Link
-                href={`/${slug}/products`}
+                href={`${base}/products`}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="size-4" /> Бүтээгдэхүүн
@@ -126,7 +128,7 @@ export function WishlistApp({ slug }: { slug: string }) {
               Хадгалсан бүтээгдэхүүн байхгүй
             </p>
             <Link
-              href={`/${slug}/products`}
+              href={`${base}/products`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
               Бүтээгдэхүүн үзэх
@@ -162,7 +164,7 @@ export function WishlistApp({ slug }: { slug: string }) {
               Хадгалсан бүтээгдэхүүн байхгүй
             </p>
             <Link
-              href={`/${slug}/products`}
+              href={`${base}/products`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
               Бүтээгдэхүүн үзэх

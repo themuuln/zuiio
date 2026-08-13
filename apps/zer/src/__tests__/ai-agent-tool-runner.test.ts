@@ -82,17 +82,23 @@ describe("runWithTools", () => {
   });
 
   it("executes tool calls in parallel and pushes results in call order", async () => {
-    const executed: string[] = [];
+    // Deterministic concurrency proof: both tool executions must be in
+    // flight simultaneously. A gate releases only when both have STARTED —
+    // sequential execution would deadlock (and fail the test).
+    let started = 0;
+    let releaseGate: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      releaseGate = r;
+    });
     const endOrder: string[] = [];
     const tools = [
       {
         ...lookupTool,
         execute: async (args: AnyArgs) => {
-          executed.push(String(args.id));
-          // a is slow, b is fast — if execution were sequential, a would end
-          // before b even starts; parallel execution lets b finish first.
-          await new Promise((r) => setTimeout(r, args.id === "a" ? 80 : 5));
-          endOrder.push(`end-${args.id}`);
+          started += 1;
+          if (started === 2) releaseGate();
+          await gate;
+          endOrder.push(String(args.id));
           return { found: args.id };
         },
       },
@@ -125,9 +131,8 @@ describe("runWithTools", () => {
     });
 
     expect(reply).toBe("Дууслаа");
-    expect(executed.sort()).toEqual(["a", "b"]);
-    // b (no delay) finished before a (60ms delay) even though a started first.
-    expect(endOrder).toEqual(["end-b", "end-a"]);
+    expect(started).toBe(2);
+    expect(endOrder.sort()).toEqual(["a", "b"]);
 
     // Tool results pushed back to the model in tool_calls order.
     const secondBody = JSON.parse(String(fetchMock.mock.calls[1][1].body));

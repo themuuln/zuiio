@@ -4,7 +4,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { after } from "next/server";
 import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 function slugify(value: string): string {
@@ -101,6 +101,7 @@ export async function createBlogPost(
         ),
       );
       revalidateEntities(["blog"]);
+      revalidateEntityTag("blog", organizationId);
       return { success: true as const, error: undefined };
     }
     capture(postError, { context: "createBlogPost: insert" });
@@ -121,6 +122,7 @@ export async function createBlogPost(
   );
 
   revalidateEntities(["blog"]);
+  revalidateEntityTag("blog", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -211,6 +213,7 @@ export async function updateBlogPost(
   );
 
   revalidateEntities(["blog"]);
+  revalidateEntityTag("blog", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -274,6 +277,7 @@ export async function toggleBlogPostPublished(
   );
 
   revalidateEntities(["blog"]);
+  revalidateEntityTag("blog", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -326,5 +330,6 @@ export async function deleteBlogPost(postId: string) {
   );
 
   revalidateEntities(["blog"]);
+  revalidateEntityTag("blog", organizationId);
   return { success: true as const, error: undefined };
 }

@@ -9,7 +9,13 @@ import { createClient } from "@/lib/supabase/server";
  *   https://shop.example.com/products → /{slug}/products
  *
  * Only verified domains are resolvable; the query goes through RLS
- * (org_profiles_resolve_domain policy) so it works with the anon key.
+ * (org_public_profiles_select policy) so it works with the anon key.
+ *
+ * When the host is not a storefront domain, the route checks whether it
+ * is an org's verified admin (ERP) domain and answers `{ admin: true }`
+ * — the middleware must NOT rewrite admin hosts to the storefront, the
+ * dashboard/auth pages render under them. Only a boolean is returned so
+ * the org behind an admin domain stays private.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -33,6 +39,17 @@ export async function GET(request: Request) {
   }
 
   if (!data) {
+    const { data: adminMatch } = await supabase
+      .from("organization_public_profiles")
+      .select("organization_id")
+      .eq("admin_domain", host)
+      .eq("admin_domain_verified", true)
+      .maybeSingle();
+
+    if (adminMatch) {
+      return NextResponse.json({ admin: true });
+    }
+
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

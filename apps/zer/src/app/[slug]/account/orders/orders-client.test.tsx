@@ -32,6 +32,7 @@ vi.mock("sonner", () => ({
   toast: { success: mockToastSuccess, error: mockToastError },
 }));
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { I18nProvider } from "@/lib/i18n";
 import type { StoreSessionState } from "../use-store-session";
 import { type MyOrder, OrdersClient } from "./orders-client";
@@ -75,9 +76,11 @@ const ORDER: MyOrder = {
 
 function renderOrders() {
   return render(
-    <I18nProvider>
-      <OrdersClient slug="storefront-e2e-test" />
-    </I18nProvider>,
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      <I18nProvider>
+        <OrdersClient slug="storefront-e2e-test" />
+      </I18nProvider>
+    </StorefrontBaseProvider>,
   );
 }
 

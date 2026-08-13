@@ -128,6 +128,7 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "sales",
     "settings",
     "shop",
+    "storefront",
     "suppliers",
     "users",
     "webhooks",

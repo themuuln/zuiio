@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { runWithTools } from "@zuiio/ai-agent";
 import { createBuyerAgentTools } from "@/lib/agent-tools/buyer";
+import { storefrontUrl } from "@/lib/storefront-host";
 import type { Database } from "@/lib/supabase/types";
 
 export type BotBuyerSession =
@@ -96,7 +97,7 @@ const BUYER_SYSTEM_PROMPT = (
 - Бүх мэдээлэл бүрэн болсны дараа place_order багажийг дуудаж, захиалгын дугаар (order_id), нийт дүн (total_amount), статусыг худалдан авагчид баталгаажуулна уу.
 - Захиалгын статус асуухад get_order_status багажийг order_id-ээр дуудаж хариулна уу.
 - Зөвхөн багажаас ирсэн бодит өгөгдлийг ашиглана уу. Үнэ, нөөц, бүтээгдэхүүнийг зохион бүтээж болохгүй.
-- Бүтээгдэхүүн санал болгохдоо холбоос оруулна уу: ${baseUrl}/${slug}/products/<бүтээгдэхүүний_id>`;
+- Бүтээгдэхүүн санал болгохдоо холбоос оруулна уу: ${storefrontUrl(baseUrl, slug, "/products/<бүтээгдэхүүний_id>")}`;
 
 /**
  * Run the buyer agent for one message and return the reply text.

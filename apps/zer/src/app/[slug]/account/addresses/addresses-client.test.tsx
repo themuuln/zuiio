@@ -35,6 +35,7 @@ vi.mock("sonner", () => ({
   toast: { success: mockToastSuccess, error: mockToastError },
 }));
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { I18nProvider } from "@/lib/i18n";
 import type { StoreSessionState } from "../use-store-session";
 import { AddressesClient, type SavedAddress } from "./addresses-client";
@@ -119,9 +120,11 @@ function mockTable() {
 
 function renderAddresses() {
   return render(
-    <I18nProvider>
-      <AddressesClient slug="storefront-e2e-test" />
-    </I18nProvider>,
+    <StorefrontBaseProvider basePath="/storefront-e2e-test">
+      <I18nProvider>
+        <AddressesClient />
+      </I18nProvider>
+    </StorefrontBaseProvider>,
   );
 }
 

@@ -7,7 +7,10 @@ const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", { capture: captureMock });
 
 const revalidateEntitiesMock = mock.fn(() => {});
-mockMod("@/lib/revalidate", { revalidateEntities: revalidateEntitiesMock });
+mockMod("@/lib/revalidate", {
+  revalidateEntities: revalidateEntitiesMock,
+  revalidateEntityTag: mock.fn(() => {}),
+});
 
 mockMod("@/lib/constants", {
   PRESET_CATEGORIES: { other: ["Cat1", "Cat2"] },

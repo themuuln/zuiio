@@ -3,6 +3,7 @@
 import { Article, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatDate } from "@/lib/format";
@@ -10,14 +11,9 @@ import type { PublicBlogPost } from "./page";
 
 const PAGE_SIZE = 8;
 
-export function BlogClient({
-  slug,
-  posts,
-}: {
-  slug: string;
-  posts: PublicBlogPost[];
-}) {
+export function BlogClient({ posts }: { posts: PublicBlogPost[] }) {
   const [page, setPage] = useState(1);
+  const base = useStorefrontBase();
   const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -38,7 +34,7 @@ export function BlogClient({
         {visiblePosts.map((post) => (
           <Link
             key={post.id}
-            href={`/${slug}/blog/${post.slug}`}
+            href={`${base}/blog/${post.slug}`}
             className="group overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-colors hover:border-primary/30"
           >
             {post.cover_image_url ? (

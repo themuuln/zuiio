@@ -20,11 +20,15 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import {
+  getPublicProductCached,
+  getStorefrontShell,
+} from "@/lib/storefront-cache";
+import {
   requestHost,
+  storefrontBasePath,
   storefrontCanonical,
   storefrontSocialMetadata,
 } from "@/lib/storefront-seo";
-import { createClient } from "@/lib/supabase/server";
 import type { PublicProduct } from "../page";
 import { ProductDetailDrawer } from "../product-detail-drawer";
 import { ProductCard } from "../products-page-client";
@@ -49,37 +53,6 @@ export type PublicAttribute = {
   value: string;
 };
 
-export type PublicProductDetail = {
-  id: string;
-  name: string;
-  sku: string | null;
-  barcode: string | null;
-  unit: string | null;
-  sale_price: number | null;
-  category_name: string | null;
-  category_id: string | null;
-  image_url: string | null;
-  description: string | null;
-  created_at: string | null;
-  variants: PublicVariant[];
-  attributes: PublicAttribute[];
-  // Extra gallery images (image_url is always the primary/first entry).
-  images: Array<{ url: string | null; sort_order: number | null }> | null;
-  // Only populated when the org opts in to public stock (show_stock=true),
-  // otherwise NULL — privacy default preserved.
-  current_stock: number | null;
-  // Review stats + active promo (backend migration 2026-08-11).
-  review_count: number | null;
-  review_average: number | null;
-  promo: {
-    id: string;
-    title: string;
-    reward_label: string | null;
-  } | null;
-  // Same-category products (≤4) for the related section.
-  related: PublicRelatedProduct[] | null;
-};
-
 export type PublicRelatedProduct = {
   id: string;
   name: string;
@@ -88,29 +61,13 @@ export type PublicRelatedProduct = {
   category_name: string | null;
 };
 
-export type PublicProductDetailData = {
-  organization: {
-    name: string;
-    slug: string;
-    currency: string;
-    company_type: string;
-  };
-  product: PublicProductDetail;
-};
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string; id: string }>;
 }): Promise<Metadata> {
   const { slug, id } = await params;
-  const supabase = await createClient();
-
-  const { data } = await supabase.rpc("get_public_product", {
-    p_slug: slug,
-    p_product_id: id,
-  });
-  const detail = data as unknown as PublicProductDetailData | null;
+  const detail = await getPublicProductCached(slug, id);
 
   if (!detail?.product) {
     return { title: "Бүтээгдэхүүн" };
@@ -168,39 +125,23 @@ async function ProductDetailDataFetcher({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase.rpc("get_public_product", {
-      p_slug: slug,
-      p_product_id: id,
-    });
+    const detail = await getPublicProductCached(slug, id);
 
-    if (error) {
-      capture(error, { context: "public product detail: rpc" });
+    if (!detail) {
       notFound();
     }
 
-    if (!data) {
-      notFound();
-    }
-
-    const { organization, product } =
-      data as unknown as PublicProductDetailData;
+    const { organization, product } = detail;
     const variants = product.variants ?? [];
     const attributes = product.attributes ?? [];
     const hasAttributes = attributes.length > 0;
 
     // Messenger deep link entry — the shop's Facebook page handle comes
     // from social_links (or the org website URL as fallback).
-    const { data: profileRow } = await supabase
-      .from("organizations")
-      .select("public_profile:organization_public_profiles(social_links)")
-      .eq("slug", slug)
-      .maybeSingle();
-    const socialLinks = Array.isArray(profileRow?.public_profile)
-      ? profileRow.public_profile[0]?.social_links
-      : profileRow?.public_profile?.social_links;
+    const shell = await getStorefrontShell(slug);
+    const socialLinks = shell?.profile?.social_links ?? null;
     const messengerPageHandle = extractFacebookHandle(socialLinks);
 
     // Gallery images: image_url is the primary entry; extra images come from
@@ -259,6 +200,7 @@ async function ProductDetailDataFetcher({
         availability,
       },
     };
+    const base = storefrontBasePath(host, slug);
     const breadcrumbJsonLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
@@ -307,7 +249,7 @@ async function ProductDetailDataFetcher({
             <div className="border-b border-border/60 bg-background/60">
               <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
                 <Link
-                  href={`/${slug}/products`}
+                  href={`${base}/products`}
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="size-4" /> Буцах

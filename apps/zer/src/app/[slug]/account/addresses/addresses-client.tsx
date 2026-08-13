@@ -6,6 +6,7 @@ import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useStorefrontBase } from "@/components/storefront/storefront-base-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,8 +53,9 @@ function isValidPhone(phone: string): boolean {
   return digits.length === 0 || (digits.length >= 8 && digits.length <= 12);
 }
 
-export function AddressesClient({ slug }: { slug: string }) {
+export function AddressesClient() {
   const { state } = useStoreSession();
+  const base = useStorefrontBase();
   const accountId = state.status === "account" ? state.account.id : null;
   const [addresses, setAddresses] = useState<SavedAddress[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -257,7 +259,7 @@ export function AddressesClient({ slug }: { slug: string }) {
           Хаягаа хадгалахын тулд нэвтэрнэ үү.
         </p>
         <Button asChild size="lg">
-          <Link href={`/${slug}/account`}>Нэвтрэх</Link>
+          <Link href={`${base}/account`}>Нэвтрэх</Link>
         </Button>
       </div>
     );

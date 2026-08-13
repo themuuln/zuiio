@@ -55,6 +55,7 @@ vi.mock("@/lib/public-checkout-actions", () => ({
   submitStoreOrder: mockSubmitStoreOrder,
 }));
 
+import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
 import { buildOrderItems } from "@/lib/storefront-order";
 import { CartClient, type CartOrg, type StorefrontBranch } from "./cart-client";
 
@@ -185,6 +186,19 @@ function lastPayload(): Record<string, unknown> {
   return payload;
 }
 
+/**
+ * CartView links are storefront-relative — tests render on the primary
+ * host, so the provider base is the org slug prefix (matches the hrefs
+ * the assertions expect).
+ */
+function renderCart(ui: React.ReactElement) {
+  return render(
+    <StorefrontBaseProvider basePath={`/${ORG.slug}`}>
+      {ui}
+    </StorefrontBaseProvider>,
+  );
+}
+
 describe("CartClient", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -199,7 +213,7 @@ describe("CartClient", () => {
   });
 
   it("shows the empty-cart state with a link back to the catalog", () => {
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
     expect(screen.getByText("Сагс хоосон байна")).toBeInTheDocument();
     // Button asChild renders an anchor exposed with role="button"
     expect(
@@ -211,7 +225,7 @@ describe("CartClient", () => {
 
   it("renders cart items with per-line and total amounts", () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     expect(screen.getByText("Бүтээгдэхүүн 1")).toBeInTheDocument();
     expect(screen.getByText("Цамц")).toBeInTheDocument();
@@ -225,7 +239,7 @@ describe("CartClient", () => {
 
   it("updates quantities and totals via the stepper", () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     // + on Бүтээгдэхүүн 1: qty 2 → 3, line 15,000, total 27,500
     fireEvent.click(screen.getAllByLabelText("Тоо хэмжээ нэмэх")[0]);
@@ -239,7 +253,7 @@ describe("CartClient", () => {
 
   it("removes an item from the cart via the trash button", () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     fireEvent.click(screen.getByLabelText("Цамц сагснаас хасах"));
     expect(screen.queryByText("Цамц")).toBeNull();
@@ -259,7 +273,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -318,7 +332,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     fireEvent.change(screen.getByLabelText("Имэйл"), {
@@ -353,7 +367,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -379,7 +393,7 @@ describe("CartClient", () => {
       ok: false,
       message: "Нөөц хүрэлцэхгүй байна",
     });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -409,7 +423,7 @@ describe("CartClient", () => {
         giftCardAmount: null,
         paymentInstructions: null,
       });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -432,7 +446,7 @@ describe("CartClient", () => {
 
   it("validates the contact fields before calling the RPC", async () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     // Empty name
     await fillCheckoutForm("", "99887766");
@@ -453,7 +467,7 @@ describe("CartClient", () => {
     seedCart(TWO_ITEM_CART);
 
     // Both disabled → no control at all
-    const { unmount } = render(
+    const { unmount } = renderCart(
       <CartClient slug={ORG.slug} organization={ORG} />,
     );
     expect(screen.queryByLabelText("Дэлгүүрээс авах")).toBeNull();
@@ -461,7 +475,7 @@ describe("CartClient", () => {
     unmount();
 
     // Pickup only → pickup option shown, delivery hidden, default is pickup
-    render(<CartClient slug={ORG.slug} organization={PICKUP_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={PICKUP_ONLY} />);
     expect(
       screen.getByRole("radio", { name: "Дэлгүүрээс авах" }),
     ).toBeInTheDocument();
@@ -482,7 +496,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     // Delivery-only org → delivery is the default, address visible
     expect(
@@ -531,7 +545,7 @@ describe("CartClient", () => {
     });
 
     // Multiple branches → branch select shown with name + address labels
-    const { unmount } = render(
+    const { unmount } = renderCart(
       <CartClient
         slug={ORG.slug}
         organization={PICKUP_ONLY}
@@ -557,7 +571,7 @@ describe("CartClient", () => {
     // Single branch → no picker; pickup without a choice sends null
     // (the success above cleared the cart, so seed it again)
     seedCart(TWO_ITEM_CART);
-    render(
+    renderCart(
       <CartClient
         slug={ORG.slug}
         organization={PICKUP_ONLY}
@@ -575,7 +589,7 @@ describe("CartClient", () => {
 
   it("lists qpay and bank_transfer as payment methods", async () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     // No delivery/pickup here → the payment select is the only combobox.
     fireEvent.click(screen.getByRole("combobox"));
@@ -604,7 +618,7 @@ describe("CartClient", () => {
         qpay_qr_url: null,
       },
     });
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     fireEvent.change(screen.getByLabelText("Хаяг"), {
@@ -659,7 +673,7 @@ describe("CartClient", () => {
         qpay_qr_url: "https://cdn.test/qpay.png",
       },
     });
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     fireEvent.change(screen.getByLabelText("Хаяг"), {
@@ -683,7 +697,7 @@ describe("CartClient", () => {
       ok: false,
       message: "Купон олдсонгүй",
     });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -701,7 +715,7 @@ describe("CartClient", () => {
   it("falls back to the generic message when the RPC error has no message", async () => {
     seedCart(TWO_ITEM_CART);
     mockSubmitStoreOrder.mockResolvedValue({ ok: false, message: "" });
-    render(<CartClient slug={ORG.slug} organization={ORG} />);
+    renderCart(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
@@ -726,7 +740,7 @@ describe("CartClient", () => {
         phone: "99112233",
       },
     ]);
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     // The picker appears next to the address fields for delivery.
     const picker = await screen.findByLabelText("Хадгалсан хаяг");
@@ -753,7 +767,7 @@ describe("CartClient", () => {
 
   it("keeps the address picker and save checkbox hidden for guests", async () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Хаяг")).toBeInTheDocument();
@@ -777,7 +791,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     await waitFor(() => {
       expect(
@@ -822,7 +836,7 @@ describe("CartClient", () => {
       giftCardAmount: null,
       paymentInstructions: null,
     });
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     await waitFor(() => {
       expect(
@@ -843,7 +857,7 @@ describe("CartClient", () => {
 
   it("renders the delivery ETA hint when the org has estimated_delivery_hours", async () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_WITH_ETA} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_WITH_ETA} />);
 
     expect(
       await screen.findByText("Хүргэлт: ~4 цагийн дотор"),
@@ -852,7 +866,7 @@ describe("CartClient", () => {
 
   it("hides the ETA hint when estimated_delivery_hours is absent", async () => {
     seedCart(TWO_ITEM_CART);
-    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+    renderCart(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
     expect(await screen.findByLabelText("Хаяг")).toBeInTheDocument();
     expect(screen.queryByText(/Хүргэлт: ~\d+ цагийн дотор/)).toBeNull();

@@ -12,31 +12,83 @@ import { getSupabaseEnv } from "./env";
  * /{slug}/account (buyer sign-in / register / orders), /{slug}/wishlist
  * (client-side localStorage list — guests must reach it from the header
  * heart). Dashboard routes (/shop/cart, /products, /settings, /dashboard,
- * …) stay protected because their first segment is not an org slug.
+ * …) stay protected because their first segment is a reserved route.
  */
 const STOREFRONT_SUBPATHS = ["products", "cart", "blog", "account", "wishlist"];
 
 /**
- * True when `pathname` looks like a storefront path (single segment or a
- * known storefront subpath) whose first segment resolves to an org slug.
- * Runs only for anonymous visitors on non-public paths, so dashboard
- * routes never reach the DB lookup.
+ * First-path-segments that are ERP dashboard, static, or infrastructure
+ * routes — never org storefronts. Classifying storefront paths against this
+ * list (instead of a per-request `organizations.slug` lookup) keeps the
+ * proxy DB-free: a slug that is not reserved falls through to the server,
+ * which renders the storefront or 404s for unknown orgs. Static segments
+ * always win over the dynamic `[slug]` route in Next's router, so a future
+ * org slug colliding with a reserved segment behaves the same as today
+ * (its storefront stays reachable via custom domain / subdomain).
  */
-async function isPublicStorefrontPath(
-  supabase: ReturnType<typeof createServerClient<Database>>,
-  pathname: string,
-): Promise<boolean> {
+const RESERVED_FIRST_SEGMENTS = new Set([
+  // ERP dashboard route groups (app/(dashboard)/*).
+  "accounting",
+  "ai",
+  "ai-assistant",
+  "audit",
+  "blog",
+  "bom",
+  "budget",
+  "cash-register",
+  "commissions",
+  "coupons",
+  "customers",
+  "deliveries",
+  "discounts",
+  "expenses",
+  "gift-cards",
+  "hr",
+  "inventory",
+  "invoices",
+  "loyalty",
+  "pos",
+  "production",
+  "products",
+  "promotions",
+  "purchases",
+  "quality",
+  "quotations",
+  "reports",
+  "returns",
+  "reviews",
+  "sales",
+  "settings",
+  "shop",
+  "suppliers",
+  "webhooks",
+  // Root-level static pages (legal / meta).
+  "about",
+  "contact",
+  "privacy",
+  "terms",
+  // Infrastructure segments.
+  "api",
+  "auth",
+  "dashboard",
+  "embed",
+  "r",
+  "terminal",
+]);
+
+/**
+ * True when `pathname` looks like a storefront path (single segment or a
+ * known storefront subpath) whose first segment is not a reserved ERP or
+ * static route. Runs only for anonymous visitors on non-public paths.
+ * Unknown slugs pass through — the server renders a 404 for them.
+ */
+function isPublicStorefrontPath(pathname: string): boolean {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0) return false;
   if (segments.length > 1 && !STOREFRONT_SUBPATHS.includes(segments[1])) {
     return false;
   }
-  const { data } = await supabase
-    .from("organizations")
-    .select("slug")
-    .eq("slug", segments[0])
-    .maybeSingle();
-  return data !== null;
+  return !RESERVED_FIRST_SEGMENTS.has(segments[0]);
 }
 
 export async function updateSession(request: NextRequest) {
@@ -87,10 +139,11 @@ export async function updateSession(request: NextRequest) {
   const isCronRoute = request.nextUrl.pathname.startsWith("/api/cron/");
 
   // Allow public storefront pages on the default domain (/{slug} and its
-  // storefront subpaths) — resolved against organizations.slug so
-  // dashboard routes never match. Only consulted for anonymous visitors.
+  // storefront subpaths) — classified statically so the proxy makes no DB
+  // round trip; unknown slugs fall through to the server (404). Only
+  // consulted for anonymous visitors.
   const isStorefrontRoute = !userId
-    ? await isPublicStorefrontPath(supabase, request.nextUrl.pathname)
+    ? isPublicStorefrontPath(request.nextUrl.pathname)
     : false;
 
   // Public landing for anonymous visitors on the app root. Authenticated

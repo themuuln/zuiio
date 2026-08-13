@@ -24,8 +24,12 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  type CheckDnsState,
+  checkAdminDomainDns,
   checkCustomDomainDns,
   updatePublicProfile,
+  type VerifyDomainState,
+  verifyAdminDomain,
   verifyCustomDomain,
 } from "@/app/(dashboard)/settings/organization/actions";
 import { Button } from "@/components/ui/button";
@@ -78,6 +82,8 @@ type PublicProfile = {
   og_image_url: string | null;
   custom_domain: string | null;
   domain_verified: boolean;
+  admin_domain: string | null;
+  admin_domain_verified: boolean;
   policies: string | null;
   social_links: Record<string, string> | null;
   delivery_fee_amount?: string | null;
@@ -272,6 +278,174 @@ function dnsRecordForDomain(domain: string): {
   };
 }
 
+/**
+ * Self-service custom domain card shared by the storefront domain
+ * (custom_domain) and the ERP domain (admin_domain): TXT ownership proof,
+ * Vercel attach status, and the DNS-pointing check. Behavior is identical
+ * for both roles — only labels and the action state differ.
+ */
+function DomainSetupCard({
+  title,
+  label,
+  description,
+  inputId,
+  inputName,
+  placeholder,
+  value,
+  onValueChange,
+  verified,
+  verifiedDomain,
+  txtValue,
+  liveMessage,
+  verifyState,
+  dnsState,
+  verifyFormAction,
+  dnsFormAction,
+  isVerifying,
+  isCheckingDns,
+}: {
+  title: string;
+  label: string;
+  description: string;
+  inputId: string;
+  inputName: string;
+  placeholder: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  verified: boolean;
+  verifiedDomain: string | null;
+  txtValue: string;
+  liveMessage: string;
+  verifyState: VerifyDomainState | undefined;
+  dnsState: CheckDnsState | undefined;
+  verifyFormAction: (formData: FormData) => void;
+  dnsFormAction: (formData: FormData) => void;
+  isVerifying: boolean;
+  isCheckingDns: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <div className="space-y-1.5">
+        <label
+          htmlFor={inputId}
+          className="text-xs font-medium text-muted-foreground"
+        >
+          {label}
+        </label>
+        <Input
+          id={inputId}
+          name={inputName}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onValueChange(e.target.value.toLowerCase())}
+        />
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+
+      {/* Step 1 — TXT ownership */}
+      {value.trim() && (
+        <div className="space-y-2 rounded-lg border p-3">
+          <p className="text-xs font-medium text-muted-foreground">
+            TXT бичлэг нэмнэ үү:
+          </p>
+          <CopyField value={txtValue} label="TXT хуулах" />
+          <form action={verifyFormAction}>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              disabled={isVerifying}
+            >
+              {isVerifying ? (
+                <>
+                  <Spinner className="size-3 animate-spin" />
+                  Шалгаж байна...
+                </>
+              ) : (
+                "Баталгаажуулах"
+              )}
+            </Button>
+          </form>
+        </div>
+      )}
+      {verifyState?.vercelError && (
+        <p className="text-xs text-amber-600">
+          Домэйн баталгаажсан, гэхдээ Vercel-д холбоход алдаа гарлаа. Доорх "DNS
+          шалгах" товчийг дараад дахин оролдоно уу.
+        </p>
+      )}
+      {verifyState?.error && (
+        <p className="text-xs text-destructive">{verifyState.error}</p>
+      )}
+
+      {/* Step 2 — point DNS at Vercel */}
+      {(verified || verifyState?.verified) && (
+        <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+            <CheckCircle className="size-4" weight="fill" />
+            Домэйн баталгаажсан
+          </p>
+          {(() => {
+            const record = verifiedDomain
+              ? dnsRecordForDomain(verifiedDomain)
+              : null;
+            return record ? (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Одоо DNS бичлэгээ нэмээд Vercel рүү чиглүүлнэ үү:
+                </p>
+                <div className="space-y-1">
+                  <CopyField
+                    value={`${record.type} ${record.name} → ${record.value}`}
+                    label="Бичлэг хуулах"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {record.type === "A"
+                      ? "Дээрх A бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."
+                      : "Дээрх CNAME бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."}
+                  </p>
+                </div>
+              </div>
+            ) : null;
+          })()}
+          <form action={dnsFormAction}>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              disabled={isCheckingDns}
+            >
+              {isCheckingDns ? (
+                <>
+                  <Spinner className="size-3 animate-spin" />
+                  Шалгаж байна...
+                </>
+              ) : (
+                "DNS шалгах"
+              )}
+            </Button>
+          </form>
+          {dnsState?.live && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircle className="size-3.5" weight="fill" />
+              {liveMessage}
+            </p>
+          )}
+          {dnsState?.success && !dnsState?.live && (
+            <p className="text-xs text-muted-foreground">
+              DNS тархаж байна. Хэдэн минутын дараа дахин шалгана уу.
+            </p>
+          )}
+          {dnsState?.error && (
+            <p className="text-xs text-destructive">{dnsState.error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PublicProfileSettings({
   slug,
   initialProfile,
@@ -292,6 +466,10 @@ export function PublicProfileSettings({
     checkCustomDomainDns,
     undefined,
   );
+  const [adminVerifyState, adminVerifyFormAction, isVerifyingAdmin] =
+    useActionState(verifyAdminDomain, undefined);
+  const [adminDnsState, adminDnsFormAction, isCheckingAdminDns] =
+    useActionState(checkAdminDomainDns, undefined);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Controlled state for images and complex inputs (not easily represented in plain form inputs)
@@ -303,6 +481,9 @@ export function PublicProfileSettings({
   );
   const [customDomainInput, setCustomDomainInput] = useState<string>(
     initialProfile?.custom_domain ?? "",
+  );
+  const [adminDomainInput, setAdminDomainInput] = useState<string>(
+    initialProfile?.admin_domain ?? "",
   );
 
   // Business hours state
@@ -631,137 +812,59 @@ export function PublicProfileSettings({
 
           <Separator />
 
-          {/* Custom Domain */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Өөрийн домэйн</h3>
-            <div className="space-y-1.5">
-              <label
-                htmlFor="custom_domain"
-                className="text-xs font-medium text-muted-foreground"
-              >
-                Домэйн (жишээ: shop.mydomain.mn)
-              </label>
-              <Input
-                id="custom_domain"
-                name="custom_domain"
-                placeholder="shop.mydomain.mn"
-                value={customDomainInput}
-                onChange={(e) =>
-                  setCustomDomainInput(e.target.value.toLowerCase())
-                }
-              />
-              <p className="text-xs text-muted-foreground">
-                Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ хадгалаад доорх
-                TXT бичлэгийг DNS тохиргоондоо нэмж, "Баталгаажуулах" товчийг
-                дарна уу.
-              </p>
-            </div>
+          {/* Custom Domain (storefront) */}
+          <DomainSetupCard
+            title="Өөрийн домэйн (дэлгүүр)"
+            label="Домэйн (жишээ: shop.mydomain.mn)"
+            description={
+              'Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ хадгалаад доорх TXT бичлэгийг DNS тохиргоондоо нэмж, "Баталгаажуулах" товчийг дарна уу.'
+            }
+            inputId="custom_domain"
+            inputName="custom_domain"
+            placeholder="shop.mydomain.mn"
+            value={customDomainInput}
+            onValueChange={setCustomDomainInput}
+            verified={initialProfile?.domain_verified ?? false}
+            verifiedDomain={
+              initialProfile?.custom_domain?.trim().toLowerCase() ?? null
+            }
+            txtValue={`zer-verify=${deriveDomainVerificationToken(organizationId)}`}
+            liveMessage="Холбогдсон ✓ Дэлгүүр таны домэйноор нээгдэж байна."
+            verifyState={verifyState}
+            dnsState={dnsState}
+            verifyFormAction={verifyFormAction}
+            dnsFormAction={dnsFormAction}
+            isVerifying={isVerifying}
+            isCheckingDns={isCheckingDns}
+          />
 
-            {/* Step 1 — TXT ownership */}
-            {customDomainInput.trim() && (
-              <div className="space-y-2 rounded-lg border p-3">
-                <p className="text-xs font-medium text-muted-foreground">
-                  TXT бичлэг нэмнэ үү:
-                </p>
-                <CopyField
-                  value={`zer-verify=${deriveDomainVerificationToken(organizationId)}`}
-                  label="TXT хуулах"
-                />
-                <form action={verifyFormAction}>
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    size="sm"
-                    disabled={isVerifying}
-                  >
-                    {isVerifying ? (
-                      <>
-                        <Spinner className="size-3 animate-spin" />
-                        Шалгаж байна...
-                      </>
-                    ) : (
-                      "Баталгаажуулах"
-                    )}
-                  </Button>
-                </form>
-              </div>
-            )}
-            {verifyState?.vercelError && (
-              <p className="text-xs text-amber-600">
-                Домэйн баталгаажсан, гэхдээ Vercel-д холбоход алдаа гарлаа.
-                Доорх "DNS шалгах" товчийг дараад дахин оролдоно уу.
-              </p>
-            )}
-            {verifyState?.error && (
-              <p className="text-xs text-destructive">{verifyState.error}</p>
-            )}
+          <Separator />
 
-            {/* Step 2 — point DNS at Vercel */}
-            {(initialProfile?.domain_verified || verifyState?.verified) && (
-              <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
-                <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-                  <CheckCircle className="size-4" weight="fill" />
-                  Домэйн баталгаажсан
-                </p>
-                {(() => {
-                  const verifiedDomain =
-                    initialProfile?.custom_domain?.trim().toLowerCase() ?? "";
-                  const record = verifiedDomain
-                    ? dnsRecordForDomain(verifiedDomain)
-                    : null;
-                  return record ? (
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Одоо DNS бичлэгээ нэмээд Vercel рүү чиглүүлнэ үү:
-                      </p>
-                      <div className="space-y-1">
-                        <CopyField
-                          value={`${record.type} ${record.name} → ${record.value}`}
-                          label="Бичлэг хуулах"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {record.type === "A"
-                            ? "Дээрх A бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."
-                            : "Дээрх CNAME бичлэгийг домэйнийнхээ DNS тохиргоонд нэмнэ үү."}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
-                <form action={dnsFormAction}>
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    size="sm"
-                    disabled={isCheckingDns}
-                  >
-                    {isCheckingDns ? (
-                      <>
-                        <Spinner className="size-3 animate-spin" />
-                        Шалгаж байна...
-                      </>
-                    ) : (
-                      "DNS шалгах"
-                    )}
-                  </Button>
-                </form>
-                {dnsState?.live && (
-                  <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-                    <CheckCircle className="size-3.5" weight="fill" />
-                    Холбогдсон ✓ Дэлгүүр таны домэйноор нээгдэж байна.
-                  </p>
-                )}
-                {dnsState?.success && !dnsState?.live && (
-                  <p className="text-xs text-muted-foreground">
-                    DNS тархаж байна. Хэдэн минутын дараа дахин шалгана уу.
-                  </p>
-                )}
-                {dnsState?.error && (
-                  <p className="text-xs text-destructive">{dnsState.error}</p>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Admin (ERP) Domain */}
+          <DomainSetupCard
+            title="ERP домэйн"
+            label="Домэйн (жишээ: erp.mydomain.mn)"
+            description={
+              'ERP самбар энэ домэйноор нээгдэнэ. Домэйнээ хадгалаад доорх TXT бичлэгийг DNS тохиргоондоо нэмж, "Баталгаажуулах" товчийг дарна уу.'
+            }
+            inputId="admin_domain"
+            inputName="admin_domain"
+            placeholder="erp.mydomain.mn"
+            value={adminDomainInput}
+            onValueChange={setAdminDomainInput}
+            verified={initialProfile?.admin_domain_verified ?? false}
+            verifiedDomain={
+              initialProfile?.admin_domain?.trim().toLowerCase() ?? null
+            }
+            txtValue={`zer-verify=${deriveDomainVerificationToken(organizationId)}`}
+            liveMessage="Холбогдсон ✓ ERP таны домэйноор нээгдэж байна."
+            verifyState={adminVerifyState}
+            dnsState={adminDnsState}
+            verifyFormAction={adminVerifyFormAction}
+            dnsFormAction={adminDnsFormAction}
+            isVerifying={isVerifyingAdmin}
+            isCheckingDns={isCheckingAdminDns}
+          />
 
           <Separator />
 

@@ -5,21 +5,15 @@ import { Suspense } from "react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatDate } from "@/lib/format";
 import {
+  getPublicBlogPostCached,
+  getStorefrontShell,
+} from "@/lib/storefront-cache";
+import {
   requestHost,
+  storefrontBasePath,
   storefrontCanonical,
   storefrontSocialMetadata,
 } from "@/lib/storefront-seo";
-import { createClient } from "@/lib/supabase/server";
-
-type PublicBlogPostDetail = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  content: string;
-  cover_image_url: string | null;
-  published_at: string | null;
-};
 
 export default function PublicBlogPostPage({
   params,
@@ -39,13 +33,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string; postSlug: string }>;
 }): Promise<Metadata> {
   const { slug, postSlug } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("get_public_blog_post", {
-    p_slug: slug,
-    p_post_slug: postSlug,
-  });
+  const post = await getPublicBlogPostCached(slug, postSlug);
 
-  const post = data as PublicBlogPostDetail | null;
   if (!post) {
     return { title: "Нийтлэл" };
   }
@@ -81,27 +70,20 @@ async function PostDataFetcher({
   params: Promise<{ slug: string; postSlug: string }>;
 }) {
   const { slug, postSlug } = await params;
-  const supabase = await createClient();
 
-  const [{ data, error }, { data: org }] = await Promise.all([
-    supabase.rpc("get_public_blog_post", {
-      p_slug: slug,
-      p_post_slug: postSlug,
-    }),
-    supabase.from("organizations").select("name").eq("slug", slug).single(),
+  const [post, shell] = await Promise.all([
+    getPublicBlogPostCached(slug, postSlug),
+    getStorefrontShell(slug),
   ]);
 
-  if (error || !data) {
+  if (!post) {
     notFound();
   }
 
-  const post = data as PublicBlogPostDetail;
-  const publisherName = org?.name ?? null;
-  const postUrl = storefrontCanonical(
-    await requestHost(),
-    slug,
-    `/blog/${post.slug}`,
-  );
+  const publisherName = shell?.org?.name ?? null;
+  const host = await requestHost();
+  const postUrl = storefrontCanonical(host, slug, `/blog/${post.slug}`);
+  const base = storefrontBasePath(host, slug);
 
   const paragraphs = post.content
     .split(/\n{2,}/)
@@ -133,7 +115,7 @@ async function PostDataFetcher({
     <div className="min-h-dvh bg-background">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
-          href={`/${slug}/blog`}
+          href={`${base}/blog`}
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           ← Блог руу буцах
