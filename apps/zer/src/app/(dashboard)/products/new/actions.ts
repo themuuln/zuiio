@@ -23,6 +23,13 @@ export async function createProduct(
   const brandName = formData.get("brand_name")?.toString() || null;
   const categoryName = formData.get("category_name")?.toString() || null;
   const imageUrl = formData.get("image_url")?.toString() || null;
+  const description = formData.get("description")?.toString() || null;
+  const materialType = formData.get("material_type")?.toString() || null;
+  const additionalInfo = formData.get("additional_info")?.toString() || null;
+  const usageInstructions =
+    formData.get("usage_instructions")?.toString() || null;
+  const careInstructions =
+    formData.get("care_instructions")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -120,6 +127,11 @@ export async function createProduct(
       current_stock: currentStock,
       min_stock: minStock,
       image_url: imageUrl,
+      description: description?.trim() || null,
+      material_type: materialType?.trim() || null,
+      additional_info: additionalInfo?.trim() || null,
+      usage_instructions: usageInstructions?.trim() || null,
+      care_instructions: careInstructions?.trim() || null,
       is_public: false,
       has_variants: Boolean(variantGroupsRaw && variantDataRaw),
     } as never)

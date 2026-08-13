@@ -55,6 +55,11 @@ export type ProductRow = {
   brand_name: string | null;
   brand_logo_url: string | null;
   image_url: string | null;
+  description: string | null;
+  material_type: string | null;
+  additional_info: string | null;
+  usage_instructions: string | null;
+  care_instructions: string | null;
   has_variants: boolean | null;
   is_public: boolean | null;
 };
@@ -70,6 +75,11 @@ function toEditData(product: ProductRow): ProductEditData {
     brand_id: product.brand_id,
     brand_name: product.brand_name,
     brand_logo_url: product.brand_logo_url,
+    description: product.description,
+    material_type: product.material_type,
+    additional_info: product.additional_info,
+    usage_instructions: product.usage_instructions,
+    care_instructions: product.care_instructions,
     cost_price: product.cost_price,
     sale_price: product.sale_price,
     current_stock: product.current_stock,
@@ -154,6 +164,7 @@ export function ProductsTable({
     current_stock: product.current_stock,
     min_stock: product.min_stock,
     image_url: product.image_url,
+    description: product.description,
     variants:
       selectedVariants?.map((v) => ({
         id: v.id,

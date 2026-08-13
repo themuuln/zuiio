@@ -226,3 +226,53 @@ describe("reorderProductImages action", () => {
     expect(result).toHaveProperty("error");
   });
 });
+
+describe("updateProduct action", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates description and extra info fields", async () => {
+    const updatePayloads: Record<string, unknown>[] = [];
+    mockSupabase.from.mockImplementation((table: string) => {
+      const chain = {
+        update: vi.fn((payload: unknown) => {
+          updatePayloads.push(payload as Record<string, unknown>);
+          return chain;
+        }),
+        eq: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        insert: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: "prod-1" } }),
+        // biome-ignore lint/suspicious/noThenProperty: intentional thenable to mimic Supabase's awaitable query builder chain.
+        then: (resolve: (v: unknown) => void) => resolve({ error: null }),
+      };
+      return chain;
+    });
+
+    const formData = new FormData();
+    formData.append("id", "prod-1");
+    formData.append("name", "Тест бүтээгдэхүүн");
+    formData.append("sku", "TST-003");
+    formData.append("cost_price", "1000");
+    formData.append("sale_price", "2000");
+    formData.append("description", "  Шинэ тайлбар  ");
+    formData.append("material_type", "арьс");
+    formData.append("additional_info", "2л багц");
+    formData.append("usage_instructions", "Буцалсан усаар угаана");
+    formData.append("care_instructions", "Сэрүүн газар хадгална");
+
+    const { updateProduct } = await import("../actions");
+    const result = await updateProduct(undefined, formData);
+
+    expect(result).toEqual({ success: true });
+    expect(updatePayloads[0]).toMatchObject({
+      description: "Шинэ тайлбар",
+      material_type: "арьс",
+      additional_info: "2л багц",
+      usage_instructions: "Буцалсан усаар угаана",
+      care_instructions: "Сэрүүн газар хадгална",
+    });
+  });
+});

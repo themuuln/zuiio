@@ -39,7 +39,7 @@ async function DataFetcher({
     supabase
       .from("products")
       .select(
-        "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url, has_variants",
+        "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url, description, material_type, additional_info, usage_instructions, care_instructions, has_variants, is_public",
         { count: "exact" },
       )
       .eq("organization_id", organizationId)
@@ -73,8 +73,13 @@ async function DataFetcher({
         (product.brands as { name: string; logo_url: string | null } | null)
           ?.logo_url ?? null,
       image_url: product.image_url,
+      description: product.description,
+      material_type: product.material_type,
+      additional_info: product.additional_info,
+      usage_instructions: product.usage_instructions,
+      care_instructions: product.care_instructions,
       has_variants: product.has_variants,
-      is_public: false,
+      is_public: product.is_public,
     })) ?? [];
 
   return (

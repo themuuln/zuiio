@@ -30,6 +30,13 @@ export async function updateProduct(
   const brandId = formData.get("brand_id")?.toString() || null;
   const categoryName = formData.get("category_name")?.toString() || null;
   const isPublic = formData.get("is_public") === "on";
+  const description = formData.get("description")?.toString() || null;
+  const materialType = formData.get("material_type")?.toString() || null;
+  const additionalInfo = formData.get("additional_info")?.toString() || null;
+  const usageInstructions =
+    formData.get("usage_instructions")?.toString() || null;
+  const careInstructions =
+    formData.get("care_instructions")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -87,6 +94,11 @@ export async function updateProduct(
       unit,
       brand_id: brandId || null,
       category_id: categoryId,
+      description: description?.trim() || null,
+      material_type: materialType?.trim() || null,
+      additional_info: additionalInfo?.trim() || null,
+      usage_instructions: usageInstructions?.trim() || null,
+      care_instructions: careInstructions?.trim() || null,
       cost_price: costPrice,
       sale_price: salePrice,
       ...(formData.has("current_stock") ? { current_stock: currentStock } : {}),
