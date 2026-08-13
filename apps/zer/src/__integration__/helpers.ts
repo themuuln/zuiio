@@ -137,6 +137,15 @@ async function cleanupDependents(
         await cleanupDependents(admin, { table: "products", id: productId });
       }
       await deleteCleanupRows(admin, "products", "organization_id", entry.id);
+      // Contacts (incl. loyalty buyers) reference the org — clear them before
+      // the org delete, else the FK blocks cleanup and leaves residue.
+      await deleteCleanupRows(
+        admin,
+        "loyalty_points",
+        "organization_id",
+        entry.id,
+      );
+      await deleteCleanupRows(admin, "contacts", "organization_id", entry.id);
       break;
     }
     case "products":

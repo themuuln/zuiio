@@ -50,7 +50,6 @@ test.describe("Dashboard — AI Driven", () => {
 test.describe("Products — AI Driven", () => {
   test("ai can navigate to products page and see the table", async ({
     page,
-    _ai,
     aiAssert,
   }) => {
     test.skip(
@@ -119,7 +118,7 @@ test.describe("Navigation — AI Driven", () => {
 });
 
 test.describe("Reports — AI Driven", () => {
-  test("ai can view the reports page", async ({ page, aiAssert, _ai }) => {
+  test("ai can view the reports page", async ({ page, aiAssert }) => {
     test.skip(
       !hasModelConfig,
       "Set MIDSCENE_MODEL_NAME env var to run AI tests",
