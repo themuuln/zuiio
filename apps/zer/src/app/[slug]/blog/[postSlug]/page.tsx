@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatDate } from "@/lib/format";
+import {
+  requestHost,
+  storefrontCanonical,
+  storefrontSocialMetadata,
+} from "@/lib/storefront-seo";
 import { createClient } from "@/lib/supabase/server";
 
 type PublicBlogPostDetail = {
@@ -46,32 +50,28 @@ export async function generateMetadata({
     return { title: "Нийтлэл" };
   }
 
-  // Canonical host: use the request host when a custom domain served the
-  // page (rewrites preserve it); fall back to the configured site URL.
-  const host = (await headers()).get("host") ?? "";
-  const configuredHost = (
-    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
-  ).replace(/^https?:\/\//, "");
-  const canonicalBase =
-    host && host !== configuredHost
-      ? `https://${host}`
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
-  const postUrl = `${canonicalBase}/${slug}/blog/${postSlug}`;
+  const postUrl = storefrontCanonical(
+    await requestHost(),
+    slug,
+    `/blog/${postSlug}`,
+  );
+  const title = post.title;
+  const description = post.excerpt ?? post.title;
 
   return {
-    title: post.title,
-    description: post.excerpt ?? post.title,
+    title,
+    description,
     robots: { index: true, follow: true },
     alternates: { canonical: postUrl },
-    openGraph: {
-      title: post.title,
-      description: post.excerpt ?? post.title,
-      ...(post.cover_image_url
-        ? { images: [{ url: post.cover_image_url, width: 1200, height: 630 }] }
-        : {}),
+    ...storefrontSocialMetadata({
+      title,
+      description,
+      canonical: postUrl,
+      siteName: null,
+      images: [post.cover_image_url],
+      publishedTime: post.published_at,
       type: "article",
-      url: postUrl,
-    },
+    }),
   };
 }
 
@@ -97,6 +97,11 @@ async function PostDataFetcher({
 
   const post = data as PublicBlogPostDetail;
   const publisherName = org?.name ?? null;
+  const postUrl = storefrontCanonical(
+    await requestHost(),
+    slug,
+    `/blog/${post.slug}`,
+  );
 
   const paragraphs = post.content
     .split(/\n{2,}/)
@@ -105,12 +110,22 @@ async function PostDataFetcher({
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: post.title,
+    ...(post.excerpt ? { description: post.excerpt } : {}),
     ...(post.cover_image_url ? { image: [post.cover_image_url] } : {}),
-    ...(post.published_at ? { datePublished: post.published_at } : {}),
+    ...(post.published_at
+      ? {
+          datePublished: post.published_at,
+          dateModified: post.published_at,
+        }
+      : {}),
+    mainEntityOfPage: postUrl,
     ...(publisherName
-      ? { publisher: { "@type": "Organization", name: publisherName } }
+      ? {
+          author: { "@type": "Organization", name: publisherName },
+          publisher: { "@type": "Organization", name: publisherName },
+        }
       : {}),
   };
 

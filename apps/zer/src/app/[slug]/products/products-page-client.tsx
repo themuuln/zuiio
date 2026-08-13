@@ -65,6 +65,22 @@ export function ProductsPageClient({
   const [maxPriceInput, setMaxPriceInput] = useState(maxPrice);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Lock the background scroll while the mobile filter overlay is open —
+  // otherwise touch/wheel gestures on the panel chain to the products list
+  // behind it (the panel often fits the screen, so it has nothing to
+  // scroll and every gesture falls through to the background). The page
+  // scrolls on <html>, so that is what gets locked (body overflow:hidden
+  // does not stop the window scroller).
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = previous;
+    };
+  }, [mobileFiltersOpen]);
+
   const updateParams = useCallback(
     (updates: Record<string, string | undefined>) => {
       const params = new URLSearchParams(urlSearchParams.toString());
@@ -157,30 +173,33 @@ export function ProductsPageClient({
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* Header */}
-      <div className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      {/* Header — the storefront shell header (layout) is the sticky one;
+          this page header scrolls with content and keeps only the
+          page-local controls (filter toggle + catalog count) */}
+      <div className="border-b border-border/60 bg-card/50">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div>
+          <div className="flex items-center justify-between gap-3 py-4">
+            <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                 {getCompanyTypeLabel(organization.companyType)}
               </p>
-              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
                 {organization.name}
               </h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
               {/* Mobile filter toggle */}
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                aria-label="Шүүлтүүр"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "default" }),
                   "lg:hidden",
                 )}
               >
                 <FunnelSimple className="size-4" />
-                Шүүлтүүр
+                <span className="max-sm:hidden">Шүүлтүүр</span>
                 {hasFilters && (
                   <span className="size-1.5 rounded-full bg-primary" />
                 )}
@@ -207,7 +226,7 @@ export function ProductsPageClient({
               </Link>
               {/* Cart link */}
               <StorefrontCartLink slug={organization.slug} />
-              <div className="text-right">
+              <div className="hidden text-right sm:block">
                 <p className="text-2xl font-bold tabular-nums">{total}</p>
                 <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
               </div>
@@ -216,16 +235,19 @@ export function ProductsPageClient({
         </div>
       </div>
 
-      {/* Mobile filters overlay */}
+      {/* Mobile filters overlay — inline z-index pins it above the sticky
+          shell header (z-40) and the AI-chat FAB (z-50), matching the
+          BottomSheet treatment; otherwise the header paints over the
+          panel's top content. */}
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-20 lg:hidden">
+        <div className="fixed inset-0 lg:hidden" style={{ zIndex: 60 }}>
           <button
             type="button"
             aria-label="Close filters"
             className="absolute inset-0 bg-black/30"
             onClick={() => setMobileFiltersOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto bg-background p-5 shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto overscroll-contain bg-background p-5 shadow-xl">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-base font-semibold">Шүүлтүүр</h2>
               <button
@@ -330,18 +352,19 @@ export function ProductsPageClient({
             </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 2xl:grid-cols-4">
                 {products.map((product) => (
-                  <ProductDetailDrawer
-                    key={product.id}
-                    product={product}
-                    organization={organization}
-                  >
-                    <ProductCard
+                  <div key={product.id} className="group">
+                    <ProductDetailDrawer
                       product={product}
-                      currency={organization.currency}
-                    />
-                  </ProductDetailDrawer>
+                      organization={organization}
+                    >
+                      <ProductCard
+                        product={product}
+                        currency={organization.currency}
+                      />
+                    </ProductDetailDrawer>
+                  </div>
                 ))}
               </div>
 
@@ -495,7 +518,7 @@ function SidebarFilters({
               onClick={() => setCategoryFilter("")}
               className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                 !categoryFilter
-                  ? "bg-primary/10 font-medium text-primary-foreground"
+                  ? "bg-primary/10 font-medium text-primary"
                   : "text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -511,7 +534,7 @@ function SidebarFilters({
                 }
                 className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                   categoryFilter === cat.id
-                    ? "bg-primary/10 font-medium text-primary-foreground"
+                    ? "bg-primary/10 font-medium text-primary"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -584,14 +607,14 @@ export function ProductCard({
         {/* Corner badges: sold-out + promo stack on the top-left, mirroring
             the sold-out overlay placement. */}
         {(product.current_stock === 0 || product.promo) && (
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+          <div className="absolute top-2 left-2 right-14 flex flex-col items-start gap-1">
             {product.current_stock === 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[10px] font-medium text-destructive-foreground backdrop-blur-sm">
                 Дууссан
               </span>
             )}
             {product.promo && (
-              <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+              <span className="inline-flex max-w-full items-center truncate rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
                 {product.promo.reward_label ?? product.promo.title}
               </span>
             )}
@@ -600,14 +623,14 @@ export function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="space-y-2 p-4">
+      <div className="space-y-2 p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-sm font-medium leading-tight">
               {product.name}
             </h3>
             {product.description && (
-              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed max-sm:hidden">
                 {product.description}
               </p>
             )}
@@ -625,9 +648,9 @@ export function ProductCard({
           </div>
         )}
 
-        <div className="flex items-end justify-between gap-2">
-          <div>
-            <p className="text-lg font-bold tracking-tight tabular-nums">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 sm:items-end">
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold tracking-tight tabular-nums sm:text-lg">
               {formatCurrency(Number(product.sale_price ?? 0))}
             </p>
             {currency && (
@@ -636,6 +659,7 @@ export function ProductCard({
           </div>
           <AddToCartButton
             size="sm"
+            compact
             className="relative z-20"
             item={{
               productId: product.id,
@@ -647,8 +671,8 @@ export function ProductCard({
           />
         </div>
 
-        {/* View details hint */}
-        <div className="flex items-center gap-1 pt-1 text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">
+        {/* View details hint — hover affordance only on pointer devices */}
+        <div className="hidden items-center gap-1 pt-1 text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
           Дэлгэрэнгүй
           <ArrowRight className="size-3" />
         </div>

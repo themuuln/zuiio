@@ -1,7 +1,23 @@
+import type { Metadata } from "next";
 import Script from "next/script";
 import { StorefrontAiChat } from "@/components/storefront/ai-chat/ai-chat-widget";
+import { StorefrontCartProvider } from "@/components/storefront/cart-context";
+import { StorefrontFooter } from "@/components/storefront/storefront-footer";
+import { StorefrontHeader } from "@/components/storefront/storefront-header";
+import { WishlistProvider } from "@/components/storefront/wishlist-context";
 import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
+import { APP_NAME } from "@/lib/constants";
+import { getPublicCategories } from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Storefront pages carry their own org/product titles — the root layout's
+ * "%s | Zer" suffix would leak the platform brand onto org sites (including
+ * custom domains), so it is neutralized here.
+ */
+export const metadata: Metadata = {
+  title: { default: APP_NAME, template: "%s" },
+};
 
 /**
  * Public storefront layout.
@@ -30,7 +46,7 @@ export default async function StorefrontLayout({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "id, name, brand_config, public_profile:organization_public_profiles(display_name)",
+      "id, name, brand_config, public_profile:organization_public_profiles(display_name, logo_url, description, contact_email, contact_phone, address, website_url, social_links, business_hours)",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -40,12 +56,34 @@ export default async function StorefrontLayout({
   );
 
   // organization_public_profiles is 1:1 with organizations, but PostgREST
-  // may still return an array shape; normalize defensively.
+  // may still return an array shape; normalize defensively. The select
+  // result is Json-shaped, so the shape cast goes through unknown.
+  type ShellProfile = {
+    display_name?: string | null;
+    logo_url?: string | null;
+    description?: string | null;
+    contact_email?: string | null;
+    contact_phone?: string | null;
+    address?: string | null;
+    website_url?: string | null;
+    social_links?: Record<string, string> | null;
+    business_hours?: Record<string, string> | null;
+  };
   const profile = Array.isArray(org?.public_profile)
-    ? (org.public_profile as { display_name?: string | null }[])[0]
-    : (org?.public_profile as { display_name?: string | null } | null);
+    ? (org.public_profile as unknown as ShellProfile[])[0]
+    : (org?.public_profile as unknown as ShellProfile | null);
 
   const orgName = profile?.display_name ?? org?.name ?? null;
+
+  // Category nav for the storefront header. Tolerant lookup — the
+  // get_public_categories RPC may be absent on environments where the
+  // migration is not applied; the header then simply shows "Бүх бараа".
+  let categories: { id: string; name: string }[] = [];
+  try {
+    categories = await getPublicCategories(supabase, slug);
+  } catch {
+    categories = [];
+  }
 
   // Analytics ids (ga_measurement_id / meta_pixel_id) were added by
   // migration 20260730000004, which is not applied on local or remote DBs
@@ -75,7 +113,6 @@ export default async function StorefrontLayout({
       {brandCSS && (
         <style
           id="brand-theme"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated CSS from brand config
           dangerouslySetInnerHTML={{ __html: brandCSS }}
         />
       )}
@@ -119,7 +156,35 @@ export default async function StorefrontLayout({
           }}
         />
       )}
-      {children}
+      <StorefrontCartProvider>
+        <WishlistProvider slug={slug}>
+          <div className="flex min-h-dvh flex-col bg-background">
+            {org && (
+              <StorefrontHeader
+                slug={slug}
+                name={orgName}
+                logoUrl={profile?.logo_url ?? null}
+                categories={categories}
+              />
+            )}
+            <div className="flex flex-1 flex-col">{children}</div>
+            {org && (
+              <StorefrontFooter
+                data={{
+                  name: orgName,
+                  description: profile?.description ?? null,
+                  contactEmail: profile?.contact_email ?? null,
+                  contactPhone: profile?.contact_phone ?? null,
+                  address: profile?.address ?? null,
+                  websiteUrl: profile?.website_url ?? null,
+                  socialLinks: profile?.social_links ?? null,
+                  businessHours: profile?.business_hours ?? null,
+                }}
+              />
+            )}
+          </div>
+        </WishlistProvider>
+      </StorefrontCartProvider>
       {org && <StorefrontAiChat slug={slug} orgName={orgName} />}
     </>
   );

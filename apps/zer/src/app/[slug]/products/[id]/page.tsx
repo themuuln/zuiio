@@ -8,7 +8,6 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -20,6 +19,11 @@ import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
+import {
+  requestHost,
+  storefrontCanonical,
+  storefrontSocialMetadata,
+} from "@/lib/storefront-seo";
 import { createClient } from "@/lib/supabase/server";
 import type { PublicProduct } from "../page";
 import { ProductDetailDrawer } from "../product-detail-drawer";
@@ -120,32 +124,29 @@ export async function generateMetadata({
       ? `${rawDescription.slice(0, 157).trimEnd()}…`
       : rawDescription || title;
 
-  // Canonical host: use the request host when a custom domain served the
-  // page (rewrites preserve it); fall back to the configured site URL.
-  const host = (await headers()).get("host") ?? "";
-  const configuredHost = (
-    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
-  ).replace(/^https?:\/\//, "");
-  const canonicalBase =
-    host && host !== configuredHost
-      ? `https://${host}`
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
-  const canonical = `${canonicalBase}/${slug}/products/${product.id}`;
+  // Canonical host: on a custom domain the slug prefix is dropped (the
+  // domain root maps to the org), so canonicals stay clean per host.
+  const canonical = storefrontCanonical(
+    await requestHost(),
+    slug,
+    `/products/${product.id}`,
+  );
+  const galleryImages = (product.images ?? [])
+    .map((image) => image.url)
+    .filter((url): url is string => url != null);
 
   return {
     title,
     description,
     robots: { index: true, follow: true },
     alternates: { canonical },
-    openGraph: {
+    ...storefrontSocialMetadata({
       title,
       description,
-      images: product.image_url
-        ? [{ url: product.image_url, width: 1200, height: 630 }]
-        : [],
-      type: "website",
-      url: canonical,
-    },
+      canonical,
+      siteName: organization.name,
+      images: [product.image_url, ...galleryImages],
+    }),
   };
 }
 
@@ -215,6 +216,74 @@ async function ProductDetailDataFetcher({
     const currentStock = product.current_stock;
     const soldOut = currentStock !== null && currentStock === 0;
 
+    // Structured data: Product with offers, ratings and breadcrumbs so
+    // product pages can surface rich results.
+    const host = await requestHost();
+    const canonical = storefrontCanonical(
+      host,
+      slug,
+      `/products/${product.id}`,
+    );
+    const productImages = [
+      product.image_url,
+      ...galleryImages.filter((url) => url !== product.image_url),
+    ].filter((url): url is string => url != null);
+    const availability = soldOut
+      ? "https://schema.org/OutOfStock"
+      : "https://schema.org/InStock";
+    const productJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      ...(productImages.length ? { image: productImages } : {}),
+      description: product.description ?? undefined,
+      ...(product.sku ? { sku: product.sku } : {}),
+      brand: { "@type": "Brand", name: organization.name },
+      url: canonical,
+      ...(product.review_count && product.review_average
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: product.review_average,
+              reviewCount: product.review_count,
+              bestRating: 5,
+            },
+          }
+        : {}),
+      offers: {
+        "@type": "Offer",
+        url: canonical,
+        price: Number(product.sale_price ?? 0),
+        priceCurrency: organization.currency,
+        itemCondition: "https://schema.org/NewCondition",
+        availability,
+      },
+    };
+    const breadcrumbJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: organization.name,
+          item: storefrontCanonical(host, slug),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Бүтээгдэхүүнүүд",
+          item: storefrontCanonical(host, slug, "/products"),
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: product.name,
+          item: canonical,
+        },
+      ],
+    };
+
     return (
       <StorefrontCartProvider>
         <WishlistProvider slug={slug}>
@@ -223,24 +292,19 @@ async function ProductDetailDataFetcher({
             <script
               type="application/ld+json"
               dangerouslySetInnerHTML={{
-                __html: JSON.stringify({
-                  "@context": "https://schema.org",
-                  "@type": "Product",
-                  name: product.name,
-                  image: product.image_url,
-                  description: product.description,
-                  offers: {
-                    "@type": "Offer",
-                    price: Number(product.sale_price ?? 0),
-                    priceCurrency: organization.currency,
-                    availability: "https://schema.org/InStock",
-                  },
-                }),
+                __html: JSON.stringify(productJsonLd),
+              }}
+            />
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify(breadcrumbJsonLd),
               }}
             />
 
-            {/* Sticky header */}
-            <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
+            {/* Breadcrumb bar — the shell header (layout) is the sticky one;
+                this row only provides back navigation */}
+            <div className="border-b border-border/60 bg-background/60">
               <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
                 <Link
                   href={`/${slug}/products`}
@@ -436,7 +500,7 @@ async function ProductDetailDataFetcher({
                   <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
                     Холбоотой бүтээгдэхүүнүүд
                   </h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
                     {(product.related ?? []).map((relatedProduct) => (
                       <div key={relatedProduct.id} className="group">
                         <ProductDetailDrawer

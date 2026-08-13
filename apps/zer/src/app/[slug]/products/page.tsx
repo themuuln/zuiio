@@ -9,6 +9,11 @@ import {
   getPublicPromotions,
   type PublicProductSort,
 } from "@/lib/public-catalog";
+import {
+  requestHost,
+  storefrontCanonical,
+  storefrontSocialMetadata,
+} from "@/lib/storefront-seo";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
@@ -111,10 +116,21 @@ export async function generateMetadata({
     return { title: "Каталог" };
   }
 
+  const title = `${catalog.organization.name} — Бүтээгдэхүүний каталог`;
+  const description = `${catalog.organization.name}-ийн бүтээгдэхүүний каталог`;
+  const canonical = storefrontCanonical(await requestHost(), slug, "/products");
+
   return {
-    title: `${catalog.organization.name} — Бүтээгдэхүүний каталог`,
-    description: `${catalog.organization.name}-ийн бүтээгдэхүүний каталог`,
+    title,
+    description,
     robots: { index: true, follow: true },
+    alternates: { canonical },
+    ...storefrontSocialMetadata({
+      title,
+      description,
+      canonical,
+      siteName: catalog.organization.name,
+    }),
   };
 }
 

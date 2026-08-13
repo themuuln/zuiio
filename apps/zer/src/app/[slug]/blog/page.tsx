@@ -1,9 +1,13 @@
 import { Article } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import {
+  requestHost,
+  storefrontCanonical,
+  storefrontSocialMetadata,
+} from "@/lib/storefront-seo";
 import { createClient } from "@/lib/supabase/server";
 import { BlogClient } from "./blog-client";
 
@@ -41,22 +45,21 @@ export async function generateMetadata({
     .eq("slug", slug)
     .single();
 
-  // Canonical host: use the request host when a custom domain served the
-  // page (rewrites preserve it); fall back to the configured site URL.
-  const host = (await headers()).get("host") ?? "";
-  const configuredHost = (
-    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
-  ).replace(/^https?:\/\//, "");
-  const canonicalBase =
-    host && host !== configuredHost
-      ? `https://${host}`
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
+  const canonical = storefrontCanonical(await requestHost(), slug, "/blog");
+  const title = org ? `${org.name} — Блог` : "Блог";
+  const description = org ? `${org.name}-ийн блог, нийтлэлүүд` : "Блог";
 
   return {
-    title: org ? `${org.name} — Блог` : "Блог",
-    description: org ? `${org.name}-ийн блог, нийтлэлүүд` : "Блог",
+    title,
+    description,
     robots: { index: true, follow: true },
-    alternates: { canonical: `${canonicalBase}/${slug}/blog` },
+    alternates: { canonical },
+    ...storefrontSocialMetadata({
+      title,
+      description,
+      canonical,
+      siteName: org?.name ?? null,
+    }),
   };
 }
 

@@ -1,27 +1,18 @@
-import {
-  Clock,
-  Envelope,
-  FacebookLogo,
-  Globe,
-  InstagramLogo,
-  LinkedinLogo,
-  MapPin,
-  Phone,
-  TiktokLogo,
-  XLogo,
-  YoutubeLogo,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { StorefrontCartProvider } from "@/components/storefront/cart-context";
-import { StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
-import { WishlistProvider } from "@/components/storefront/wishlist-context";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getPublicCatalog } from "@/lib/public-catalog";
+import {
+  absoluteImageUrl,
+  requestHost,
+  storefrontCanonical,
+  storefrontSocialMetadata,
+} from "@/lib/storefront-seo";
 import { createClient } from "@/lib/supabase/server";
 import type { OrgMeta, PublicProduct } from "./products/page";
 import { ProductDetailDrawer } from "./products/product-detail-drawer";
@@ -55,33 +46,56 @@ type OrgProfileData = {
   } | null;
 };
 
-const SOCIAL_ICONS = {
-  facebook: FacebookLogo,
-  instagram: InstagramLogo,
-  twitter: XLogo,
-  youtube: YoutubeLogo,
-  tiktok: TiktokLogo,
-  linkedin: LinkedinLogo,
-} as const;
+function normalizeTime(value: string): string | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return `${String(hours).padStart(2, "0")}:${match[2]}`;
+}
 
-const SOCIAL_LABELS: Record<string, string> = {
-  facebook: "Facebook",
-  instagram: "Instagram",
-  twitter: "Twitter / X",
-  youtube: "YouTube",
-  tiktok: "TikTok",
-  linkedin: "LinkedIn",
-};
-
-const DAY_LABELS: Record<string, string> = {
-  Monday: "Даваа",
-  Tuesday: "Мягмар",
-  Wednesday: "Лхагва",
-  Thursday: "Пүрэв",
-  Friday: "Баасан",
-  Saturday: "Бямба",
-  Sunday: "Ням",
-};
+/**
+ * Convert stored business_hours ({"Monday": "09:00-18:00", …}) into
+ * schema.org openingHoursSpecification entries. Days sharing the same
+ * open/close range are grouped; malformed values are skipped.
+ */
+function openingHoursSpecification(
+  hours: Record<string, string> | null | undefined,
+):
+  | Array<{
+      "@type": "OpeningHoursSpecification";
+      dayOfWeek: string[];
+      opens: string;
+      closes: string;
+    }>
+  | undefined {
+  if (!hours) return undefined;
+  const byRange = new Map<string, string[]>();
+  for (const [day, value] of Object.entries(hours)) {
+    const match = /^\s*(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})\s*$/.exec(
+      value,
+    );
+    if (!match) continue;
+    const opens = normalizeTime(match[1]);
+    const closes = normalizeTime(match[2]);
+    if (!opens || !closes) continue;
+    const key = `${opens}-${closes}`;
+    const days = byRange.get(key) ?? [];
+    days.push(day);
+    byRange.set(key, days);
+  }
+  if (byRange.size === 0) return undefined;
+  return [...byRange.entries()].map(([range, days]) => {
+    const [opens, closes] = range.split("-");
+    return {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: days,
+      opens,
+      closes,
+    };
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -106,40 +120,31 @@ export async function generateMetadata({
     meta_description?: string | null;
     og_image_url?: string | null;
     logo_url?: string | null;
+    banner_url?: string | null;
   } | null;
 
   const title = profile?.meta_title || org.name;
   const description =
     profile?.meta_description || `${org.name}-ийн нийтийн хуудас`;
-  const images = profile?.og_image_url
-    ? [{ url: profile.og_image_url, width: 1200, height: 630 }]
-    : profile?.logo_url
-      ? [{ url: profile.logo_url, width: 1200, height: 630 }]
-      : [];
 
-  // Canonical host: use the request host when a custom domain served the
-  // page (rewrites preserve it); fall back to the configured site URL.
-  const host = (await headers()).get("host") ?? "";
-  const configuredHost = (
-    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
-  ).replace(/^https?:\/\//, "");
-  const canonicalBase =
-    host && host !== configuredHost
-      ? `https://${host}`
-      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
+  // Canonical host: on a custom domain the storefront is served at the
+  // domain root (middleware rewrites / → /{slug}), so the canonical is the
+  // bare origin; on the primary host it keeps the org slug.
+  const host = await requestHost();
+  const canonical = storefrontCanonical(host, org.slug);
 
   return {
-    title,
+    title: { absolute: title },
     description,
     robots: { index: true, follow: true },
-    alternates: { canonical: `${canonicalBase}/${org.slug}` },
-    openGraph: {
+    alternates: { canonical },
+    ...storefrontSocialMetadata({
       title,
       description,
-      images,
-      type: "website",
-      url: `${canonicalBase}/${org.slug}`,
-    },
+      canonical,
+      siteName: org.name,
+      images: [profile?.og_image_url, profile?.logo_url, profile?.banner_url],
+    }),
   };
 }
 
@@ -241,242 +246,207 @@ async function OrgProfileDataFetcher({
       public_profile: publicProfile,
     };
 
+    // Structured data: Organization with contact, socials, logo and opening
+    // hours so the storefront can surface as a rich local-business result.
+    const canonical = storefrontCanonical(await requestHost(), orgData.slug);
+    const socialLinks = orgData.public_profile?.social_links ?? {};
+    const sameAs = Object.values(socialLinks).filter(
+      (url): url is string => !!url && /^https?:\/\//i.test(url),
+    );
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": canonical,
       name: orgData.public_profile?.display_name ?? orgData.name,
+      ...(orgData.public_profile?.display_name
+        ? { alternateName: orgData.name }
+        : {}),
       description: orgData.public_profile?.description ?? undefined,
-      url: orgData.public_profile?.website_url ?? undefined,
+      url: canonical,
+      ...(orgData.public_profile?.website_url
+        ? { website: orgData.public_profile.website_url }
+        : {}),
+      logo: orgData.public_profile?.logo_url
+        ? absoluteImageUrl(orgData.public_profile.logo_url)
+        : undefined,
+      image: orgData.public_profile?.banner_url
+        ? absoluteImageUrl(orgData.public_profile.banner_url)
+        : undefined,
       email: orgData.public_profile?.contact_email ?? undefined,
       telephone: orgData.public_profile?.contact_phone ?? undefined,
       address: orgData.public_profile?.address
         ? {
             "@type": "PostalAddress",
             streetAddress: orgData.public_profile.address,
+            addressCountry: "MN",
           }
         : undefined,
+      ...(sameAs.length ? { sameAs } : {}),
+      ...(openingHoursSpecification(orgData.public_profile?.business_hours)
+        ? {
+            openingHoursSpecification: openingHoursSpecification(
+              orgData.public_profile?.business_hours,
+            ),
+          }
+        : {}),
     };
+
+    // Promo-bearing products get their own "Хямдралтай" section (mirrors
+    // shop.mn's sale rows); the full-catalog section then shows the rest.
+    const promoProducts = products.filter((product) => product.promo);
+    const catalogProducts =
+      promoProducts.length > 0
+        ? products.filter((product) => !product.promo)
+        : products;
 
     return (
       <div className="min-h-dvh bg-background">
-        <StorefrontCartProvider>
-          <script
-            type="application/ld+json"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: required for JSON-LD structured data
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-          {/* Banner */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {/* Hero — banner with scrim + org identity. The shell header now
+              carries logo/name/search/cart, so the old in-body logo + name +
+              cart row is gone; the hero turns the banner into a proper
+              above-the-fold statement (shop.mn-style). */}
+        <div className="relative overflow-hidden">
           {orgData.public_profile?.banner_url ? (
-            <div className="relative h-48 w-full overflow-hidden bg-muted sm:h-64">
-              <OptimizedImage
-                src={orgData.public_profile.banner_url}
-                alt={orgData.name}
-                className="h-full w-full object-cover"
-                width={1600}
-                priority
-              />
-            </div>
+            <OptimizedImage
+              src={orgData.public_profile.banner_url}
+              alt={orgData.name}
+              className="h-56 w-full object-cover sm:h-72"
+              width={1600}
+              priority
+            />
           ) : (
-            <div className="h-32 w-full bg-gradient-to-br from-primary/10 to-primary/5" />
+            <div className="h-36 w-full bg-gradient-to-br from-primary/15 to-primary/5 sm:h-48" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/5" />
+          <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-7xl px-4 pb-7 sm:px-6 sm:pb-9 lg:px-8">
+            <div className="flex items-end gap-4">
+              {orgData.public_profile?.logo_url ? (
+                <div className="size-16 shrink-0 overflow-hidden rounded-xl border border-white/20 bg-background/90 p-1 backdrop-blur-sm sm:size-20">
+                  <OptimizedImage
+                    src={orgData.public_profile.logo_url}
+                    alt={orgData.name}
+                    className="h-full w-full object-contain"
+                    width={80}
+                    height={80}
+                  />
+                </div>
+              ) : (
+                <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary text-2xl font-bold text-primary-foreground sm:size-20">
+                  {orgData.name.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0 space-y-1.5">
+                <h1 className="break-words text-2xl font-bold tracking-tight text-white drop-shadow-sm sm:text-3xl">
+                  {orgData.public_profile?.display_name ?? orgData.name}
+                </h1>
+                <Badge
+                  variant="secondary"
+                  className="bg-background/80 text-foreground backdrop-blur-sm"
+                >
+                  {orgData.company_type === "retail"
+                    ? "Жижиглэн худалдаа"
+                    : orgData.company_type === "wholesale"
+                      ? "Томоохон худалдаа"
+                      : orgData.company_type === "service"
+                        ? "Үйлчилгээ"
+                        : orgData.name}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
+          {/* Description */}
+          {orgData.public_profile?.description && (
+            <div className="prose prose-sm max-w-none text-muted-foreground">
+              <p>{orgData.public_profile.description}</p>
+            </div>
           )}
 
-          <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                {orgData.public_profile?.logo_url ? (
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border bg-muted">
-                    <OptimizedImage
-                      src={orgData.public_profile.logo_url}
-                      alt={orgData.name}
-                      className="h-full w-full object-contain"
-                      width={64}
-                      height={64}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl font-bold text-primary">
-                    {orgData.name.charAt(0)}
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    {orgData.public_profile?.display_name ?? orgData.name}
-                  </h1>
-                  <Badge variant="secondary">
-                    {orgData.company_type === "retail"
-                      ? "Жижиглэн худалдаа"
-                      : orgData.company_type === "wholesale"
-                        ? "Томоохон худалдаа"
-                        : orgData.company_type === "service"
-                          ? "Үйлчилгээ"
-                          : orgData.name}
-                  </Badge>
-                </div>
-              </div>
-              <StorefrontCartLink slug={org.slug} />
+          {/* Policies */}
+          {orgData.public_profile?.policies && (
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-2 text-sm font-medium">Бодлого</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {orgData.public_profile.policies}
+              </p>
             </div>
+          )}
 
-            {/* Description */}
-            {orgData.public_profile?.description && (
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                <p>{orgData.public_profile.description}</p>
+          {/* Promo section — mirrors shop.mn's sale rows */}
+          {promoProducts.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-bold tracking-tight">Хямдралтай</h2>
+                <Link
+                  href={`/${orgData.slug}/products`}
+                  className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary transition-colors hover:underline"
+                >
+                  Бүгдийг харах
+                  <ArrowRight className="size-3.5" />
+                </Link>
               </div>
-            )}
-
-            {/* Contact info */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {orgData.public_profile?.contact_email && (
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <Envelope className="size-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
-                      Имэйл
-                    </p>
-                    <p className="text-sm">
-                      {orgData.public_profile.contact_email}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {orgData.public_profile?.contact_phone && (
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <Phone className="size-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
-                      Утас
-                    </p>
-                    <p className="text-sm">
-                      {orgData.public_profile.contact_phone}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {orgData.public_profile?.address && (
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <MapPin className="size-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
-                      Хаяг
-                    </p>
-                    <p className="text-sm">{orgData.public_profile.address}</p>
-                  </div>
-                </div>
-              )}
-              {orgData.public_profile?.website_url && (
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <Globe className="size-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
-                      Вебсайт
-                    </p>
-                    <a
-                      href={orgData.public_profile.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-foreground underline-offset-4 hover:text-primary hover:underline"
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {promoProducts.map((product) => (
+                  <div key={product.id} className="group">
+                    <ProductDetailDrawer
+                      product={product}
+                      organization={orgMeta}
                     >
-                      {orgData.public_profile.website_url}
-                    </a>
+                      <ProductCard
+                        product={product}
+                        currency={orgMeta.currency}
+                      />
+                    </ProductDetailDrawer>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Social Links */}
-            {orgData.public_profile?.social_links &&
-              Object.keys(orgData.public_profile.social_links).length > 0 && (
-                <div className="flex flex-wrap items-center gap-3">
-                  {Object.entries(orgData.public_profile.social_links).map(
-                    ([platform, url]) => {
-                      const Icon =
-                        SOCIAL_ICONS[platform as keyof typeof SOCIAL_ICONS];
-                      if (!Icon) return null;
-                      return (
-                        <a
-                          key={platform}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-                          aria-label={platform}
-                        >
-                          <Icon className="size-3.5" />
-                          {SOCIAL_LABELS[
-                            platform as keyof typeof SOCIAL_LABELS
-                          ] ?? platform}
-                        </a>
-                      );
-                    },
-                  )}
-                </div>
-              )}
-
-            {/* Business hours */}
-            {orgData.public_profile?.business_hours &&
-              Object.keys(orgData.public_profile.business_hours).length > 0 && (
-                <div className="rounded-lg border p-4">
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-                    <Clock className="size-4" />
-                    Ажлын цаг
-                  </h3>
-                  <div className="grid gap-1.5 sm:grid-cols-2">
-                    {Object.entries(orgData.public_profile.business_hours).map(
-                      ([day, hours]) => (
-                        <div key={day} className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {DAY_LABELS[day] ?? day}
-                          </span>
-                          <span>{hours}</span>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* Policies */}
-            {orgData.public_profile?.policies && (
-              <div className="rounded-lg border p-4">
-                <h3 className="mb-2 text-sm font-medium">Бодлого</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {orgData.public_profile.policies}
-                </p>
+                ))}
               </div>
-            )}
+            </section>
+          )}
 
-            {/* Products — full catalog inline */}
-            {products.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold tracking-tight">
-                    Бүтээгдэхүүнүүд
-                  </h2>
+          {/* Full catalog — section header with total + view-all link */}
+          {catalogProducts.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-bold tracking-tight">
+                  Бүтээгдэхүүнүүд
+                </h2>
+                <div className="flex shrink-0 items-center gap-4">
                   <span className="text-sm text-muted-foreground tabular-nums">
                     Нийт {catalogTotal}
                   </span>
+                  <Link
+                    href={`/${orgData.slug}/products`}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:underline"
+                  >
+                    Бүгдийг харах
+                    <ArrowRight className="size-3.5" />
+                  </Link>
                 </div>
-                <WishlistProvider slug={slug}>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {products.map((product) => (
-                      <div key={product.id} className="group">
-                        <ProductDetailDrawer
-                          product={product}
-                          organization={orgMeta}
-                        >
-                          <ProductCard
-                            product={product}
-                            currency={orgMeta.currency}
-                          />
-                        </ProductDetailDrawer>
-                      </div>
-                    ))}
-                  </div>
-                </WishlistProvider>
               </div>
-            )}
-          </div>
-        </StorefrontCartProvider>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {catalogProducts.map((product) => (
+                  <div key={product.id} className="group">
+                    <ProductDetailDrawer
+                      product={product}
+                      organization={orgMeta}
+                    >
+                      <ProductCard
+                        product={product}
+                        currency={orgMeta.currency}
+                      />
+                    </ProductDetailDrawer>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     );
   } catch (err) {
@@ -489,7 +459,7 @@ function OrgProfileSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <div className="h-32 w-full animate-pulse bg-muted sm:h-48" />
-      <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex items-start gap-4">
           <div className="size-16 animate-pulse rounded-xl bg-muted" />
           <div className="space-y-2">
@@ -498,7 +468,7 @@ function OrgProfileSkeleton() {
           </div>
         </div>
         <div className="h-4 w-96 animate-pulse rounded bg-muted" />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[1, 2, 3, 4].map((n) => (
             <div key={n} className="h-20 animate-pulse rounded-lg bg-muted" />
           ))}
