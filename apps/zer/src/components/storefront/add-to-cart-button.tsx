@@ -11,10 +11,13 @@ export function AddToCartButton({
   item,
   size,
   className,
+  compact = false,
 }: {
   item: Omit<CartItem, "quantity">;
   size?: ComponentProps<typeof Button>["size"];
   className?: string;
+  /** Icon-only variant for dense product grids; keeps the same accessible name. */
+  compact?: boolean;
 }) {
   const { addItem } = useStorefrontCart();
   const disabled = item.maxStock <= 0;
@@ -25,6 +28,7 @@ export function AddToCartButton({
       size={size}
       className={className}
       disabled={disabled}
+      aria-label={compact ? "Сагсанд нэмэх" : undefined}
       onClick={(e) => {
         // Stop the click from bubbling to the card's drawer trigger.
         e.stopPropagation();
@@ -33,7 +37,7 @@ export function AddToCartButton({
       }}
     >
       <ShoppingCart className="size-4" weight="bold" />
-      Сагсанд нэмэх
+      {!compact && "Сагсанд нэмэх"}
     </Button>
   );
 }

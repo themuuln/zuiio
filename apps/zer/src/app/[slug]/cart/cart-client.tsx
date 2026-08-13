@@ -32,7 +32,15 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/format";
+import { formatPoints } from "@/lib/loyalty";
+import { submitStoreOrder } from "@/lib/public-checkout-actions";
 import { getCartItemKey } from "@/lib/shop-cart";
+import {
+  fetchPublicLoyalty,
+  maxRedeemablePoints,
+  type PublicLoyalty,
+  pointsToMoney,
+} from "@/lib/storefront-loyalty";
 import { buildOrderItems, createIdempotencyKey } from "@/lib/storefront-order";
 import { createClient } from "@/lib/supabase/client";
 
@@ -50,6 +58,8 @@ const PAYMENT_METHODS = [
   { value: "qpay", label: "QPay" },
   { value: "bank_transfer", label: "Банкны шилжүүлэг" },
 ] as const;
+
+const BNPL_METHOD = { value: "bnpl", label: "Хугацаатай төлбөр" } as const;
 
 export type CartOrg = {
   name: string;
@@ -97,6 +107,9 @@ export type SubmittedOrder = {
   delivery_fee?: number | null;
   discount_amount?: number | null;
   gift_card_amount?: number | null;
+  points_discount?: number | null;
+  points_redeemed?: number | null;
+  points_earned?: number | null;
   payment_instructions?: PaymentInstructions;
 };
 
@@ -113,14 +126,22 @@ export function CartClient({
   slug,
   organization,
   branches = [],
+  bnplAvailable = false,
 }: {
   slug: string;
   organization: CartOrg;
   branches?: StorefrontBranch[];
+  /** G-BNPL: show the installment method only when a provider is configured. */
+  bnplAvailable?: boolean;
 }) {
   return (
     <StorefrontCartProvider>
-      <CartView slug={slug} organization={organization} branches={branches} />
+      <CartView
+        slug={slug}
+        organization={organization}
+        branches={branches}
+        bnplAvailable={bnplAvailable}
+      />
     </StorefrontCartProvider>
   );
 }
@@ -129,10 +150,12 @@ function CartView({
   slug,
   organization,
   branches,
+  bnplAvailable,
 }: {
   slug: string;
   organization: CartOrg;
   branches: StorefrontBranch[];
+  bnplAvailable: boolean;
 }) {
   const { items, total, removeItem, updateQuantity, clear } =
     useStorefrontCart();
@@ -148,6 +171,9 @@ function CartView({
   const [couponCode, setCouponCode] = useState("");
   const [giftCardCode, setGiftCardCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  // Storefront loyalty: balance + earn rate for the redeem control.
+  const [loyalty, setLoyalty] = useState<PublicLoyalty | null>(null);
+  const [redeemPoints, setRedeemPoints] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<SubmittedOrder | null>(null);
@@ -163,6 +189,48 @@ function CartView({
   // Created once per checkout session and reused across retries so the RPC
   // returns the same order instead of creating a duplicate.
   const idempotencyKeyRef = useRef<string | null>(null);
+  // G-ABANDONED: debounced cart report → /api/store/cart-capture so the
+  // cron can email a recovery link when a buyer who shared an email never
+  // orders.
+  const captureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (items.length === 0) return;
+    if (captureTimerRef.current) clearTimeout(captureTimerRef.current);
+    captureTimerRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          let sessionId = localStorage.getItem("zer-abandoned-cart-session");
+          if (!sessionId) {
+            sessionId = crypto.randomUUID();
+            localStorage.setItem("zer-abandoned-cart-session", sessionId);
+          }
+          await fetch("/api/store/cart-capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              slug,
+              session_id: sessionId,
+              items: items.map((item) => ({
+                productId: item.productId,
+                variantId: item.variantId ?? null,
+                quantity: item.quantity,
+              })),
+              contact_email: email.trim() || null,
+              contact_name: name.trim() || null,
+              contact_phone: phone.trim() || null,
+              subtotal: total,
+              currency: organization.currency,
+            }),
+          });
+        } catch (err) {
+          capture(err, { context: "storefront: cart capture" });
+        }
+      })();
+    }, 1500);
+    return () => {
+      if (captureTimerRef.current) clearTimeout(captureTimerRef.current);
+    };
+  }, [items, email, name, phone, total, slug, organization.currency]);
   // The cart is cleared on success, so snapshot the pre-clear subtotal and the
   // submitted delivery type for the confirmation breakdown.
   const submittedSubtotalRef = useRef(0);
@@ -181,14 +249,18 @@ function CartView({
         }
         if (!cancelled) setSignedIn(true);
         if (!cancelled) setAccountId(user.id);
-        const { data, error: addressesError } = await supabase
-          .from("store_account_addresses")
-          .select("id, label, address, address_note, phone, is_default")
-          .eq("store_account_id", user.id)
-          .order("is_default", { ascending: false })
-          .order("created_at", { ascending: false });
-        if (addressesError) throw addressesError;
-        if (!cancelled) setSavedAddresses(data ?? []);
+        const [loyaltyResult, addressesResult] = await Promise.all([
+          fetchPublicLoyalty(createClient(), slug).catch(() => null),
+          supabase
+            .from("store_account_addresses")
+            .select("id, label, address, address_note, phone, is_default")
+            .eq("store_account_id", user.id)
+            .order("is_default", { ascending: false })
+            .order("created_at", { ascending: false }),
+        ]);
+        if (!cancelled) setLoyalty(loyaltyResult);
+        if (addressesResult.error) throw addressesResult.error;
+        if (!cancelled) setSavedAddresses(addressesResult.data ?? []);
       } catch (err) {
         capture(err, { context: "storefront: load saved addresses" });
         if (!cancelled) setSavedAddresses([]);
@@ -197,7 +269,7 @@ function CartView({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [slug]);
 
   const handleAddressPick = (addressId: string) => {
     const picked = savedAddresses?.find((a) => a.id === addressId);
@@ -244,39 +316,48 @@ function CartView({
 
     setSubmitting(true);
     try {
-      // submit_shop_order's delivery/coupon/gift-card params were added by the
-      // backend migration after the generated types snapshot; call through the
-      // untyped client until types regenerate (repo pattern for new RPC args).
-      const supabase = createClient() as SupabaseClient;
-      const { data, error: rpcError } = await supabase.rpc(
-        "submit_shop_order",
-        {
-          p_org_slug: slug,
-          p_items: buildOrderItems(items),
-          p_payment_method: paymentMethod,
-          p_contact_name: trimmedName,
-          p_contact_phone: trimmedPhone,
-          p_currency_code: organization.currency,
-          p_idempotency_key: idempotencyKeyRef.current,
-          p_delivery_type: deliveryType,
-          p_address: deliveryType === "delivery" ? address.trim() : null,
-          p_address_note:
-            deliveryType === "delivery" && addressNote.trim()
-              ? addressNote.trim()
-              : null,
-          p_contact_email: trimmedEmail || null,
-          p_coupon_code: trimmedCoupon || null,
-          p_gift_card_code: trimmedGiftCard || null,
-          p_pickup_branch_slug:
-            deliveryType === "pickup" ? pickupBranchSlug || null : null,
-        },
-      );
-      if (rpcError) throw rpcError;
+      // Server action: submits via submit_shop_order with the caller's
+      // session; the confirmation email fires DB-side (trigger → pg_net →
+      // /api/notify/order-confirmation) — a single path for every client.
+      const result = await submitStoreOrder({
+        slug,
+        items: buildOrderItems(items),
+        paymentMethod: paymentMethod as
+          | "cash"
+          | "card"
+          | "qpay"
+          | "bank_transfer",
+        currencyCode: organization.currency,
+        contactName: trimmedName,
+        contactPhone: trimmedPhone,
+        contactEmail: trimmedEmail || null,
+        deliveryType,
+        address: deliveryType === "delivery" ? address.trim() : null,
+        addressNote:
+          deliveryType === "delivery" && addressNote.trim()
+            ? addressNote.trim()
+            : null,
+        couponCode: trimmedCoupon || null,
+        giftCardCode: trimmedGiftCard || null,
+        pickupBranchSlug:
+          deliveryType === "pickup" ? pickupBranchSlug || null : null,
+        idempotencyKey: idempotencyKeyRef.current,
+        redeemPoints: redeemPoints > 0 ? redeemPoints : undefined,
+      });
+      if (!result.ok) throw new Error(result.message);
 
-      const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
-      if (!row) {
-        throw new Error("submit_shop_order returned no order row");
-      }
+      const row: SubmittedOrder = {
+        order_id: result.orderId,
+        status: result.status,
+        total_amount: result.totalAmount,
+        delivery_fee: result.deliveryFee,
+        discount_amount: result.discountAmount,
+        gift_card_amount: result.giftCardAmount,
+        points_discount: result.pointsDiscount,
+        points_redeemed: result.pointsRedeemed,
+        points_earned: result.pointsEarned,
+        payment_instructions: result.paymentInstructions,
+      };
 
       submittedSubtotalRef.current = Number(total);
       submittedDeliveryTypeRef.current = deliveryType;
@@ -321,7 +402,10 @@ function CartView({
 
   if (order) {
     const subtotal = submittedSubtotalRef.current;
-    const discount = Number(order.discount_amount ?? 0);
+    // discount_amount includes the points discount server-side; the points
+    // portion has its own row below.
+    const discount =
+      Number(order.discount_amount ?? 0) - Number(order.points_discount ?? 0);
     const deliveryFee = Number(order.delivery_fee ?? 0);
     const giftCard = Number(order.gift_card_amount ?? 0);
     const instructions = order.payment_instructions;
@@ -353,6 +437,17 @@ function CartView({
                   <span className="text-muted-foreground">Хямдрал</span>
                   <span className="font-medium tabular-nums text-emerald-600">
                     −{formatCurrency(discount)} {organization.currency}
+                  </span>
+                </div>
+              )}
+              {Number(order.points_discount ?? 0) > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Онооны хямдрал ({order.points_redeemed} оноо)
+                  </span>
+                  <span className="font-medium tabular-nums text-emerald-600">
+                    −{formatCurrency(Number(order.points_discount ?? 0))}{" "}
+                    {organization.currency}
                   </span>
                 </div>
               )}
@@ -388,6 +483,14 @@ function CartView({
                 <span className="text-muted-foreground">Төлөв</span>
                 <span>{STATUS_LABELS[order.status] ?? order.status}</span>
               </div>
+              {Number(order.points_earned ?? 0) > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Оноо авсан</span>
+                  <span className="font-medium tabular-nums text-emerald-600">
+                    +{order.points_earned}
+                  </span>
+                </div>
+              )}
               {instructions && (
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-sm font-medium">Төлбөрийн мэдээлэл</p>
@@ -750,6 +853,48 @@ function CartView({
                       autoComplete="off"
                     />
                   </div>
+                  {loyalty?.enabled &&
+                    signedIn &&
+                    loyalty.balance > 0 &&
+                    (() => {
+                      const maxRedeem = Math.min(
+                        loyalty.balance,
+                        maxRedeemablePoints(
+                          Number(total),
+                          loyalty.points_per_mnt,
+                        ),
+                      );
+                      if (maxRedeem <= 0) return null;
+                      const discount = pointsToMoney(
+                        maxRedeem,
+                        loyalty.points_per_mnt,
+                      );
+                      const checked = redeemPoints > 0;
+                      return (
+                        <label
+                          htmlFor="checkout-redeem-points"
+                          className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50"
+                        >
+                          <Checkbox
+                            id="checkout-redeem-points"
+                            checked={checked}
+                            onCheckedChange={(v) =>
+                              setRedeemPoints(v === true ? maxRedeem : 0)
+                            }
+                          />
+                          <div>
+                            <p className="text-sm font-medium">
+                              {formatPoints(maxRedeem)} оноогоор хямдруулах
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              ≈ −{formatCurrency(discount)}{" "}
+                              {organization.currency} · үлдэгдэл{" "}
+                              {formatPoints(loyalty.balance)} оноо
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })()}
                   <div className="flex flex-col gap-2">
                     <Label>Төлбөрийн хэлбэр</Label>
                     <Select
@@ -760,7 +905,10 @@ function CartView({
                         <SelectValue placeholder="Төлбөрийн хэлбэр сонгох" />
                       </SelectTrigger>
                       <SelectContent>
-                        {PAYMENT_METHODS.map((m) => (
+                        {(bnplAvailable
+                          ? [...PAYMENT_METHODS, BNPL_METHOD]
+                          : PAYMENT_METHODS
+                        ).map((m) => (
                           <SelectItem key={m.value} value={m.value}>
                             {m.label}
                           </SelectItem>

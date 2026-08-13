@@ -241,7 +241,7 @@ export async function updateDeliveryStatus(
     "deliveries: fetch for status update",
     supabase
       .from("deliveries")
-      .select("status, contact_name")
+      .select("status, contact_name, contact_phone")
       .eq("id", deliveryId)
       .eq("organization_id", organizationId)
       .single(),
@@ -327,6 +327,17 @@ export async function updateDeliveryStatus(
   import("@/lib/notification").then(({ notifyDeliveryStatus }) =>
     notifyDeliveryStatus(organizationId, delivery.contact_name, status),
   );
+
+  // G-SMS: buyer status-change SMS when a provider is configured.
+  if (delivery.contact_phone) {
+    import("@/lib/notifications/sms").then(({ sendOrderStatusSms }) =>
+      sendOrderStatusSms({
+        to: delivery.contact_phone,
+        orderNumber: deliveryId.slice(0, 8),
+        status,
+      }),
+    );
+  }
 
   revalidateEntities(["deliveries"]);
   return { success: true as const, error: undefined };

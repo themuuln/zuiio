@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const STORAGE_KEY = "zer-storefront-cart";
 const mockRpc = vi.hoisted(() => vi.fn());
+const mockSubmitStoreOrder = vi.hoisted(() => vi.fn());
 const mockCapture = vi.hoisted(() => vi.fn());
 const mockGetSession = vi.hoisted(() => vi.fn());
 const mockInsert = vi.hoisted(() => vi.fn());
@@ -48,6 +49,10 @@ vi.mock("@/lib/supabase/client", () => ({
 
 vi.mock("@zuiio/capture", () => ({
   capture: mockCapture,
+}));
+
+vi.mock("@/lib/public-checkout-actions", () => ({
+  submitStoreOrder: mockSubmitStoreOrder,
 }));
 
 import { buildOrderItems } from "@/lib/storefront-order";
@@ -174,10 +179,9 @@ function submitCheckout() {
 }
 
 function lastPayload(): Record<string, unknown> {
-  const [, payload] = mockRpc.mock.calls[mockRpc.mock.calls.length - 1] as [
-    string,
-    Record<string, unknown>,
-  ];
+  const payload = mockSubmitStoreOrder.mock.calls[
+    mockSubmitStoreOrder.mock.calls.length - 1
+  ][0] as Record<string, unknown>;
   return payload;
 }
 
@@ -185,6 +189,7 @@ describe("CartClient", () => {
   beforeEach(() => {
     window.localStorage.clear();
     mockRpc.mockReset();
+    mockSubmitStoreOrder.mockReset();
     mockCapture.mockReset();
     mockGetSession.mockReset();
     mockInsert.mockReset();
@@ -242,17 +247,17 @@ describe("CartClient", () => {
     expect(screen.getByText("₮ 10,000")).toBeInTheDocument();
   });
 
-  it("submits the order to submit_shop_order with the buildOrderItems payload", async () => {
+  it("submits the order through submitStoreOrder with the buildOrderItems payload", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [
-        {
-          order_id: "11111111-2222-4333-8444-555555555555",
-          status: "pending",
-          total_amount: 22500,
-        },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "11111111-2222-4333-8444-555555555555",
+      status: "pending",
+      totalAmount: 22500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -260,19 +265,18 @@ describe("CartClient", () => {
     submitCheckout();
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(1);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(1);
     });
-    const [rpcName, payload] = mockRpc.mock.calls[0] as [
+    const payload = mockSubmitStoreOrder.mock.calls[0][0] as Record<
       string,
-      Record<string, unknown>,
-    ];
-    expect(rpcName).toBe("submit_shop_order");
-    expect(payload.p_org_slug).toBe("storefront-e2e-test");
-    expect(payload.p_payment_method).toBe("cash");
-    expect(payload.p_contact_name).toBe("Тест Хэрэглэгч");
-    expect(payload.p_contact_phone).toBe("99887766");
-    expect(payload.p_currency_code).toBe("MNT");
-    expect(payload.p_items).toEqual(
+      unknown
+    >;
+    expect(payload.slug).toBe("storefront-e2e-test");
+    expect(payload.paymentMethod).toBe("cash");
+    expect(payload.contactName).toBe("Тест Хэрэглэгч");
+    expect(payload.contactPhone).toBe("99887766");
+    expect(payload.currencyCode).toBe("MNT");
+    expect(payload.items).toEqual(
       buildOrderItems([
         {
           productId: "p1",
@@ -294,25 +298,25 @@ describe("CartClient", () => {
         },
       ]),
     );
-    expect(typeof payload.p_idempotency_key).toBe("string");
+    expect(typeof payload.idempotencyKey).toBe("string");
     // Both delivery and pickup disabled → no delivery_type, no address params
-    expect(payload.p_delivery_type).toBeNull();
-    expect(payload.p_address).toBeNull();
-    expect(payload.p_address_note).toBeNull();
-    expect(payload.p_pickup_branch_slug).toBeNull();
+    expect(payload.deliveryType).toBeNull();
+    expect(payload.address).toBeNull();
+    expect(payload.addressNote).toBeNull();
+    expect(payload.pickupBranchSlug).toBeNull();
   });
 
   it("submits email, coupon and gift card codes as params", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [
-        {
-          order_id: "ord-coupon",
-          status: "pending",
-          total_amount: 18000,
-        },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-coupon",
+      status: "pending",
+      totalAmount: 18000,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -329,19 +333,25 @@ describe("CartClient", () => {
     submitCheckout();
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(1);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(1);
     });
     const payload = lastPayload();
-    expect(payload.p_contact_email).toBe("buyer@example.com");
-    expect(payload.p_coupon_code).toBe("SAY10");
-    expect(payload.p_gift_card_code).toBe("GC-1234");
+    expect(payload.contactEmail).toBe("buyer@example.com");
+    expect(payload.couponCode).toBe("SAY10");
+    expect(payload.giftCardCode).toBe("GC-1234");
   });
 
   it("shows the order confirmation and clears the cart on success", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [{ order_id: "ord-123", status: "pending", total_amount: 22500 }],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-123",
+      status: "pending",
+      totalAmount: 22500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -365,9 +375,9 @@ describe("CartClient", () => {
 
   it("keeps the cart and surfaces the RPC error message when the RPC fails", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: null,
-      error: { message: "Нөөц хүрэлцэхгүй байна" },
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: false,
+      message: "Нөөц хүрэлцэхгүй байна",
     });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -387,13 +397,17 @@ describe("CartClient", () => {
 
   it("reuses the same idempotency key when retrying after an error", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc
-      .mockResolvedValueOnce({ data: null, error: {} })
+    mockSubmitStoreOrder
+      .mockResolvedValueOnce({ ok: false, message: "" })
       .mockResolvedValueOnce({
-        data: [
-          { order_id: "ord-retry", status: "pending", total_amount: 22500 },
-        ],
-        error: null,
+        ok: true,
+        orderId: "ord-retry",
+        status: "pending",
+        totalAmount: 22500,
+        deliveryFee: null,
+        discountAmount: null,
+        giftCardAmount: null,
+        paymentInstructions: null,
       });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -405,13 +419,14 @@ describe("CartClient", () => {
     submitCheckout();
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(2);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(2);
     });
-    const firstKey = (mockRpc.mock.calls[0][1] as { p_idempotency_key: string })
-      .p_idempotency_key;
+    const firstKey = (
+      mockSubmitStoreOrder.mock.calls[0][0] as { idempotencyKey: string }
+    ).idempotencyKey;
     const secondKey = (
-      mockRpc.mock.calls[1][1] as { p_idempotency_key: string }
-    ).p_idempotency_key;
+      mockSubmitStoreOrder.mock.calls[1][0] as { idempotencyKey: string }
+    ).idempotencyKey;
     expect(secondKey).toBe(firstKey);
   });
 
@@ -423,7 +438,7 @@ describe("CartClient", () => {
     await fillCheckoutForm("", "99887766");
     submitCheckout();
     expect(screen.getByText("Нэрээ оруулна уу.")).toBeInTheDocument();
-    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockSubmitStoreOrder).not.toHaveBeenCalled();
 
     // Too-short phone (7 digits)
     await fillCheckoutForm("Тест", "9988776");
@@ -431,7 +446,7 @@ describe("CartClient", () => {
     expect(
       screen.getByText("Утасны дугаар 8-12 оронтой тоо байх ёстой."),
     ).toBeInTheDocument();
-    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockSubmitStoreOrder).not.toHaveBeenCalled();
   });
 
   it("renders the delivery choice only when the org enables delivery or pickup", () => {
@@ -457,9 +472,15 @@ describe("CartClient", () => {
 
   it("defaults to delivery and requires an address before submitting", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [{ order_id: "ord-del", status: "pending", total_amount: 27500 }],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-del",
+      status: "pending",
+      totalAmount: 27500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
@@ -475,7 +496,7 @@ describe("CartClient", () => {
     expect(
       screen.getByText("Хүргэлтийн хаягаа оруулна уу."),
     ).toBeInTheDocument();
-    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockSubmitStoreOrder).not.toHaveBeenCalled();
 
     // Filling the address submits with delivery params
     fireEvent.change(screen.getByLabelText("Хаяг"), {
@@ -487,22 +508,26 @@ describe("CartClient", () => {
     submitCheckout();
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(1);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(1);
     });
     const payload = lastPayload();
-    expect(payload.p_delivery_type).toBe("delivery");
-    expect(payload.p_address).toBe("СБД, 1-р хороо, 41-р байр, 12 тоот");
-    expect(payload.p_address_note).toBe("Орц 2");
-    expect(payload.p_pickup_branch_slug).toBeNull();
+    expect(payload.deliveryType).toBe("delivery");
+    expect(payload.address).toBe("СБД, 1-р хороо, 41-р байр, 12 тоот");
+    expect(payload.addressNote).toBe("Орц 2");
+    expect(payload.pickupBranchSlug).toBeNull();
   });
 
   it("shows the branch picker for pickup when the org has multiple branches", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [
-        { order_id: "ord-pickup", status: "pending", total_amount: 22500 },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-pickup",
+      status: "pending",
+      totalAmount: 22500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
 
     // Multiple branches → branch select shown with name + address labels
@@ -524,9 +549,9 @@ describe("CartClient", () => {
     fireEvent.click(option);
     submitCheckout();
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(1);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(1);
     });
-    expect(lastPayload().p_pickup_branch_slug).toBe("ub-pickup");
+    expect(lastPayload().pickupBranchSlug).toBe("ub-pickup");
     unmount();
 
     // Single branch → no picker; pickup without a choice sends null
@@ -543,9 +568,9 @@ describe("CartClient", () => {
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
     submitCheckout();
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledTimes(2);
+      expect(mockSubmitStoreOrder).toHaveBeenCalledTimes(2);
     });
-    expect(lastPayload().p_pickup_branch_slug).toBeNull();
+    expect(lastPayload().pickupBranchSlug).toBeNull();
   });
 
   it("lists qpay and bank_transfer as payment methods", async () => {
@@ -564,24 +589,20 @@ describe("CartClient", () => {
 
   it("shows the full breakdown and payment instructions on success", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [
-        {
-          order_id: "ord-breakdown",
-          status: "pending",
-          total_amount: 18500,
-          delivery_fee: 5000,
-          discount_amount: 2000,
-          gift_card_amount: 3000,
-          payment_instructions: {
-            bank_name: "Хаан банк",
-            bank_account: "1234567890",
-            account_name: "Shop LLC",
-            qpay_qr_url: null,
-          },
-        },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-breakdown",
+      status: "pending",
+      totalAmount: 18500,
+      deliveryFee: 5000,
+      discountAmount: 2000,
+      giftCardAmount: 3000,
+      paymentInstructions: {
+        bank_name: "Хаан банк",
+        bank_account: "1234567890",
+        account_name: "Shop LLC",
+        qpay_qr_url: null,
+      },
     });
     render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
@@ -623,24 +644,20 @@ describe("CartClient", () => {
 
   it("shows Үнэгүй delivery and the QPay QR when the fee is zero and a QR url is present", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: [
-        {
-          order_id: "ord-free",
-          status: "pending",
-          total_amount: 22500,
-          delivery_fee: 0,
-          discount_amount: 0,
-          gift_card_amount: 0,
-          payment_instructions: {
-            bank_name: null,
-            bank_account: null,
-            account_name: null,
-            qpay_qr_url: "https://cdn.test/qpay.png",
-          },
-        },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-free",
+      status: "pending",
+      totalAmount: 22500,
+      deliveryFee: 0,
+      discountAmount: 0,
+      giftCardAmount: 0,
+      paymentInstructions: {
+        bank_name: null,
+        bank_account: null,
+        account_name: null,
+        qpay_qr_url: "https://cdn.test/qpay.png",
+      },
     });
     render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
@@ -662,9 +679,9 @@ describe("CartClient", () => {
 
   it("surfaces a server-side RPC message in the error banner", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({
-      data: null,
-      error: { message: "Купон олдсонгүй" },
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: false,
+      message: "Купон олдсонгүй",
     });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
@@ -683,7 +700,7 @@ describe("CartClient", () => {
 
   it("falls back to the generic message when the RPC error has no message", async () => {
     seedCart(TWO_ITEM_CART);
-    mockRpc.mockResolvedValue({ data: null, error: {} });
+    mockSubmitStoreOrder.mockResolvedValue({ ok: false, message: "" });
     render(<CartClient slug={ORG.slug} organization={ORG} />);
 
     await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
@@ -750,9 +767,15 @@ describe("CartClient", () => {
     mockSignedInSession();
     // Signed in but no saved addresses yet → no picker, checkbox only.
     mockAddressTable([]);
-    mockRpc.mockResolvedValue({
-      data: [{ order_id: "ord-addr", status: "pending", total_amount: 27500 }],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-addr",
+      status: "pending",
+      totalAmount: 27500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 
@@ -789,11 +812,15 @@ describe("CartClient", () => {
     seedCart(TWO_ITEM_CART);
     mockSignedInSession();
     mockAddressTable([]);
-    mockRpc.mockResolvedValue({
-      data: [
-        { order_id: "ord-no-save", status: "pending", total_amount: 27500 },
-      ],
-      error: null,
+    mockSubmitStoreOrder.mockResolvedValue({
+      ok: true,
+      orderId: "ord-no-save",
+      status: "pending",
+      totalAmount: 27500,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
 

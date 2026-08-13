@@ -147,7 +147,7 @@ export function WishlistApp({ slug }: { slug: string }) {
             </button>
           </div>
         ) : products === null ? (
-          <div className="grid gap-4 py-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 py-6 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {SKELETON_KEYS.slice(0, Math.min(count, 6)).map((key) => (
               <div
                 key={key}
@@ -169,7 +169,7 @@ export function WishlistApp({ slug }: { slug: string }) {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <div key={product.id} className="group">
                 <ProductDetailDrawer

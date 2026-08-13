@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { requireEmail, requirePassword } from "@/lib/validation";
+import { PointsBalanceCard } from "./points-balance-card";
 import { useStoreSession } from "./use-store-session";
 
 function isValidPhone(phone: string): boolean {
@@ -188,6 +189,8 @@ export function AccountClient({ slug }: { slug: string }) {
             </div>
           )}
         </Card>
+
+        <PointsBalanceCard slug={slug} />
 
         <div className="flex flex-col gap-2">
           <Button asChild size="lg">

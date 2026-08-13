@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import { connection, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
@@ -33,7 +32,7 @@ export async function GET(request: Request) {
     // G-EMAIL/G-ABANDONED: keep site_url fresh for DB-side pg_net hooks
     // (order confirmation trigger, cron routes). Object shape matches the
     // trigger's value->>'site_url' read.
-    const { error: configError } = await (supabase as SupabaseClient)
+    const { error: configError } = await supabase
       .from("app_config")
       .upsert(
         { key: "site_url", value: JSON.stringify({ site_url: appUrl }) },
@@ -48,12 +47,9 @@ export async function GET(request: Request) {
     if (error)
       capture(error, { context: "[cron/setup] schedule_daily_report_cron" });
 
-    const abandoned = await (supabase as SupabaseClient).rpc(
-      "schedule_abandoned_cart_cron",
-      {
-        p_app_url: appUrl,
-      },
-    );
+    const abandoned = await supabase.rpc("schedule_abandoned_cart_cron", {
+      p_app_url: appUrl,
+    });
     if (abandoned.error)
       capture(abandoned.error, {
         context: "[cron/setup] schedule_abandoned_cart_cron",

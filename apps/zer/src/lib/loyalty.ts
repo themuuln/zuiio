@@ -40,6 +40,7 @@ export function calculatePointsEarned(
   pointsPerMnt: number,
   minPurchase: number,
 ): number {
+  if (pointsPerMnt <= 0) return 0;
   if (amount < minPurchase) return 0;
   return Math.floor(amount * pointsPerMnt);
 }

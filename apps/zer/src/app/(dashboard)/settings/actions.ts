@@ -552,6 +552,7 @@ const ALLOWED_FEATURE_SETTINGS = new Set([
   "has_checkout_quick_amounts",
   "has_receipt_drawer",
   "has_receipt_printer",
+  "has_cash_drawer",
   "has_track_stock",
   "has_delivery_tracking",
   "has_coupons",
@@ -583,6 +584,41 @@ export async function updateOrgFeatureSetting(
 
   if (error) {
     capture(error, { context: "updateOrgFeatureSetting" });
+    return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
+  }
+
+  revalidateEntity("settings");
+  return { success: true as const };
+}
+
+export async function updateOrgHardwareSetting(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const host = formData.get("escpos_host")?.toString().trim() ?? "";
+  const portRaw = formData.get("escpos_port")?.toString().trim() ?? "";
+  const port = portRaw === "" ? 9100 : Number(portRaw);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    return { error: "Портын дугаар буруу байна." };
+  }
+
+  const { error } = await withDbCapture(
+    "organizations: update escpos config",
+    supabase
+      .from("organizations" as never)
+      .update({
+        escpos_host: host || null,
+        escpos_port: port,
+      } as never)
+      .eq("id" as never, organizationId),
+  );
+
+  if (error) {
+    capture(error, { context: "updateOrgHardwareSetting" });
     return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
   }
 

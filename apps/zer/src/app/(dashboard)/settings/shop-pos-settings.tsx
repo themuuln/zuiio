@@ -4,6 +4,7 @@ import { Storefront } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -23,6 +26,7 @@ import type { MessageKey } from "@/lib/i18n/messages";
 import { useI18n } from "@/lib/i18n/provider";
 import {
   updateOrgFeatureSetting,
+  updateOrgHardwareSetting,
   updateShopDefaultPaymentMethod,
 } from "./actions";
 
@@ -31,8 +35,11 @@ export type ShopPosSettingsValues = {
   has_checkout_quick_amounts: boolean;
   has_receipt_drawer: boolean;
   has_receipt_printer: boolean;
+  has_cash_drawer: boolean;
   has_track_stock: boolean;
   shop_default_payment_method: string;
+  escpos_host: string | null;
+  escpos_port: number | null;
 };
 
 const PAYMENT_METHOD_OPTIONS = [
@@ -48,6 +55,7 @@ const TOGGLES: {
     | "has_checkout_quick_amounts"
     | "has_receipt_drawer"
     | "has_receipt_printer"
+    | "has_cash_drawer"
     | "has_track_stock";
   label: string;
   description: string;
@@ -80,6 +88,12 @@ const TOGGLES: {
       "Борлуулалт бүрийн дараа баримтыг автоматаар хэвлэх. Баримт хэвлэгч холбогдсон дэлгүүрт асаана.",
     labelKey: "settings.receiptPrinter",
     descriptionKey: "settings.receiptPrinter.description",
+  },
+  {
+    key: "has_cash_drawer",
+    label: "Мөнгөн хайрцаг",
+    description:
+      "Бэлэн төлбөр бүрийн дараа мөнгөн хайрцгийг автоматаар нээх. Хайрцаг ESC/POS принтерийн портоос удирдагдана.",
   },
   {
     key: "has_track_stock",
@@ -124,6 +138,8 @@ export function ShopPosSettings({
             />
           ))}
         </div>
+
+        <EscPosConfig host={initial.escpos_host} port={initial.escpos_port} />
 
         <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
           <div>
@@ -182,6 +198,77 @@ function PosToggle({
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     </label>
+  );
+}
+
+function EscPosConfig({
+  host,
+  port,
+}: {
+  host: string | null;
+  port: number | null;
+}) {
+  const [hostValue, setHostValue] = useState(host ?? "");
+  const [portValue, setPortValue] = useState(String(port ?? 9100));
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("escpos_host", hostValue);
+      formData.append("escpos_port", portValue);
+      const result = await updateOrgHardwareSetting(undefined, formData);
+      if (result && "error" in result) throw new Error(result.error);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+    onSuccess: () => {
+      toast.success("Принтерийн тохиргоо хадгалагдлаа.");
+    },
+  });
+
+  return (
+    <div className="space-y-3 rounded-lg border p-3">
+      <div>
+        <p className="text-sm font-medium">ESC/POS принтер</p>
+        <p className="text-xs text-muted-foreground">
+          Сүлжээний дулааны принтерийн хаяг. Тохируулсан үед баримтыг ESC/POS
+          драйвераар хэвлэж, бэлэн төлбөрт мөнгөн хайрцгийг нээнэ. Хоосон үед
+          хөтчийн хэвлэх цонх ашиглана.
+        </p>
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)_110px] gap-2">
+        <div className="space-y-1">
+          <Label htmlFor="escpos-host">Хаяг (IP / hostname)</Label>
+          <Input
+            id="escpos-host"
+            value={hostValue}
+            onChange={(e) => setHostValue(e.target.value)}
+            placeholder="192.168.1.50"
+            autoComplete="off"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="escpos-port">Порт</Label>
+          <Input
+            id="escpos-port"
+            value={portValue}
+            onChange={(e) => setPortValue(e.target.value.replace(/\D/g, ""))}
+            inputMode="numeric"
+            placeholder="9100"
+            autoComplete="off"
+          />
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={mutation.isPending}
+        onClick={() => mutation.mutate()}
+      >
+        Хадгалах
+      </Button>
+    </div>
   );
 }
 

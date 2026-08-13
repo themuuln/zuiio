@@ -105,6 +105,9 @@ async function CartDataFetcher({
               : null,
         }}
         branches={branches}
+        bnplAvailable={Boolean(
+          process.env.BNPL_PROVIDER && process.env.BNPL_API_KEY,
+        )}
       />
     );
   } catch {

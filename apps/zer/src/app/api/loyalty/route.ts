@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { withDbCapture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { requireAppContext } from "@/lib/erp";
@@ -6,10 +5,9 @@ import { requireAppContext } from "@/lib/erp";
 export async function GET() {
   try {
     const { supabase, organizationId } = await requireAppContext();
-    const db = supabase as unknown as SupabaseClient;
     const { data: settings } = await withDbCapture(
       "loyalty_settings_get",
-      db
+      supabase
         .from("loyalty_settings")
         .select("*")
         .eq("organization_id", organizationId)
@@ -17,7 +15,7 @@ export async function GET() {
     );
     const { data: rewards } = await withDbCapture(
       "loyalty_rewards_list",
-      db
+      supabase
         .from("loyalty_rewards")
         .select("*")
         .eq("organization_id", organizationId)
@@ -25,7 +23,7 @@ export async function GET() {
     );
     const { data: topCustomers } = await withDbCapture(
       "loyalty_top_customers",
-      db
+      supabase
         .from("contacts")
         .select("id, full_name, phone, points_balance")
         .eq("organization_id", organizationId)

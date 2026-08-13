@@ -56,6 +56,22 @@ export function WishlistProvider({
   slug: string;
   children: React.ReactNode;
 }) {
+  // Idempotent provider — the storefront shell hoists it in
+  // [slug]/layout.tsx, so nested page-level providers pass through to keep a
+  // single wishlist context per storefront. The early return lives in a
+  // wrapper so the inner provider's hooks stay unconditional.
+  const parent = useContext(WishlistContext);
+  if (parent) return <>{children}</>;
+  return <WishlistProviderInner slug={slug}>{children}</WishlistProviderInner>;
+}
+
+function WishlistProviderInner({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: React.ReactNode;
+}) {
   const storageKey = `wishlist:${slug}`;
   const [items, setItems] = useState<string[]>([]);
   const hydrated = useRef(false);

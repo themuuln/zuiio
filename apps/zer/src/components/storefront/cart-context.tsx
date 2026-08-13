@@ -67,6 +67,22 @@ export function StorefrontCartProvider({
 }: {
   children: React.ReactNode;
 }) {
+  // Idempotent provider — when a parent already provides the cart (the
+  // storefront shell hoists it in [slug]/layout.tsx), nested page-level
+  // providers become pass-throughs so the header badge and page share one
+  // context instead of diverging on separate localStorage-backed states.
+  // The early return lives in a wrapper so the inner provider's hooks stay
+  // unconditional (rules of hooks).
+  const parent = useContext(StorefrontCartContext);
+  if (parent) return <>{children}</>;
+  return <StorefrontCartProviderInner>{children}</StorefrontCartProviderInner>;
+}
+
+function StorefrontCartProviderInner({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [state, dispatch] = useReducer(cartReducer, {
     items: [],
     discount: null,

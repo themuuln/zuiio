@@ -92,6 +92,9 @@ interface PosRow {
   has_receipt_drawer: boolean | null;
   has_track_stock: boolean | null;
   has_receipt_printer: boolean | null;
+  has_cash_drawer: boolean | null;
+  escpos_host: string | null;
+  escpos_port: number | null;
   shop_default_payment_method: string | null;
 }
 
@@ -120,6 +123,9 @@ interface SettingsData {
     has_receipt_drawer: boolean;
     has_track_stock: boolean;
     has_receipt_printer: boolean;
+    has_cash_drawer: boolean;
+    escpos_host: string | null;
+    escpos_port: number | null;
     shop_default_payment_method: string;
   };
   userId: string;
@@ -242,7 +248,7 @@ export function SettingsContent() {
             supabase
               .from("organizations" as never)
               .select(
-                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, has_receipt_printer, shop_default_payment_method",
+                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, has_receipt_printer, has_cash_drawer, escpos_host, escpos_port, shop_default_payment_method",
               )
               .eq("id" as never, organizationId)
               .single(),
@@ -278,6 +284,9 @@ export function SettingsContent() {
         has_receipt_drawer: posRow?.has_receipt_drawer !== false,
         has_track_stock: posRow?.has_track_stock !== false,
         has_receipt_printer: posRow?.has_receipt_printer === true,
+        has_cash_drawer: posRow?.has_cash_drawer === true,
+        escpos_host: posRow?.escpos_host ?? null,
+        escpos_port: posRow?.escpos_port ?? 9100,
         shop_default_payment_method:
           posRow?.shop_default_payment_method ?? "cash",
       };

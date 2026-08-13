@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import { connection, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
@@ -21,14 +20,12 @@ const STALE_AFTER_HOURS = 2;
 export async function GET() {
   await connection();
   const supabase = createServiceClient();
-  // abandoned_carts / abandoned_cart_emails land in the generated types when
   // the migration is applied + types regenerate; untyped client until then.
-  const db = supabase as SupabaseClient;
   const cutoff = new Date(
     Date.now() - STALE_AFTER_HOURS * 3_600_000,
   ).toISOString();
 
-  const { data: carts, error } = await db
+  const { data: carts, error } = await supabase
     .from("abandoned_carts")
     .select(
       "id, subtotal, currency, contact_email, organization:organizations(name, slug)",
@@ -47,7 +44,8 @@ export async function GET() {
 
   let sent = 0;
   for (const cart of carts ?? []) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://zuiio.mn";
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? "https://zer.zuiiotech.com";
     const org = Array.isArray(cart.organization)
       ? (cart.organization[0] ?? null)
       : cart.organization;
@@ -55,7 +53,7 @@ export async function GET() {
     const orgName = org?.name ?? "Дэлгүүр";
 
     // Dedupe: only the first email per cart.
-    const { error: dedupeError } = await db
+    const { error: dedupeError } = await supabase
       .from("abandoned_cart_emails")
       .insert({ cart_id: cart.id });
     if (dedupeError) continue; // 23505 → already emailed

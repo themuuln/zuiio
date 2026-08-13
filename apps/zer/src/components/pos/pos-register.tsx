@@ -23,6 +23,7 @@ import {
   type PosVariantSelection,
 } from "@/components/pos/pos-variant-dialog";
 import { Button } from "@/components/ui/button";
+import { sendEscPosCommand } from "@/lib/hardware/client";
 import { useBarcodeScanner } from "@/lib/hooks/use-barcode-scanner";
 import { useOffline } from "@/lib/offline/offline-provider";
 import { queueOfflineAction } from "@/lib/offline-sync";
@@ -55,11 +56,17 @@ export function PosRegister({
   categories,
   openSession,
   hasReceiptPrinter = false,
+  hasCashDrawer = false,
+  escposEnabled = false,
 }: {
   products: PosProduct[];
   categories: PosCategory[];
   openSession: PosOpenSession | null;
   hasReceiptPrinter?: boolean;
+  /** Open the cash drawer kick pulse on cash payments. */
+  hasCashDrawer?: boolean;
+  /** ESC/POS printer configured — receipts go through the hardware bridge. */
+  escposEnabled?: boolean;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -108,7 +115,7 @@ export function PosRegister({
       if (result?.error) throw new Error(result.error);
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       toast.success("Борлуулалт амжилттай");
       setLines([]);
       setPaymentOpen(false);
@@ -116,8 +123,18 @@ export function PosRegister({
       void queryClient.invalidateQueries({ queryKey: productKeys.all() });
       void queryClient.invalidateQueries({ queryKey: saleKeys.all() });
       const saleId = result && "sale" in result ? result.sale.id : null;
-      if (saleId && hasReceiptPrinter) {
-        router.push(`/sales/${saleId}?print=1`);
+      if (saleId) {
+        if (escposEnabled) {
+          // Thermal receipt via the ESC/POS bridge (configured printer).
+          void sendEscPosCommand("print", saleId);
+        } else if (hasReceiptPrinter) {
+          router.push(`/sales/${saleId}?print=1`);
+        }
+        // Cash drawer kick — the drawer lives on the printer port, so the
+        // kick is a hardware pulse, not a print. Only cash opens it.
+        if (hasCashDrawer && variables.get("payment_method") === "cash") {
+          void sendEscPosCommand("drawer");
+        }
       }
     },
     onError: (error) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { DownloadSimple, Gift, Trophy } from "@phosphor-icons/react/dist/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useCallback, useMemo, useState } from "react";
@@ -53,7 +52,7 @@ type Reward = {
   discount_value: number | null;
   is_active: boolean;
 };
-type Customer = { id: string; full_name: string; points_balance: number };
+type Customer = { id: string; name: string; points_balance: number };
 
 export function LoyaltyContent({ orgId }: { orgId: string }) {
   const queryClient = useQueryClient();
@@ -79,7 +78,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
   const dataQuery = useQuery({
     queryKey: ["loyalty", orgId],
     queryFn: async () => {
-      const supabase = createClient() as unknown as SupabaseClient;
+      const supabase = createClient();
       const { data: settings } = await supabase
         .from("loyalty_settings")
         .select("*")
@@ -92,7 +91,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
         .order("points_cost");
       const { data: customers } = await supabase
         .from("contacts")
-        .select("id, full_name, points_balance")
+        .select("id, name, points_balance")
         .eq("organization_id", orgId)
         .gt("points_balance", 0)
         .order("points_balance", { ascending: false })
@@ -114,7 +113,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
       points_per_mnt: number;
       min_purchase: number;
     }) => {
-      const supabase = createClient() as unknown as SupabaseClient;
+      const supabase = createClient();
       const { data: existing } = await supabase
         .from("loyalty_settings")
         .select("id")
@@ -156,7 +155,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
 
   const toggleMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      const supabase = createClient() as unknown as SupabaseClient;
+      const supabase = createClient();
       const { data: existing } = await supabase
         .from("loyalty_settings")
         .select("id")
@@ -214,7 +213,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
 
   const createRewardMutation = useMutation({
     mutationFn: async () => {
-      const supabase = createClient() as unknown as SupabaseClient;
+      const supabase = createClient();
       const { data, error } = await supabase
         .from("loyalty_rewards")
         .insert({
@@ -536,13 +535,6 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
                 <div
                   key={r.id}
                   className="flex items-center justify-between rounded border p-3"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                    }
-                  }}
                 >
                   <div>
                     <p className="font-medium">{r.name}</p>
@@ -584,7 +576,7 @@ export function LoyaltyContent({ orgId }: { orgId: string }) {
                       {i + 1}
                     </span>
                     <div>
-                      <p className="font-medium">{c.full_name}</p>
+                      <p className="font-medium">{c.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {formatPoints(c.points_balance)} оноо
                       </p>
