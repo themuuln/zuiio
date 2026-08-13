@@ -21,7 +21,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     useTypeScriptCli: true,
-    inlineCss: true,
     staleTimes: {
       dynamic: 30,
       static: 180,
