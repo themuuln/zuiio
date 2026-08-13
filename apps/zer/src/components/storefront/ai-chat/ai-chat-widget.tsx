@@ -7,8 +7,9 @@ import {
   Sparkle,
   X,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { MarkdownText } from "./markdown";
 
 /**
  * Floating AI shopping assistant for the public storefront.
@@ -32,7 +33,65 @@ interface ChatMessage {
   content: string;
 }
 
-const URL_PATTERN = /(https?:\/\/[^\s<>"']+)/g;
+/**
+ * Reads the SSE stream returned by /api/ai/chat. Calls `onToken` for each
+ * `{token}` event as it arrives and resolves with the full reply or a
+ * mid-stream `{error}` message.
+ */
+async function readSseStream(
+  res: Response,
+  onToken: (token: string) => void,
+): Promise<{ reply?: string; error?: string }> {
+  if (!res.body) return { error: GENERIC_ERROR };
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let reply = "";
+  let errorMsg: string | undefined;
+
+  const handleEvent = (raw: string) => {
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const payload = trimmed.slice(5).trim();
+      if (!payload) continue;
+      let data: Record<string, unknown>;
+      try {
+        data = JSON.parse(payload);
+      } catch {
+        continue; // ignore keep-alive frames
+      }
+      if (typeof data.token === "string" && data.token.length > 0) {
+        reply += data.token;
+        onToken(data.token);
+      } else if (typeof data.error === "string") {
+        errorMsg = data.error;
+      } else if (data.done && typeof data.reply === "string") {
+        // Authoritative final text (covers a token-less edge case).
+        reply = data.reply;
+      }
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE events are separated by a blank line (\n\n or \r\n\r\n).
+    let sep = buffer.search(/\r?\n\r?\n/);
+    while (sep !== -1) {
+      const raw = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + (buffer[sep] === "\r" ? 4 : 2));
+      handleEvent(raw);
+      if (errorMsg) return { error: errorMsg };
+      sep = buffer.search(/\r?\n\r?\n/);
+    }
+  }
+  handleEvent(buffer);
+
+  return { reply: reply || undefined, error: errorMsg };
+}
 
 export function StorefrontAiChat({
   slug,
@@ -45,16 +104,24 @@ export function StorefrontAiChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight stream when the widget unmounts so the server stops
+  // spending tokens on a reply nobody will see.
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   // Keep the latest message in view.
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll must re-run when the chat list changes, even though the body only touches the ref
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ block: "end" });
-  }, [messages, pending, open]);
+  }, [messages, pending, streamingText, open]);
 
   // Focus the input when the panel opens.
   useEffect(() => {
@@ -74,7 +141,11 @@ export function StorefrontAiChat({
       setMessages(history);
       setInput("");
       setError(null);
+      setStreamingText("");
       setPending(true);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
         const res = await fetch("/api/ai/chat", {
@@ -85,7 +156,31 @@ export function StorefrontAiChat({
             messages: history,
             baseUrl: window.location.origin,
           }),
+          signal: controller.signal,
         });
+
+        // Streaming path: SSE events {token}, {done, reply}, or {error}.
+        const contentType = res.headers?.get?.("content-type") ?? "";
+        if (res.ok && contentType.includes("text/event-stream")) {
+          const reply = await readSseStream(res, (token) =>
+            setStreamingText((prev) => prev + token),
+          );
+          if (reply.error) {
+            setError(reply.error);
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: reply.reply ?? "",
+              },
+            ]);
+          }
+          return;
+        }
+
+        // Non-streaming path (validation/rate-limit/config errors).
         const data = (await res.json().catch(() => null)) as {
           reply?: string;
           error?: string;
@@ -100,10 +195,15 @@ export function StorefrontAiChat({
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", content: reply },
         ]);
-      } catch {
-        setError(GENERIC_ERROR);
+      } catch (err) {
+        // A deliberate abort (unmount or user navigation) is not an error.
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
+          setError(GENERIC_ERROR);
+        }
       } finally {
         setPending(false);
+        setStreamingText("");
+        abortRef.current = null;
       }
     },
     [messages, pending, slug],
@@ -181,17 +281,28 @@ export function StorefrontAiChat({
               <div
                 key={m.id}
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words",
+                  "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm break-words",
                   m.role === "user"
                     ? "ml-auto rounded-br-sm bg-primary text-primary-foreground"
                     : "mr-auto rounded-bl-sm border border-border/60 bg-muted/50",
                 )}
               >
-                {m.role === "user" ? m.content : <Linkify text={m.content} />}
+                {m.role === "user" ? (
+                  <p className="whitespace-pre-wrap">{m.content}</p>
+                ) : (
+                  <MarkdownText text={m.content} />
+                )}
               </div>
             ))}
 
-            {pending && (
+            {pending && streamingText && (
+              <div className="mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-border/60 bg-muted/50 px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words">
+                <MarkdownText text={streamingText} />
+                <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse align-middle bg-muted-foreground/70" />
+              </div>
+            )}
+
+            {pending && !streamingText && (
               <div className="mr-auto flex items-center gap-1.5 rounded-2xl rounded-bl-sm border border-border/60 bg-muted/50 px-4 py-3">
                 <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground" />
                 <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:120ms]" />
@@ -235,44 +346,6 @@ export function StorefrontAiChat({
             </button>
           </form>
         </section>
-      )}
-    </>
-  );
-}
-
-/**
- * Renders text with http(s) URLs as clickable links. Text parts are
- * rendered as plain React children (auto-escaped) — no innerHTML.
- */
-function Linkify({ text }: { text: string }) {
-  const parts = useMemo(() => {
-    const seen = new Map<string, number>();
-    return text
-      .split(URL_PATTERN)
-      .filter(Boolean)
-      .map((part) => {
-        const count = seen.get(part) ?? 0;
-        seen.set(part, count + 1);
-        return { part, key: `${part}#${count}` };
-      });
-  }, [text]);
-
-  return (
-    <>
-      {parts.map(({ part, key }) =>
-        part.startsWith("http://") || part.startsWith("https://") ? (
-          <a
-            key={key}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2"
-          >
-            {part}
-          </a>
-        ) : (
-          <span key={key}>{part}</span>
-        ),
       )}
     </>
   );

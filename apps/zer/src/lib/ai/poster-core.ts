@@ -1,6 +1,6 @@
-import { fal } from "@fal-ai/client";
 import { capture } from "@zuiio/capture";
 import sharp from "sharp";
+import { editImage, generateImage } from "@/lib/ai/openai-image";
 
 export type PosterStyle = {
   id: string;
@@ -71,6 +71,21 @@ export const PLATFORM_SIZES: Record<string, PlatformSize> = {
   print_a4: { label: "A4", width: 2480, height: 3508 },
 };
 
+/**
+ * OpenAI GPT Image models accept a fixed set of standard sizes. Map each
+ * platform to the closest aspect ratio; Sharp resizes to the exact platform
+ * dimensions afterwards.
+ */
+const PLATFORM_OPENAI_SIZES: Record<
+  string,
+  "1024x1024" | "1536x1024" | "1024x1536"
+> = {
+  instagram: "1024x1024",
+  facebook: "1536x1024",
+  web: "1536x1024",
+  print_a4: "1024x1536",
+};
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -137,36 +152,28 @@ export async function generatePosterCore(
     : `A product poster for ${productName}, Mongolian market, ${platform}`;
 
   const imageSize = getDimensions(platform);
+  const openAiSize = PLATFORM_OPENAI_SIZES[platform];
 
   try {
-    fal.config({ credentials: process.env.FAL_API_KEY });
-  } catch {
-    return {
-      error: "AI үйлчилгээний тохиргоо дутуу байна. FAL_API_KEY тохируулна уу.",
-    };
-  }
-
-  try {
-    const result = await fal.run("fal-ai/flux-pro/v1.1/redux", {
-      input: {
-        prompt,
-        image_url: productImageUrl,
-        image_size: imageSize,
-        num_images: 1,
-      },
+    const result = await editImage({
+      imageUrl: productImageUrl,
+      prompt,
+      size: openAiSize,
+      quality: "high",
+      outputFormat: "webp",
     });
 
-    const imageUrl = result.data?.images?.[0]?.url;
-    if (!imageUrl) {
+    if (result.error) {
+      return { error: result.error };
+    }
+    if (!result.dataUrl) {
       return { error: "Зураг үүсгэхэд алдаа гарлаа. Дахин оролдоно уу." };
     }
 
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      return { error: "Үүсгэсэн зургийг татахад алдаа гарлаа." };
-    }
-
-    let imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    let imageBuffer = Buffer.from(
+      result.dataUrl.replace(/^data:image\/\w+;base64,/, ""),
+      "base64",
+    );
 
     // Composite text overlay
     if (promotionalText && imageSize) {
@@ -205,22 +212,26 @@ export async function generatePosterCore(
 
 /**
  * Generate a product image from a text description.
- * Uses Fal.ai Flux Pro text-to-image.
+ * Uses OpenAI GPT Image (gpt-image-2) text-to-image.
  */
 export async function generateProductImage(
   prompt: string,
 ): Promise<{ imageUrl?: string; error?: string }> {
   try {
-    fal.config({ credentials: process.env.FAL_API_KEY });
-    const result = await fal.run("fal-ai/flux-pro/v1.1", {
-      input: {
-        prompt,
-        image_size: { width: 1024, height: 1024 },
-        num_images: 1,
-      },
+    const result = await generateImage({
+      prompt,
+      size: "1024x1024",
+      quality: "medium",
+      outputFormat: "webp",
     });
-    const url = result.data?.images?.[0]?.url;
-    return url ? { imageUrl: url } : { error: "Зураг үүсгэхэд алдаа гарлаа." };
+
+    if (result.error) {
+      return { error: result.error };
+    }
+    if (!result.dataUrl) {
+      return { error: "Зураг үүсгэхэд алдаа гарлаа." };
+    }
+    return { imageUrl: result.dataUrl };
   } catch (e) {
     capture(e, { context: "generateProductImage" });
     return { error: "Зураг үүсгэхэд алдаа гарлаа." };

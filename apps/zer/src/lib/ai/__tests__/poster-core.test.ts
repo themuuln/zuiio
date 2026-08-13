@@ -5,13 +5,11 @@ vi.mock("@zuiio/capture", () => ({
   capture: (...args: unknown[]) => mockCapture(...args),
 }));
 
-const mockFalConfig = vi.fn();
-const mockFalRun = vi.fn();
-vi.mock("@fal-ai/client", () => ({
-  fal: {
-    config: (...args: unknown[]) => mockFalConfig(...args),
-    run: (...args: unknown[]) => mockFalRun(...args),
-  },
+const mockEditImage = vi.fn();
+const mockGenerateImage = vi.fn();
+vi.mock("@/lib/ai/openai-image", () => ({
+  editImage: (...args: unknown[]) => mockEditImage(...args),
+  generateImage: (...args: unknown[]) => mockGenerateImage(...args),
 }));
 
 const chain = {
@@ -33,26 +31,17 @@ import {
 
 const FULL_PARAMS = {
   productName: "Цамц",
-  productImageUrl: "https://cdn.fal.ai/product.jpg",
+  productImageUrl: "https://supabase.storage/product.jpg",
   styleId: "minimal",
   platform: "instagram",
 };
 
 const RAW_BYTES = Buffer.from("fake-image-bytes");
 const PNG_BYTES = RAW_BYTES.toString("base64");
+const WEBP_DATA_URL = `data:image/webp;base64,${PNG_BYTES}`;
 
-function mockFalImage(url = "https://cdn.fal.ai/result.png") {
-  mockFalRun.mockResolvedValue({ data: { images: [{ url }] } });
-}
-
-function mockFetchOk() {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({
-      ok: true,
-      arrayBuffer: async () => Buffer.from("raw-image"),
-    }),
-  );
+function mockOpenAiImage(dataUrl = WEBP_DATA_URL) {
+  mockEditImage.mockResolvedValue({ dataUrl });
 }
 
 function stubChain() {
@@ -64,39 +53,37 @@ function stubChain() {
 
 describe("generatePosterCore", () => {
   beforeEach(() => {
-    vi.stubEnv("FAL_API_KEY", "test-fal-key");
-    mockFalConfig.mockImplementation(() => undefined);
     stubChain();
-    mockFetchOk();
-    mockFalImage();
+    mockOpenAiImage();
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
-    vi.unstubAllGlobals();
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("returns a base64 webp data URL for a generated poster", async () => {
     const result = await generatePosterCore(FULL_PARAMS);
 
     expect(result.posterUrl).toBe(`data:image/webp;base64,${PNG_BYTES}`);
-    expect(mockFalConfig).toHaveBeenCalledWith({ credentials: "test-fal-key" });
-    expect(mockFalRun).toHaveBeenCalledWith("fal-ai/flux-pro/v1.1/redux", {
-      input: {
-        prompt: expect.stringContaining("Цамц"),
-        image_url: "https://cdn.fal.ai/product.jpg",
-        image_size: { width: 1080, height: 1080 },
-        num_images: 1,
-      },
+    expect(mockEditImage).toHaveBeenCalledWith({
+      imageUrl: "https://supabase.storage/product.jpg",
+      prompt: expect.stringContaining("Цамц"),
+      size: "1024x1024",
+      quality: "high",
+      outputFormat: "webp",
     });
   });
 
-  it("uses the platform dimensions for the request", async () => {
+  it("maps the platform to the closest OpenAI image size", async () => {
     await generatePosterCore({ ...FULL_PARAMS, platform: "print_a4" });
+    expect(mockEditImage.mock.calls[0][0].size).toBe("1024x1536");
 
-    const input = mockFalRun.mock.calls[0][1].input;
-    expect(input.image_size).toEqual({ width: 2480, height: 3508 });
+    await generatePosterCore({ ...FULL_PARAMS, platform: "facebook" });
+    expect(mockEditImage.mock.calls[1][0].size).toBe("1536x1024");
+
+    await generatePosterCore({ ...FULL_PARAMS, platform: "web" });
+    expect(mockEditImage.mock.calls[2][0].size).toBe("1536x1024");
   });
 
   it("uses the custom prompt for the custom style", async () => {
@@ -106,14 +93,14 @@ describe("generatePosterCore", () => {
       customPrompt: "vintage neon poster",
     });
 
-    const prompt = mockFalRun.mock.calls[0][1].input.prompt;
+    const prompt = mockEditImage.mock.calls[0][0].prompt;
     expect(prompt).toContain("vintage neon poster");
   });
 
   it("falls back to a plain prompt for an unknown style", async () => {
     await generatePosterCore({ ...FULL_PARAMS, styleId: "nonexistent" });
 
-    const prompt = mockFalRun.mock.calls[0][1].input.prompt;
+    const prompt = mockEditImage.mock.calls[0][0].prompt;
     expect(prompt).toBe(
       "A product poster for Цамц, Mongolian market, instagram",
     );
@@ -141,31 +128,23 @@ describe("generatePosterCore", () => {
     });
   });
 
-  it("returns a config error when fal.config throws", async () => {
-    mockFalConfig.mockImplementation(() => {
-      throw new Error("bad key");
+  it("forwards the OpenAI config error when the API key is missing", async () => {
+    mockEditImage.mockResolvedValue({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
 
     const result = await generatePosterCore(FULL_PARAMS);
 
     expect(result).toEqual({
-      error: "AI үйлчилгээний тохиргоо дутуу байна. FAL_API_KEY тохируулна уу.",
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
-    expect(mockFalRun).not.toHaveBeenCalled();
+    expect(chain.webp).not.toHaveBeenCalled();
   });
 
-  it("returns a download error when the image fetch fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
-
-    const result = await generatePosterCore(FULL_PARAMS);
-
-    expect(result).toEqual({
-      error: "Үүсгэсэн зургийг татахад алдаа гарлаа.",
-    });
-  });
-
-  it("returns an error when fal returns no image url", async () => {
-    mockFalRun.mockResolvedValue({ data: { images: [] } });
+  it("returns an error when OpenAI returns no image data", async () => {
+    mockEditImage.mockResolvedValue({});
 
     const result = await generatePosterCore(FULL_PARAMS);
 
@@ -176,7 +155,7 @@ describe("generatePosterCore", () => {
 
   it("captures and surfaces a provider error with its message", async () => {
     const boom = new Error("upstream timeout");
-    mockFalRun.mockRejectedValue(boom);
+    mockEditImage.mockRejectedValue(boom);
 
     const result = await generatePosterCore(FULL_PARAMS);
 
@@ -190,34 +169,45 @@ describe("generatePosterCore", () => {
 });
 
 describe("generateProductImage", () => {
-  beforeEach(() => {
-    vi.stubEnv("FAL_API_KEY", "test-fal-key");
-  });
-
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
 
-  it("returns the generated image url", async () => {
-    mockFalRun.mockResolvedValue({
-      data: { images: [{ url: "https://cdn.fal.ai/product.png" }] },
+  it("returns the generated image data URL", async () => {
+    mockGenerateImage.mockResolvedValue({
+      dataUrl: "data:image/webp;base64,cHJvZHVjdA==",
     });
 
     const result = await generateProductImage("a red shirt");
 
-    expect(result).toEqual({ imageUrl: "https://cdn.fal.ai/product.png" });
-    expect(mockFalRun).toHaveBeenCalledWith("fal-ai/flux-pro/v1.1", {
-      input: {
-        prompt: "a red shirt",
-        image_size: { width: 1024, height: 1024 },
-        num_images: 1,
-      },
+    expect(result).toEqual({
+      imageUrl: "data:image/webp;base64,cHJvZHVjdA==",
+    });
+    expect(mockGenerateImage).toHaveBeenCalledWith({
+      prompt: "a red shirt",
+      size: "1024x1024",
+      quality: "medium",
+      outputFormat: "webp",
     });
   });
 
-  it("returns an error when no image url comes back", async () => {
-    mockFalRun.mockResolvedValue({ data: { images: [] } });
+  it("forwards the OpenAI config error when the API key is missing", async () => {
+    mockGenerateImage.mockResolvedValue({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
+    });
+
+    const result = await generateProductImage("a red shirt");
+
+    expect(result).toEqual({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
+    });
+  });
+
+  it("returns an error when no image data comes back", async () => {
+    mockGenerateImage.mockResolvedValue({});
 
     const result = await generateProductImage("a red shirt");
 
@@ -225,7 +215,7 @@ describe("generateProductImage", () => {
   });
 
   it("captures and maps a provider failure", async () => {
-    mockFalRun.mockRejectedValue(new Error("down"));
+    mockGenerateImage.mockRejectedValue(new Error("down"));
 
     const result = await generateProductImage("a red shirt");
 

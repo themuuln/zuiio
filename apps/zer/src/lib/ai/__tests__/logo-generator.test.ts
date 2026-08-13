@@ -7,23 +7,18 @@ vi.mock("@zuiio/capture", () => ({
   capture: (...args: unknown[]) => mockCapture(...args),
 }));
 
-const mockFalConfig = vi.fn();
-const mockFalRun = vi.fn();
-vi.mock("@fal-ai/client", () => ({
-  fal: {
-    config: (...args: unknown[]) => mockFalConfig(...args),
-    run: (...args: unknown[]) => mockFalRun(...args),
-  },
+const mockGenerateImage = vi.fn();
+vi.mock("@/lib/ai/openai-image", () => ({
+  generateImage: (...args: unknown[]) => mockGenerateImage(...args),
 }));
 
 import { generateLogo } from "../logo-generator";
 
+const LOGO_DATA_URL = "data:image/png;base64,bG9nbw==";
+
 describe("generateLogo", () => {
   beforeEach(() => {
-    vi.stubEnv("FAL_API_KEY", "test-fal-key");
-    mockFalRun.mockResolvedValue({
-      data: { images: [{ url: "https://cdn.fal.ai/logo.png" }] },
-    });
+    mockGenerateImage.mockResolvedValue({ dataUrl: LOGO_DATA_URL });
   });
 
   afterEach(() => {
@@ -31,12 +26,15 @@ describe("generateLogo", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the generated logo image URL", async () => {
+  it("returns the generated logo image data URL", async () => {
     const result = await generateLogo({ businessName: "Номин Дэлгүүр" });
 
-    expect(result).toEqual({ imageUrl: "https://cdn.fal.ai/logo.png" });
-    expect(mockFalConfig).toHaveBeenCalledWith({
-      credentials: "test-fal-key",
+    expect(result).toEqual({ imageUrl: LOGO_DATA_URL });
+    expect(mockGenerateImage).toHaveBeenCalledWith({
+      prompt: expect.stringContaining('"Номин Дэлгүүр"'),
+      size: "1024x1024",
+      quality: "high",
+      outputFormat: "png",
     });
   });
 
@@ -47,15 +45,8 @@ describe("generateLogo", () => {
       style: "modern",
     });
 
-    expect(mockFalRun).toHaveBeenCalledWith("fal-ai/flux-pro/v1.1", {
-      input: {
-        prompt: expect.stringContaining('"Номин"'),
-        image_size: { width: 512, height: 512 },
-        num_images: 1,
-      },
-    });
-
-    const prompt = mockFalRun.mock.calls[0][1].input.prompt;
+    const prompt = mockGenerateImage.mock.calls[0][0].prompt;
+    expect(prompt).toContain('"Номин"');
     expect(prompt).toContain("a хувцас business");
     expect(prompt).toContain("modern style");
   });
@@ -63,15 +54,29 @@ describe("generateLogo", () => {
   it("omits industry and style from the prompt when not provided", async () => {
     await generateLogo({ businessName: "Цэцэг" });
 
-    const prompt = mockFalRun.mock.calls[0][1].input.prompt;
+    const prompt = mockGenerateImage.mock.calls[0][0].prompt;
     expect(prompt).toContain('"Цэцэг"');
     expect(prompt).not.toContain("business");
     expect(prompt).not.toContain("style");
   });
 
+  it("forwards the OpenAI config error when the API key is missing", async () => {
+    mockGenerateImage.mockResolvedValue({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
+    });
+
+    const result = await generateLogo({ businessName: "Номин" });
+
+    expect(result).toEqual({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
+    });
+  });
+
   it("captures and maps a provider failure to a user error", async () => {
-    const boom = new Error("fal down");
-    mockFalRun.mockRejectedValue(boom);
+    const boom = new Error("openai down");
+    mockGenerateImage.mockRejectedValue(boom);
 
     const result = await generateLogo({ businessName: "Номин" });
 

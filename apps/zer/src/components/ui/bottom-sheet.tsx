@@ -67,6 +67,12 @@ export function BottomSheet({
         className="fixed inset-0 flex items-end justify-center"
         style={
           {
+            // Pin the whole sheet (viewport + popup) above fixed floating
+            // widgets (e.g. the storefront AI chat bubble at z-50). The
+            // popup itself is position:static inside this fixed viewport,
+            // so the z-index must live here. Inline style beats utility
+            // class order.
+            zIndex: 60,
             touchAction: virtualKeyboard ? undefined : "none",
           } as React.CSSProperties
         }

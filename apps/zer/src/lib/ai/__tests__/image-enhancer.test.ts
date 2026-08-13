@@ -7,20 +7,20 @@ vi.mock("@zuiio/capture", () => ({
   capture: (...args: unknown[]) => mockCapture(...args),
 }));
 
-const mockFalConfig = vi.fn();
-const mockFalRun = vi.fn();
-vi.mock("@fal-ai/client", () => ({
-  fal: {
-    config: (...args: unknown[]) => mockFalConfig(...args),
-    run: (...args: unknown[]) => mockFalRun(...args),
-  },
+const mockEditImage = vi.fn();
+vi.mock("@/lib/ai/openai-image", () => ({
+  editImage: (...args: unknown[]) => mockEditImage(...args),
 }));
 
 import { enhanceProductPhoto, removeBackground } from "../image-enhancer";
 
+const SOURCE_URL = "https://supabase.storage/product.jpg";
+const TRANSPARENT_PNG = "data:image/png;base64,dHJhbnNwYXJlbnQ=";
+const ENHANCED_WEBP = "data:image/webp;base64,ZW5oYW5jZWQ=";
+
 describe("removeBackground", () => {
   beforeEach(() => {
-    vi.stubEnv("FAL_API_KEY", "test-fal-key");
+    mockEditImage.mockResolvedValue({ dataUrl: TRANSPARENT_PNG });
   });
 
   afterEach(() => {
@@ -28,28 +28,38 @@ describe("removeBackground", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the removed-background image URL", async () => {
-    mockFalRun.mockResolvedValue({
-      data: { image: { url: "https://cdn.fal.ai/bg-removed.png" } },
+  it("returns the removed-background image and asks for a transparent png", async () => {
+    const result = await removeBackground(SOURCE_URL);
+
+    expect(result).toEqual({ imageUrl: TRANSPARENT_PNG });
+    expect(mockEditImage).toHaveBeenCalledWith({
+      imageUrl: SOURCE_URL,
+      prompt: expect.stringContaining("Remove the background"),
+      background: "transparent",
+      outputFormat: "png",
+      inputFidelity: "high",
+    });
+  });
+
+  it("forwards the OpenAI config error when the API key is missing", async () => {
+    mockEditImage.mockResolvedValue({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
 
-    const result = await removeBackground("https://cdn.fal.ai/input.png");
+    const result = await removeBackground(SOURCE_URL);
 
-    expect(result).toEqual({ imageUrl: "https://cdn.fal.ai/bg-removed.png" });
-    expect(mockFalConfig).toHaveBeenCalledWith({
-      credentials: "test-fal-key",
+    expect(result).toEqual({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
-    expect(mockFalRun).toHaveBeenCalledWith("fal-ai/bria/background/remove", {
-      input: { image_url: "https://cdn.fal.ai/input.png" },
-    });
-    expect(mockCapture).not.toHaveBeenCalled();
   });
 
   it("captures and maps a provider failure to a user error", async () => {
-    const boom = new Error("fal down");
-    mockFalRun.mockRejectedValue(boom);
+    const boom = new Error("openai down");
+    mockEditImage.mockRejectedValue(boom);
 
-    const result = await removeBackground("https://cdn.fal.ai/input.png");
+    const result = await removeBackground(SOURCE_URL);
 
     expect(result).toEqual({
       error: "Зургийн дэвсгэр арилгахад алдаа гарлаа.",
@@ -62,7 +72,7 @@ describe("removeBackground", () => {
 
 describe("enhanceProductPhoto", () => {
   beforeEach(() => {
-    vi.stubEnv("FAL_API_KEY", "test-fal-key");
+    mockEditImage.mockResolvedValue({ dataUrl: ENHANCED_WEBP });
   });
 
   afterEach(() => {
@@ -70,28 +80,38 @@ describe("enhanceProductPhoto", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the enhanced image URL and passes the product image", async () => {
-    mockFalRun.mockResolvedValue({
-      data: { images: [{ url: "https://cdn.fal.ai/enhanced.jpg" }] },
+  it("returns the enhanced image and passes the product image", async () => {
+    const result = await enhanceProductPhoto(SOURCE_URL);
+
+    expect(result).toEqual({ imageUrl: ENHANCED_WEBP });
+    expect(mockEditImage).toHaveBeenCalledWith({
+      imageUrl: SOURCE_URL,
+      prompt: expect.stringContaining("Enhance this product photo"),
+      quality: "high",
+      outputFormat: "webp",
+      inputFidelity: "high",
+    });
+  });
+
+  it("forwards the OpenAI config error when the API key is missing", async () => {
+    mockEditImage.mockResolvedValue({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
 
-    const result = await enhanceProductPhoto("https://cdn.fal.ai/product.jpg");
+    const result = await enhanceProductPhoto(SOURCE_URL);
 
-    expect(result).toEqual({ imageUrl: "https://cdn.fal.ai/enhanced.jpg" });
-    expect(mockFalConfig).toHaveBeenCalledWith({
-      credentials: "test-fal-key",
+    expect(result).toEqual({
+      error:
+        "AI үйлчилгээний тохиргоо дутуу байна. OPENAI_API_KEY тохируулна уу.",
     });
-    expect(mockFalRun).toHaveBeenCalledWith(
-      "fal-ai/image-apps-v2/product-photography",
-      { input: { product_image_url: "https://cdn.fal.ai/product.jpg" } },
-    );
   });
 
   it("captures and maps a provider failure to a user error", async () => {
-    const boom = new Error("timeout");
-    mockFalRun.mockRejectedValue(boom);
+    const boom = new Error("openai down");
+    mockEditImage.mockRejectedValue(boom);
 
-    const result = await enhanceProductPhoto("https://cdn.fal.ai/product.jpg");
+    const result = await enhanceProductPhoto(SOURCE_URL);
 
     expect(result).toEqual({ error: "Зураг сайжруулахад алдаа гарлаа." });
     expect(mockCapture).toHaveBeenCalledWith(boom, {

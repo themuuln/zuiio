@@ -22,6 +22,8 @@ vi.mock("@zuiio/capture", () => ({
   capture: vi.fn(),
 }));
 
+import { capture } from "@zuiio/capture";
+
 import { POST } from "./route";
 
 const ORG = {
@@ -31,7 +33,26 @@ const ORG = {
   slug: "storefront-e2e-test",
 };
 
-function mockOrgLookup(org: typeof ORG | null) {
+async function readSseBody(res: Response): Promise<string> {
+  if (!res.body) return "";
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    text += decoder.decode(value, { stream: true });
+  }
+  return text;
+}
+
+function mockOrgLookup(
+  org: typeof ORG | null,
+  rpc: () => { data: unknown; error: unknown } = () => ({
+    data: [{ allowed: true, reason: "ok", daily_tokens: 10 }],
+    error: null,
+  }),
+) {
   mockCreateClient.mockReturnValue({
     from: () => ({
       select: () => ({
@@ -40,6 +61,7 @@ function mockOrgLookup(org: typeof ORG | null) {
         }),
       }),
     }),
+    rpc: async () => rpc(),
   });
 }
 
@@ -129,13 +151,24 @@ describe("POST /api/ai/chat", () => {
     expect(mockRunWithTools).not.toHaveBeenCalled();
   });
 
-  it("runs the agent with mapped history and returns the reply", async () => {
+  it("streams the agent reply as SSE with mapped history", async () => {
     const reply = "Танд 2 утас байна.";
-    mockRunWithTools.mockResolvedValue(reply);
+    mockRunWithTools.mockImplementation(
+      async (opts: { onToken?: (delta: string) => void }) => {
+        opts.onToken?.("Танд ");
+        opts.onToken?.("2 утас байна.");
+        return reply;
+      },
+    );
 
     const res = await POST(buildRequest(VALID_BODY));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ reply });
+    expect(res.headers.get("content-type")).toContain("text/event-stream");
+
+    const text = await readSseBody(res);
+    expect(text).toContain('"token":"Танд "');
+    expect(text).toContain('"token":"2 утас байна."');
+    expect(text).toContain(`"done":true,"reply":"${reply}"`);
 
     const opts = mockRunWithTools.mock.calls[0][0];
     expect(opts.userMessage).toBe("Утас байна уу?");
@@ -144,13 +177,29 @@ describe("POST /api/ai/chat", () => {
       { role: "assistant", content: "Сайн байна уу" },
     ]);
     expect(opts.maxRounds).toBe(4);
+    expect(opts.maxTokens).toBe(1024);
+    expect(opts.signal).toBeInstanceOf(AbortSignal);
     expect(opts.systemPrompt).toContain("Storefront E2E Shop");
     expect(opts.systemPrompt).toContain("MNT");
+    expect(opts.systemPrompt).toContain("get_promotions");
+    expect(opts.systemPrompt).toContain("track_order");
+    expect(opts.systemPrompt).toContain("get_product_reviews");
     expect(mockCreateStorefrontAgentTools).toHaveBeenCalledWith(
       expect.anything(),
       "storefront-e2e-test",
       "https://shop.example.mn",
     );
+  });
+
+  it("streams an error event and captures when the agent throws", async () => {
+    mockRunWithTools.mockRejectedValue(new Error("deepseek down"));
+    const res = await POST(buildRequest(VALID_BODY));
+    expect(res.status).toBe(200);
+    const text = await readSseBody(res);
+    expect(text).toContain(
+      `"error":"Хариулт авахад алдаа гарлаа. Дахин оролдоно уу."`,
+    );
+    expect(capture).toHaveBeenCalled();
   });
 
   it("rejects a non-http baseUrl", async () => {
@@ -160,10 +209,42 @@ describe("POST /api/ai/chat", () => {
     expect(opts.systemPrompt).not.toContain("javascript:");
   });
 
-  it("returns 500 and captures when the agent throws", async () => {
-    mockRunWithTools.mockRejectedValue(new Error("deepseek down"));
+  it("returns 400 when the total conversation exceeds the size budget", async () => {
+    const messages = Array.from({ length: 7 }, (_, i) => ({
+      role: (i % 2 === 0 ? "user" : "assistant") as "user" | "assistant",
+      content: "б".repeat(2000),
+    }));
+    // 7 × 2000 = 14,000 chars > MAX_TOTAL_CHARS (12,000)
+    const res = await POST(buildRequest({ ...VALID_BODY, messages }));
+    expect(res.status).toBe(400);
+    expect(mockRunWithTools).not.toHaveBeenCalled();
+  });
+
+  it("passes an env-overridable maxTokens to the agent", async () => {
+    vi.stubEnv("AI_CHAT_MAX_TOKENS", "512");
+    mockRunWithTools.mockResolvedValue("ok");
+    await POST(buildRequest(VALID_BODY));
+    expect(mockRunWithTools.mock.calls[0][0].maxTokens).toBe(512);
+  });
+
+  it("returns 429 when the durable rate limit denies the request", async () => {
+    mockOrgLookup(ORG, () => ({
+      data: [{ allowed: false, reason: "ip-window", daily_tokens: 0 }],
+      error: null,
+    }));
+    mockRunWithTools.mockResolvedValue("ok");
     const res = await POST(buildRequest(VALID_BODY));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(429);
+    expect(mockRunWithTools).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the in-memory limiter when the durable RPC fails", async () => {
+    mockOrgLookup(ORG, () => {
+      throw new Error("rpc down");
+    });
+    mockRunWithTools.mockResolvedValue("ok");
+    const res = await POST(buildRequest(VALID_BODY));
+    expect(res.status).toBe(200);
   });
 
   it("rate-limits a single IP after 20 requests", async () => {
