@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { supabaseIntegration } from "@supabase/sentry-js-integration";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { setCaptureHandler } from "@zuiio/capture";
+import { isExpectedStoreOrderRejection } from "@/lib/storefront-order-errors";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
@@ -39,8 +40,11 @@ Sentry.init({
   ],
 });
 
-// Wire Sentry into @zuiio/capture so every capture() call reaches Sentry
+// Wire Sentry into @zuiio/capture so every capture() call reaches Sentry.
+// Expected business rejections (stock/coupon/gift-card/validation) are
+// control flow — the buyer sees the message; Sentry only gets real errors.
 setCaptureHandler((error, ctx) => {
+  if (isExpectedStoreOrderRejection(error, ctx)) return;
   Sentry.captureException(
     error instanceof Error ? error : new Error(String(error)),
     { extra: ctx },
