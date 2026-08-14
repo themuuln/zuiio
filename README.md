@@ -18,14 +18,14 @@
 zuiio/
 ├── apps/
 │   ├── zuiio-id/        ← Central identity SSO (Next.js 16, Supabase, id.zuiio.com)
-│   ├── website/         ← Company website (Next.js 16, Tailwind v4)
 │   ├── agent-gateway/   ← Multi-tenant AI agent gateway (Telegram bots)
 │   ├── onoo/            ← Basketball stats tracker (Next.js 16, Supabase)
 │   ├── tamga/           ← Horse management (Flutter)
-│   ├── tumurch/         ← Tumurch gym platform (submodule)
+│   ├── tumurch-rn/      ← Tumurch gym platform (standalone repo)
 │   ├── zim/             ← App
 │   ├── zerbu/           ← App
 │   └── ...              ← Other apps and submodules
+│   └── archive/         ← Archived apps (zer, tolom, website, sms-pay, tumurch-rn, …)
 ├── packages/            ← 16 shared @zuiio/* packages
 │   ├── ai-agent/        ← LLM client, tool-calling loop, provider abstraction
 │   ├── auth/            ← SSO federation (startZuiioSso, exchangeCode)
@@ -60,7 +60,6 @@ pnpm test                # Run tests (packages with vitest)
 
 ```bash
 pnpm dev:zuiio-id        # Central SSO (http://localhost:3000)
-pnpm dev:website         # Company site
 pnpm dev:agent-gateway   # AI agent gateway
 ```
 
@@ -68,7 +67,6 @@ pnpm dev:agent-gateway   # AI agent gateway
 
 ```bash
 pnpm build:zuiio-id      # Central SSO
-pnpm build:website       # Company site
 ```
 
 ## Design system

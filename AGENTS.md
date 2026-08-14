@@ -66,7 +66,7 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 - Barrel file imports (`export *`) force Next.js to analyze entire packages — use named imports
 
 ```bash
-pnpm --filter website build          # Build one app
+pnpm --filter zuiio-id build        # Build one app
 pnpm check                       # Typecheck + lint in parallel
 pnpm turbo run build --filter='./apps/*' --filter='./packages/*'  # CI full build
 ```

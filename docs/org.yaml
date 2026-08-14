@@ -1,7 +1,7 @@
 # Zuiio — Organization & Product Catalog
 #
 # Single source of truth for company-level info and every product.
-# The website (apps/website) and any future apps reference this for canonical product data.
+# The company website (standalone repo themuuln/website) and apps reference this for canonical product data.
 # Keep this file updated when products launch, rebrand, or sunset.
 
 company:

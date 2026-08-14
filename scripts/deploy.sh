@@ -42,13 +42,11 @@ APP_IDS=(
     zer
     tolom
     onoo
-    website
     agent-gateway
     zuiio-id
     zim
     zatly
     tamga-web
-    sms-pay
 )
 
 # Vercel profile name (maps to pass token path and Vercel account)
@@ -57,9 +55,7 @@ APP_PROFILES=(
     tolom
     zerone
     zerone
-    zerone
     themuuln6
-    zerone
     zerone
     zerone
     zerone
@@ -70,13 +66,11 @@ APP_FILTERS=(
     zer
     tolom
     onoo
-    website
     agent-gateway
     zuiio-id
     zim
     zatly
     tamga-web
-    sms-pay
 )
 
 # Author email for Vercel Hobby plan compatibility
@@ -85,9 +79,7 @@ APP_EMAILS=(
     "themuln.official@gmail.com"
     "zerone.offical@gmail.com"
     "zerone.offical@gmail.com"
-    "zerone.offical@gmail.com"
     "themuuln6@gmail.com"
-    "zerone.offical@gmail.com"
     "zerone.offical@gmail.com"
     "zerone.offical@gmail.com"
     "zerone.offical@gmail.com"
@@ -98,10 +90,8 @@ APP_PROJECT_IDS=(
     "prj_D2vMKjhrj5nQ6Ex6oMUARbvxGr5C"
     "prj_pz6FvapyAy8WnhF3CXMtl1EqnH7c"
     ""
-    "prj_gdxnvsEsr2yjkwp4azgtPIcdA0Ua"
     "prj_VYHkd4rkcpzpeCT9qTBI0w1OC45A"
     "prj_Vf4hYAx98gma0SueNyu8ho8mgdH4"
-    ""
     ""
     ""
     ""
@@ -113,9 +103,7 @@ APP_ORG_IDS=(
     "team_lfXQ2XNXmQfT3lCmPYA0t8wA"
     ""
     "team_gpvntVuvgulKYbPElyfplj50"
-    "team_gpvntVuvgulKYbPElyfplj50"
     "team_FNCiKgaJAzyWNHy6jLFM0wRR"
-    ""
     ""
     ""
     ""

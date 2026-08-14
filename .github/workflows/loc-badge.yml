@@ -1,7 +1,7 @@
 name: LOC Badge
 
-# Regenerates apps/website/public/loc.json (shields.io endpoint badge) + loc-projects.json
-# and commits them. The website deploy (deploy.yml) serves them at https://zuiiotech.com/loc.json
+# Regenerates apps/archive/website/public/loc.json (shields.io endpoint badge) + loc-projects.json
+# and commits them. The website (standalone repo) serves them at https://zuiiotech.com/loc.json
 # so the badge URL never changes even as the number grows.
 #
 # Badge usage: https://img.shields.io/endpoint?url=https%3A%2F%2Fzuiiotech.com%2Floc.json
@@ -15,8 +15,8 @@ on:
     branches: [main]
     # Ignore our own output so the badge commit does not re-trigger this workflow.
     paths-ignore:
-      - "apps/website/public/loc.json"
-      - "apps/website/public/loc-projects.json"
+      - "apps/archive/website/public/loc.json"
+      - "apps/archive/website/public/loc-projects.json"
       - "**.md"
       - "docs/**"
   schedule:
@@ -57,12 +57,12 @@ jobs:
 
       - name: Commit badge if changed
         run: |
-          if git diff --quiet -- apps/website/public/loc.json apps/website/public/loc-projects.json; then
+          if git diff --quiet -- apps/archive/website/public/loc.json apps/archive/website/public/loc-projects.json; then
             echo "Badge unchanged — nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/website/public/loc.json apps/website/public/loc-projects.json
+          git add apps/archive/website/public/loc.json apps/archive/website/public/loc-projects.json
           git commit -m "chore(website): update LOC badge"
           git push

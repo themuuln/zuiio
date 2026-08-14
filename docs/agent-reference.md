@@ -16,10 +16,10 @@ supabase stop                       # When done
 
 ### Working on an app
 - **Zuiio ID** → `apps/zuiio-id/AGENTS.md`
-- **Zer** → `apps/zer/AGENTS.md`
-- **Tolom** → `apps/tolom/AGENTS.md`
+- **Zer** → `apps/archive/zer/AGENTS.md` (standalone repo `themuuln/zer`)
+- **Tolom** → `apps/archive/tolom/AGENTS.md` (standalone repo `themuuln/tolom`)
 - **Agent Gateway** → `apps/agent-gateway/AGENTS.md`
-- **Website** → `apps/website/AGENTS.md`
+- **Website** → `apps/archive/website/AGENTS.md` (standalone repo `themuuln/website`)
 - **Onoo** → `apps/onoo/AGENTS.md`
 - **Tamga** → `apps/tamga/AGENTS.md`
 - **Tumurch** → `apps/tumurch/AGENTS.md`
@@ -30,7 +30,7 @@ supabase stop                       # When done
 - **Tolom Mobile** → `apps/tolom-mobile/AGENTS.md`
 - **Tamga Web** → `apps/tamga-web/AGENTS.md`
 - **Zraf Web** → `apps/zraf-web/AGENTS.md`
-- **Tumurch RN** → `apps/tumurch-rn/AGENTS.md`
+- **Tumurch RN** → `apps/archive/tumurch-rn/AGENTS.md` (standalone repo `themuuln/tumurch-rn`)
 
 ### Working on a package
 - **@zuiio/core** → `packages/core/AGENTS.md`

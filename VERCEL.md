@@ -10,7 +10,6 @@ Each Vercel project points to `themuuln/zuiio.git` with a Root Directory:
 
 | App | Root Directory | Notes |
 |-----|---------------|-------|
-| website | `apps/website` | Company site (no env vars, fully static) |
 | zuiio-id | `apps/zuiio-id` | Central SSO (Supabase) |
 | agent-gateway | `apps/agent-gateway` | Telegram bot (has vercel.json) |
 | onoo | `apps/onoo` | Basketball stats (Supabase) |
@@ -30,6 +29,9 @@ Some apps deploy from their own repo:
 | zer | `themuuln/zer` | SMB ERP |
 | tolom | `themuuln/tolom` | Auto repair management |
 | tumurch | `themuuln/tumurch` | Gym platform |
+| website | `themuuln/website` | Company site (no env vars, fully static) |
+| sms-pay | `themuuln/sms-pay` | SMS payment |
+| tumurch-rn | `themuuln/tumurch-rn` | Gym platform RN app |
 
 ### Not on Vercel
 
@@ -44,7 +46,6 @@ Use these from the monorepo root:
 
 ```bash
 # Run a specific app
-pnpm dev:website
 pnpm dev:zuiio-id
 pnpm dev:agent-gateway
 

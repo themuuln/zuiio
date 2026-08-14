@@ -16,7 +16,6 @@ on:
         type: choice
         options:
           - ""
-          - website
           - agent-gateway
           - zuiio-id
 
@@ -28,7 +27,6 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      website: ${{ steps.filter.outputs.website }}
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
       shared: ${{ steps.filter.outputs.shared }}
@@ -38,8 +36,6 @@ jobs:
         id: filter
         with:
           filters: |
-            website:
-              - 'apps/website/**'
             agent-gateway:
               - 'apps/agent-gateway/**'
             zuiio-id:
@@ -65,7 +61,6 @@ jobs:
         with:
           submodules: false
           sparse-checkout: |
-            apps/website
             apps/agent-gateway
             apps/zuiio-id
             packages
@@ -91,16 +86,11 @@ jobs:
       - name: Typecheck deploying apps
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
-          WEBSITE: ${{ needs.detect-changes.outputs.website }}
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
           ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
         run: |
           # Only typecheck apps that will actually deploy (matching deploy-* job conditions)
           FAILED=""
-          if [ "$WEBSITE" = "true" ] || [ "$SHARED" = "true" ]; then
-            echo "🔍 Typechecking website..."
-            pnpm --filter website exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
-          fi
           if [ "$AGENT_GW" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
             pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"
@@ -119,22 +109,7 @@ jobs:
   # ─── Deploy only changed apps ───
   # NOTE: zer and tolom moved to standalone repos (themuuln/zer, themuuln/tolom)
   # and deploy from their own CI. apps/zer + apps/tolom archived at apps/archive/ (2026-08-14).
-
-  deploy-website:
-    needs: [detect-changes, typecheck]
-    if: |
-      always() && !cancelled() &&
-      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'website' || needs.detect-changes.outputs.website == 'true' || needs.detect-changes.outputs.shared == 'true')
-    uses: ./.github/workflows/_deploy-vercel.yml
-    with:
-      app: website
-      turbo-filter: website
-      author-email: "zerone.offical@gmail.com"
-    secrets:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_WEBSITE }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_WEBSITE }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEBSITE }}
+  # website, sms-pay, tumurch-rn likewise moved to standalone repos; source archived (2026-08-14).
 
   deploy-agent-gateway:
     needs: [detect-changes, typecheck]

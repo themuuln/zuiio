@@ -33,7 +33,7 @@
     "turbo": "^2.10.4"
   },
   "lint-staged": {
-    "**/*.{ts,tsx}": [
+    "**/*.{ts,tsx} !apps/archive/**": [
       "biome check --write --no-errors-on-unmatched"
     ]
   }

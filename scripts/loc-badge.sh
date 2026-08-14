@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # loc-badge.sh — generate shields.io endpoint badge + per-project LOC stats.
 #
-# Outputs (committed to the website so Vercel serves them publicly):
-#   apps/website/public/loc.json          — shields.io endpoint badge payload
-#   apps/website/public/loc-projects.json — per-project breakdown (for future pages)
+# Outputs (committed to the archived website so the badge URL stays stable):
+#   apps/archive/website/public/loc.json          — shields.io endpoint badge payload
+#   apps/archive/website/public/loc-projects.json — per-project breakdown (for future pages)
 #
 # Requires: tokei (brew install tokei; CI installs via cargo-quickinstall).
 # Counts code lines only, excluding JSON data files (consistent with repo convention).
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT_DIR="$ROOT/apps/website/public"
+OUT_DIR="$ROOT/apps/archive/website/public"
 mkdir -p "$OUT_DIR"
 
 if ! command -v tokei >/dev/null 2>&1; then
