@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { AffiliateTracker } from "@/components/storefront/affiliate-tracker";
 import { StorefrontAiChatLazy } from "@/components/storefront/ai-chat/storefront-ai-chat-lazy";
 import { StorefrontCartProvider } from "@/components/storefront/cart-context";
 import { StorefrontBaseProvider } from "@/components/storefront/storefront-base-provider";
@@ -145,7 +144,6 @@ export default async function StorefrontLayout({
         </StorefrontCartProvider>
       </StorefrontBaseProvider>
       {org && <StorefrontAiChatLazy slug={slug} orgName={orgName} />}
-      <AffiliateTracker slug={slug} />
     </>
   );
 }
