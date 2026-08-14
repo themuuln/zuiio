@@ -107,6 +107,25 @@ describe("createClient", () => {
     expect(result).toEqual([]);
   });
 
+  it("falls back to an empty cookie store when cookies() rejects during prerendering", async () => {
+    mockGetSupabaseEnv.mockReturnValue({
+      url: "https://test.supabase.co",
+      anonKey: "test-anon-key",
+    });
+    mockCookies.mockRejectedValueOnce(
+      new Error("During prerendering, cookies() rejects when the prerender terminates"),
+    );
+
+    const { createClient } = await import("../server");
+    // Must NOT throw — React.cache would memoize the rejected promise and
+    // poison every later request on this module.
+    const client = await createClient();
+
+    expect(client).toBeDefined();
+    const cookiesConfig = mockCreateServerClient.mock.calls[0][2].cookies;
+    expect(cookiesConfig.getAll()).toEqual([]);
+  });
+
   it("passes cookies.setAll handler that delegates to cookieStore.set", async () => {
     mockGetSupabaseEnv.mockReturnValue({
       url: "https://test.supabase.co",

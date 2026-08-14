@@ -4,7 +4,7 @@
 
 The core tables (`telegram_links`, `one_time_tokens`, `agent_sessions`) already exist and the Telegram integration
 is operational. However, the following objects from
-`apps/zer/supabase/migrations/20260706000000_agent_gateway_production.sql` have **not** been applied:
+`~/.workspace/zer/supabase/migrations/20260706000000_agent_gateway_production.sql` have **not** been applied:
 
 - `agent_daily_spend` table + `increment_daily_spend` function
 - `agent_audit_log` table
@@ -23,7 +23,7 @@ is operational. However, the following objects from
 4. Click **Run**
 
 ### Migration File
-- Primary: `apps/zer/supabase/migrations/20260706000000_agent_gateway_production.sql`
+- Primary: `~/.workspace/zer/supabase/migrations/20260706000000_agent_gateway_production.sql`
 - The migration is **idempotent** — safe to run multiple times (all `IF NOT EXISTS` / `DROP ... IF EXISTS`)
 
 ## Why Direct DB Connection Fails

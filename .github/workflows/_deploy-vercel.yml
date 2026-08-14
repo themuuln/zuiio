@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       turbo-filter:
-        description: "Turbo filter name (e.g. zer, zuiio-id)"
+        description: "Turbo filter name (e.g. website, zuiio-id)"
         required: true
         type: string
       author-email:

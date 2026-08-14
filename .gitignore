@@ -100,8 +100,6 @@ package-lock.json
 
 # Archived apps — no longer in active workspace
 archive/apps/
-/apps/zer/.turbo/turbo-build.log
-apps/tolom-worktree-fix/
 
 # Supabase CLI local runtime state (project refs, pooler URLs — machine-local)
 supabase/.temp/

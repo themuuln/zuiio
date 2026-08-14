@@ -10,8 +10,6 @@ consumer apps under one codebase. All apps share `@zuiio/*` packages via `worksp
 ```
 zuiio/
 ├── apps/
-│   ├── zer/              SMB ERP/POS — Next.js 16, Supabase, shadcn/ui
-│   ├── tolom/            Auto repair management — Next.js 16, offline-first
 │   ├── agent-gateway/    Telegram AI bot — Next.js 16, Cloudflare
 │   ├── website/          Company marketing site — Next.js 16, i18n (mn/en)
 │   └── ...               Experimental apps (zerbu, tumurch, tamga-web, zoa, etc.)
@@ -59,20 +57,13 @@ Key relationships:
 
 ## App → Package Map
 
-| Package | zer | tolom | agent-gw | website |
-|---------|:---:|:-----:|:--------:|:-------:|
-| `@zuiio/core` | ✓ | ✓ | ✓ | — |
-| `@zuiio/hooks` | ✓ | ✓ | — | — |
-| `@zuiio/query` | ✓ | ✓ | — | — |
-| `@zuiio/realtime` | ✓ | ✓ | — | — |
-| `@zuiio/offline` | — | ✓ | — | — |
-| `@zuiio/supabase` | — | ✓ | — | — |
-| `@zuiio/ui` | — | ✓ | — | — |
-| `@zuiio/capture` | ✓ | ✓ | ✓ | — |
-| `@zuiio/branding` | ✓ | — | — | — |
-| `@zuiio/export` | ✓ | — | — | — |
-| `@zuiio/hr` | ✓ | — | — | — |
-| `@zuiio/ai-agent` | ✓ | — | ✓ | — |
+zer and tolom moved to standalone repos (`themuuln/zer`, `themuuln/tolom`) and consume `@zuiio/*` from npm (0.1.x).
+
+| Package | agent-gw | website |
+|---------|:--------:|:-------:|
+| `@zuiio/core` | ✓ | — |
+| `@zuiio/capture` | ✓ | — |
+| `@zuiio/ai-agent` | ✓ | — |
 
 `website` is standalone — no `@zuiio/*` dependencies. Uses only `next-intl` and Tailwind.
 

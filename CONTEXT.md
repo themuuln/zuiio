@@ -1,7 +1,7 @@
 # Zuiio — Ubiquitous Language / Domain Glossary
 
 Source of truth for shared terminology across the Zuiio monorepo.
-App-level CONTEXT.md files refine this glossary for their domain (e.g. `apps/tolom/CONTEXT.md`).
+App-level CONTEXT.md files refine this glossary for their domain (e.g. `~/.workspace/tolom/CONTEXT.md`).
 When app and root definitions conflict, the app-level file wins for its own scope.
 
 ## Core Concepts

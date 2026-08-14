@@ -9,8 +9,6 @@
     "(?i).*test.*",
     "(?i).*spec.*",
     "(?i).*__tests__.*",
-    "apps/zer/src/test/",
-    "apps/tolom/src/test/",
   ]
 
   # Example values in documentation

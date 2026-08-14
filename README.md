@@ -19,8 +19,6 @@ zuiio/
 ├── apps/
 │   ├── zuiio-id/        ← Central identity SSO (Next.js 16, Supabase, id.zuiio.com)
 │   ├── website/         ← Company website (Next.js 16, Tailwind v4)
-│   ├── zer/             ← SMB ERP (Next.js 16, Supabase) [submodule]
-│   ├── tolom/           ← Auto repair management (Next.js 16, Supabase) [submodule]
 │   ├── agent-gateway/   ← Multi-tenant AI agent gateway (Telegram bots)
 │   ├── onoo/            ← Basketball stats tracker (Next.js 16, Supabase)
 │   ├── tamga/           ← Horse management (Flutter)
@@ -63,8 +61,6 @@ pnpm test                # Run tests (packages with vitest)
 ```bash
 pnpm dev:zuiio-id        # Central SSO (http://localhost:3000)
 pnpm dev:website         # Company site
-pnpm dev:zer             # SMB ERP
-pnpm dev:tolom           # Auto repair management
 pnpm dev:agent-gateway   # AI agent gateway
 ```
 
@@ -73,8 +69,6 @@ pnpm dev:agent-gateway   # AI agent gateway
 ```bash
 pnpm build:zuiio-id      # Central SSO
 pnpm build:website       # Company site
-pnpm build:zer           # SMB ERP
-pnpm build:tolom         # Auto repair management
 ```
 
 ## Design system

@@ -31,73 +31,6 @@ jobs:
   fastgate:
     uses: ./.github/workflows/verify.yml
 
-  # ─── T2 Serial: Integration (Supabase) ───
-  integration:
-    needs: fastgate
-    if: always() && !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: supabase/setup-cli@v3.0.0
-        with:
-          version: latest
-      - name: Start Supabase local stack
-        run: supabase start --exclude studio,imgproxy,inbucket,vector,logflare,edge-runtime,meta
-      - uses: pnpm/action-setup@v6.0.10
-      - run: corepack enable
-      - uses: actions/setup-node@v7.0.0
-        with: { node-version: "24", cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - name: Run integration tests
-        run: pnpm --filter zer exec vitest run --config vitest.integration.config.ts
-        env:
-          SUPABASE_URL: http://localhost:54321
-  e2e:
-    needs: fastgate
-    if: always() && !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with: { fetch-depth: 2 }
-      - uses: pnpm/action-setup@v6.0.10
-      - run: corepack enable
-      - uses: actions/setup-node@v7.0.0
-        with: { node-version: "24", cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter zer exec playwright install --with-deps
-      - name: Build app
-        run: pnpm --filter zer build
-      - name: Run E2E tests
-        run: pnpm --filter zer exec playwright test
-        continue-on-error: true
-      - name: Run a11y scan (axe-core)
-        run: pnpm --filter zer exec playwright test --grep @a11y
-        continue-on-error: true
-      - name: Upload test artifacts
-        if: always()
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: test-results-${{ github.sha }}
-          path: apps/*/test-results/
-          retention-days: 3
-
-  # ─── T2 Serial: Visual ───
-  visual:
-    needs: fastgate
-    if: always() && !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: pnpm/action-setup@v6.0.10
-      - run: corepack enable
-      - uses: actions/setup-node@v7.0.0
-        with: { node-version: "24", cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter zer exec playwright install chromium
-      - name: Run visual regression tests
-        run: pnpm --filter zer exec playwright test --project=visual --grep @visual
-        continue-on-error: true
-
   # ─── T3 Parallel: Security ───
   security:
     needs: fastgate
@@ -144,51 +77,22 @@ jobs:
         run: pnpm licenses check
         continue-on-error: true
 
-  # ─── T3 Parallel: Performance ───
-  perf:
-    needs: fastgate
-    if: always() && !cancelled()
-    runs-on: ubuntu-latest
-    continue-on-error: ${{ github.event_name == 'pull_request' }}
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: pnpm/action-setup@v6.0.10
-      - run: corepack enable
-      - uses: actions/setup-node@v7.0.0
-        with: { node-version: "24", cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - name: Build for perf audit
-        run: pnpm --filter zer build
-      - name: Lighthouse CI
-        run: pnpm --filter zer exec lhci autorun
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        continue-on-error: true
-
-  # ─── T3 + T2 Aggregator Gate ───
+  # ─── Gate Aggregator ───
+  # NOTE: zer integration/e2e/visual/perf gates moved with zer to the
+  # standalone repo (themuuln/zer), which runs its own CI.
   gate-result:
     if: always() && !cancelled()
-    needs: [fastgate, integration, e2e, visual, security, license, perf]
+    needs: [fastgate, security, license]
     runs-on: ubuntu-latest
     steps:
       - name: Check gate results
         run: |
           echo "=== FullGate Results ==="
-          echo "FastGate:    ${{ needs.fastgate.result }}"
-          echo "Integration: ${{ needs.integration.result }}"
-          echo "E2E:         ${{ needs.e2e.result }}"
-          echo "Visual:      ${{ needs.visual.result }}"
-          echo "Security:    ${{ needs.security.result }}"
-          echo "License:     ${{ needs.license.result }}"
-          echo "Perf:        ${{ needs.perf.result }}"
-          echo ""
-          # T2 failures block PR merge
-          T2_FAILED=false
-          if [ "${{ needs.integration.result }}" = "failure" ]; then T2_FAILED=true; fi
-          if [ "${{ needs.e2e.result }}" = "failure" ]; then T2_FAILED=true; fi
-          if [ "${{ needs.visual.result }}" = "failure" ]; then T2_FAILED=true; fi
-          if [ "$T2_FAILED" = "true" ]; then
-            echo "❌ T2 gates failed — PR blocked"
+          echo "FastGate: ${{ needs.fastgate.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "License:  ${{ needs.license.result }}"
+          if [ "${{ needs.fastgate.result }}" = "failure" ]; then
+            echo "❌ FastGate failed — PR blocked"
             exit 1
           fi
           echo "✅ All gates passed — PR can merge"

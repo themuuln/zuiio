@@ -44,8 +44,6 @@ Use these from the monorepo root:
 
 ```bash
 # Run a specific app
-pnpm dev:zer
-pnpm dev:tolom
 pnpm dev:website
 pnpm dev:zuiio-id
 pnpm dev:agent-gateway

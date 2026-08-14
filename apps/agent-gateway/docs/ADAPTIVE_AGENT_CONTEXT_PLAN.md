@@ -177,7 +177,7 @@ Context management belongs in existing authenticated product settings rather tha
 
 ### Zer
 
-Under `apps/zer/src/app/(dashboard)/settings/**`:
+Under `~/.workspace/zer/src/app/(dashboard)/settings/**` (standalone repo `themuuln/zer`):
 
 - Add an **Agent Context** settings section.
 - Require the existing `settings.manage` permission in every mutation.

@@ -13,7 +13,7 @@ blocker.
 ### 1. Deploy both apps (needs owner approval)
 
 - `apps/agent-gateway` → Vercel production (root dir `apps/agent-gateway`)
-- `apps/zer` → Vercel production
+- `zer` (standalone repo `themuuln/zer`) → Vercel production
 
 ### 2. Environment variables
 

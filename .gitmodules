@@ -22,9 +22,3 @@
 [submodule "apps/zer-app"]
 	path = apps/zer-app
 	url = https://github.com/themuuln/zer-app.git
-[submodule "apps/tolom"]
-	path = apps/tolom
-	url = https://github.com/themuuln/tolom.git
-[submodule "apps/zer"]
-	path = apps/zer
-	url = https://github.com/themuuln/zer.git

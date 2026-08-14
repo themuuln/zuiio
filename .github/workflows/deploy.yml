@@ -118,7 +118,7 @@ jobs:
 
   # ─── Deploy only changed apps ───
   # NOTE: zer and tolom moved to standalone repos (themuuln/zer, themuuln/tolom)
-  # and deploy from their own CI. Remove apps/zer + apps/tolom from this repo.
+  # and deploy from their own CI. apps/zer + apps/tolom archived at apps/archive/ (2026-08-14).
 
   deploy-website:
     needs: [detect-changes, typecheck]

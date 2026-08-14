@@ -32,7 +32,7 @@ Always read `docs/vision.md` first for significant tasks — it is the single so
 
 **Before declaring any change complete, you MUST run `npm run verify`.**
 
-**Implementation loop (before that):** affected-only tests — `pnpm test:changed` from the root (`turbo run test --filter='...[HEAD]'`), or `pnpm --filter <app> test:changed` where an app has it (tolom). Never a full `verify`/`test` mid-implementation. Heavy gates are lock-wrapped (`scripts/with-test-lock.sh`): one monorepo gate at a time.
+**Implementation loop (before that):** affected-only tests — `pnpm test:changed` from the root (`turbo run test --filter='...[HEAD]'`), or `pnpm --filter <app> test:changed` where an app has it. Never a full `verify`/`test` mid-implementation. Heavy gates are lock-wrapped (`scripts/with-test-lock.sh`): one monorepo gate at a time.
 
 This runs typecheck → lint → unit tests with coverage gating (FastGate).
 If any gate fails, diagnose → fix → re-run verify (max 3 attempts).
@@ -57,7 +57,7 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 ## Build & Performance
 
 - **pnpm ONLY** — never suggest Bun or npm
-- **Never run `pnpm build`** (builds all packages — slow). Always use filtered builds: `pnpm build:zer`, `pnpm build:tolom`
+- **Never run `pnpm build`** (builds all packages — slow). Always use filtered builds: `pnpm --filter <app> build` (or `pnpm turbo run build --filter=<app>`)
 - **turbo.json `env` list**: only `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`. Adding unrelated vars invalidates cache for ALL packages — the #1 cause of slow rebuilds
 - Server-only vars (POSTGRES_*, SMTP_*, SUPABASE_*) go in `passThroughEnv`, not `env`
 - `typecheck` and `lint` run in parallel — use `pnpm check`
@@ -66,7 +66,7 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 - Barrel file imports (`export *`) force Next.js to analyze entire packages — use named imports
 
 ```bash
-pnpm build:zer                   # Build one app
+pnpm --filter website build          # Build one app
 pnpm check                       # Typecheck + lint in parallel
 pnpm turbo run build --filter='./apps/*' --filter='./packages/*'  # CI full build
 ```
@@ -94,7 +94,7 @@ Always fetch current docs — training data is stale. Use `npx ctx7@latest docs 
 
 ### ✅ Always
 - Read the nearest `AGENTS.md` and source/tests being changed
-- Use pnpm and app-scoped commands (`pnpm build:zer`, not `pnpm build`)
+- Use pnpm and app-scoped commands (`pnpm --filter <app> build`, not `pnpm build`)
 - Preserve tenant isolation, RLS, and authorization boundaries
 - Run diagnostics on changed files, then targeted tests
 - Runtime-check every user-visible change
