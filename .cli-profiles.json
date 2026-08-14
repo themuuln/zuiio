@@ -33,7 +33,6 @@
     "zer":            { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
     "zer-app":        { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
     "agent-gateway":  { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
-    "zuiio-id":       { "vercel": "themuuln6", "supabase_profile": "zerone" },
     "zim":           { "vercel": "zerone" },
     "zill":          { "vercel": "zerone" },
     "zerbu":         { "vercel": "zerone" },

@@ -277,7 +277,7 @@ open https://vercel.com/zer-erp/~/usage
 ls apps/onoo/src/middleware.ts apps/tolom/src/middleware.ts
 
 # 2. Check force-dynamic usage
-grep -rn "force-dynamic" apps/onoo/src apps/tolom/src apps/zuiio-id/src
+grep -rn "force-dynamic" apps/onoo/src apps/tolom/src
 
 # 3. Check cacheComponents in next.config
 grep "cacheComponents" apps/*/next.config.ts

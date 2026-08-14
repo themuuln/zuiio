@@ -66,7 +66,7 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 - Barrel file imports (`export *`) force Next.js to analyze entire packages — use named imports
 
 ```bash
-pnpm --filter zuiio-id build        # Build one app
+pnpm --filter agent-gateway build        # Build one app
 pnpm check                       # Typecheck + lint in parallel
 pnpm turbo run build --filter='./apps/*' --filter='./packages/*'  # CI full build
 ```
@@ -150,7 +150,6 @@ This monorepo uses multiple Supabase and Vercel accounts. **Do NOT use plain `ve
 | tolom, tolom-mobile | `v-tolom` | `themuuln4` |
 | tamga, tamga-web | `v` (zerone) | `themuuln1` (project `xwgcdqpunsuuxbyqbqik`) |
 | zatly | self-hosted | `themuuln0` (project `ijeuxmgktfqtukpmnenh`) |
-| zuiio-id | `v-themuuln6` | `themuuln6` (ref unconfirmed) |
 
 Profiles: `yesprice`, `themuuln0`, `themuuln1`, `themuuln2`, `themuuln3`, `themuuln4`, `themuuln11`. Supabase account tokens live in pass `zuiio/supabase/<name>` (agent-pass readable — allowlist is `zuiio/*`); `supa` profiles are registered via `supa login <name>`.
 

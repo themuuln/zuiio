@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { ThemeProvider } from "@/app/theme-provider";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function AuthLayout({
         <main className="w-full max-w-sm">
           {/* Zuiio wordmark */}
           <div className="mb-8 flex animate-fade-in justify-center">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center gap-2 text-foreground transition-opacity hover:opacity-80"
               aria-label="Zuiio"
@@ -33,7 +34,7 @@ export default function AuthLayout({
               <span className="text-xl font-semibold tracking-tight">
                 Zuiio
               </span>
-            </a>
+            </Link>
           </div>
           {children}
         </main>

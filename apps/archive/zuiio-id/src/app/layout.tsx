@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
-import { Toaster } from "sonner";
 import "./globals.css";
 import { ThemeToggle } from "@/app/(auth)/theme-toggle";
 import { ThemeProvider } from "@/app/theme-provider";
-import { LinkedAccountsNotification } from "@/components/linked-accounts-notification";
+import { LazyProviders } from "@/components/lazy-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+// Deferred: Geist Mono is only used by MFA/account screens (OTP inputs,
+// secret codes). Downloading it lazily keeps ~44KB of fonts off the public
+// login/signup/forgot-password pages. Same font, no visual change.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -49,9 +52,8 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <ThemeToggle />
-          <LinkedAccountsNotification />
         </ThemeProvider>
-        <Toaster richColors position="top-center" />
+        <LazyProviders />
       </body>
     </html>
   );

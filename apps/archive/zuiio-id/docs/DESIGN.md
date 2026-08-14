@@ -181,6 +181,14 @@ None. The flat model is deliberate.
 - Zuiio logo wordmark above page heading (32px SVG icon + "Zuiio" text)
 - Logo links to home (/), has hover opacity transition
 
+### Portal Home (Холбогдсон бүтээгдэхүүн)
+
+- Avatar initials: neutral (`bg-muted` + `border-border`) — never teal. Accent scarcity applies: teal stays reserved for submit buttons and the logo.
+- Product links: flat bordered cards with neutral icon chips (`bg-muted`). No per-product semantic tints (success/info) — all products are equal at the door; their own apps carry brand color. Hover: `border-foreground/20` + `bg-muted`.
+- Link affordance: right-aligned chevron (`text-muted-foreground`), slides right on hover (`group-hover:translate-x-0.5`, `text-foreground`).
+- Identity info (username, email): `text-foreground/70` — essential information; `text-muted-foreground` (4.14:1) fails WCAG AA.
+- Entrance: single staggered fade-in via `.stagger-item` with `--i` (0–4), honoring `prefers-reduced-motion`.
+
 ## 6. Do's and Don'ts
 
 ### Do:

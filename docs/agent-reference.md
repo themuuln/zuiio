@@ -15,7 +15,7 @@ supabase stop                       # When done
 ---
 
 ### Working on an app
-- **Zuiio ID** → `apps/zuiio-id/AGENTS.md`
+- **Zuiio ID** → `apps/archive/zuiio-id/AGENTS.md` (standalone repo `themuuln/zuiio-id`)
 - **Zer** → `apps/archive/zer/AGENTS.md` (standalone repo `themuuln/zer`)
 - **Tolom** → `apps/archive/tolom/AGENTS.md` (standalone repo `themuuln/tolom`)
 - **Agent Gateway** → `apps/agent-gateway/AGENTS.md`

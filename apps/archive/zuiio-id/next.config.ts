@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // One reusable App Shell per route, cached per session on the client —
+  // auth-page navigation (login ↔ signup ↔ forgot-password) is instant.
+  // Requires cacheComponents. PPR safety contract: prerender-safe public
+  // client + cookies() fallback shipped in src/lib/supabase/.
+  partialPrefetching: true,
   // typedRoutes: true,   /* enable once route type inference stabilizes */
   reactCompiler: true,
   cacheLife: {
@@ -13,7 +18,15 @@ const nextConfig: NextConfig = {
   experimental: {
     useTypeScriptCli: true,
     turbopackFileSystemCacheForBuild: true,
-    optimizePackageImports: ["date-fns"],
+    // Client-side cache: repeated navigations and back/forward are instant.
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    // Inline imported CSS into HTML — no render-blocking CSS request on first load.
+    inlineCss: true,
+    // Barrel packages: rewrite named imports to direct subpath imports.
+    optimizePackageImports: ["lucide-react"],
   },
   allowedDevOrigins: ["127.0.0.1"],
   images: {

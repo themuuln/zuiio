@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
 import {
   EyeIcon,
   EyeSlashIcon,
   FingerprintSimpleIcon,
 } from "@/components/icons";
+import { loadAppleSdk } from "@/lib/apple-sdk";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
 import {
   getPasskeyErrorMessage,
@@ -185,18 +185,29 @@ export function LoginForm({
       return;
     }
 
-    if (!window.AppleID?.auth) {
+    setOauthLoading("apple");
+    setOauthError(null);
+
+    // Fetch the Apple SDK only on demand — not on page load.
+    try {
+      await loadAppleSdk();
+    } catch {
       setOauthError(
         "Apple нэвтрэх үйлчилгээ ачаалаагүй байна. Дахин оролдоно уу.",
       );
       return;
     }
 
-    setOauthLoading("apple");
-    setOauthError(null);
+    const appleAuth = window.AppleID?.auth;
+    if (!appleAuth) {
+      setOauthError(
+        "Apple нэвтрэх үйлчилгээ ачаалаагүй байна. Дахин оролдоно уу.",
+      );
+      return;
+    }
 
     try {
-      window.AppleID.auth.init({
+      appleAuth.init({
         clientId,
         scope: "name email",
         redirectURI: window.location.origin,
@@ -204,7 +215,7 @@ export function LoginForm({
         usePopup: true,
       });
 
-      const data = await window.AppleID.auth.signIn();
+      const data = await appleAuth.signIn();
 
       const result = await signInWithApple({
         idToken: data.authorization.id_token,
@@ -243,198 +254,190 @@ export function LoginForm({
 
   /* ── Render ───────────────────────────────────────────────── */
   return (
-    <>
-      {/* Load Apple Sign In JS SDK */}
-      <Script
-        src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
-        strategy="afterInteractive"
-      />
-
-      <div className="flex animate-fade-in flex-col gap-6">
-        <div className="flex flex-col gap-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Нэвтрэх
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Zuiio бүтээгдэхүнд нэвтрэхийн тулд нэвтэрнэ үү
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <SignInMethodButton
-            provider="passkey"
-            label="Passkey ашиглан нэвтрэх"
-            onClick={() => void handlePasskeySignIn()}
-            loading={passkeyLoading}
-            isLastUsed={lastProvider === "passkey"}
-          />
-          <SignInMethodButton
-            provider="google"
-            label="Google-ээр нэвтрэх"
-            onClick={handleGoogleSignIn}
-            loading={oauthLoading === "google"}
-            isLastUsed={lastProvider === "google"}
-          />
-          <SignInMethodButton
-            provider="apple"
-            label="Apple-аар нэвтрэх"
-            onClick={handleAppleSignIn}
-            loading={oauthLoading === "apple"}
-            isLastUsed={lastProvider === "apple"}
-          />
-        </div>
-        <p className="text-center text-xs text-muted-foreground">
-          Төхөөрөмжийн нууц үггүйгээр нэвтрэх
-        </p>
-
-        {oauthError && (
-          <div
-            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {oauthError}
-          </div>
-        )}
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
-              эсвэл
-            </span>
-          </div>
-        </div>
-
-        <form ref={formRef} action={formAction} className="flex flex-col gap-4">
-          {redirectTo && (
-            <input type="hidden" name="redirectTo" value={redirectTo} />
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="identifier"
-              className="text-sm font-medium text-foreground"
-            >
-              Имэйл эсвэл нэр
-            </label>
-            <input
-              id="identifier"
-              name="identifier"
-              type="text"
-              autoComplete="username email"
-              required
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              placeholder="name@example.com эсвэл нэр"
-            />
-            {state?.fieldErrors?.identifier && (
-              <p className="text-xs text-destructive">
-                {state.fieldErrors.identifier[0]}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-foreground"
-              >
-                Нууц үг
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
-              >
-                Нууц үг мартсан?
-              </Link>
-            </div>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
-                tabIndex={-1}
-                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon size={16} />
-                ) : (
-                  <EyeIcon size={16} />
-                )}
-              </button>
-            </div>
-            {state?.fieldErrors?.password && (
-              <p className="text-xs text-destructive">
-                {state.fieldErrors.password[0]}
-              </p>
-            )}
-          </div>
-
-          {state?.formError && (
-            <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {state.formError}
-            </div>
-          )}
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              name="remember"
-              className="h-4 w-4 rounded border-input bg-card text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            />
-            Намайг сана
-          </label>
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="active-scale flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isPending && (
-              <svg
-                className="size-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            )}
-            {isPending ? "Нэвтэрч байна…" : "Нэвтрэх"}
-          </button>
-        </form>
-        <p className="text-center text-sm text-muted-foreground">
-          Бүртгэлгүй юу?{" "}
-          <Link
-            href="/signup"
-            className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
-          >
-            Бүртгүүлэх
-          </Link>
+    <div className="flex animate-fade-in flex-col gap-6">
+      <div className="flex flex-col gap-2 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Нэвтрэх
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Zuiio бүтээгдэхүнд нэвтрэхийн тулд нэвтэрнэ үү
         </p>
       </div>
-    </>
+
+      <div className="flex flex-col gap-3">
+        <SignInMethodButton
+          provider="passkey"
+          label="Passkey ашиглан нэвтрэх"
+          onClick={() => void handlePasskeySignIn()}
+          loading={passkeyLoading}
+          isLastUsed={lastProvider === "passkey"}
+        />
+        <SignInMethodButton
+          provider="google"
+          label="Google-ээр нэвтрэх"
+          onClick={handleGoogleSignIn}
+          loading={oauthLoading === "google"}
+          isLastUsed={lastProvider === "google"}
+        />
+        <SignInMethodButton
+          provider="apple"
+          label="Apple-аар нэвтрэх"
+          onClick={handleAppleSignIn}
+          loading={oauthLoading === "apple"}
+          isLastUsed={lastProvider === "apple"}
+        />
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Төхөөрөмжийн нууц үггүйгээр нэвтрэх
+      </p>
+
+      {oauthError && (
+        <div
+          className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {oauthError}
+        </div>
+      )}
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-card px-2 text-xs uppercase text-muted-foreground">
+            эсвэл
+          </span>
+        </div>
+      </div>
+
+      <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="identifier"
+            className="text-sm font-medium text-foreground"
+          >
+            Имэйл эсвэл нэр
+          </label>
+          <input
+            id="identifier"
+            name="identifier"
+            type="text"
+            autoComplete="username email"
+            required
+            className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            placeholder="name@example.com эсвэл нэр"
+          />
+          {state?.fieldErrors?.identifier && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.identifier[0]}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-foreground"
+            >
+              Нууц үг
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+            >
+              Нууц үг мартсан?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+              tabIndex={-1}
+              aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+            >
+              {showPassword ? (
+                <EyeSlashIcon size={16} />
+              ) : (
+                <EyeIcon size={16} />
+              )}
+            </button>
+          </div>
+          {state?.fieldErrors?.password && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.password[0]}
+            </p>
+          )}
+        </div>
+
+        {state?.formError && (
+          <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {state.formError}
+          </div>
+        )}
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="remember"
+            className="h-4 w-4 rounded border-input bg-card text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          />
+          Намайг сана
+        </label>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="active-scale flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isPending && (
+            <svg
+              className="size-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          )}
+          {isPending ? "Нэвтэрч байна…" : "Нэвтрэх"}
+        </button>
+      </form>
+      <p className="text-center text-sm text-muted-foreground">
+        Бүртгэлгүй юу?{" "}
+        <Link
+          href="/signup"
+          className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
+        >
+          Бүртгүүлэх
+        </Link>
+      </p>
+    </div>
   );
 }

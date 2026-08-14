@@ -17,7 +17,6 @@ on:
         options:
           - ""
           - agent-gateway
-          - zuiio-id
 
 permissions:
   contents: read
@@ -28,7 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
-      zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
       shared: ${{ steps.filter.outputs.shared }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,8 +36,6 @@ jobs:
           filters: |
             agent-gateway:
               - 'apps/agent-gateway/**'
-            zuiio-id:
-              - 'apps/zuiio-id/**'
             # Shared packages and root config affect ALL apps
             shared:
               - 'packages/**'
@@ -62,7 +58,6 @@ jobs:
           submodules: false
           sparse-checkout: |
             apps/agent-gateway
-            apps/zuiio-id
             packages
             config
             pnpm-lock.yaml
@@ -87,17 +82,12 @@ jobs:
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
-          ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
         run: |
           # Only typecheck apps that will actually deploy (matching deploy-* job conditions)
           FAILED=""
           if [ "$AGENT_GW" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
             pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"
-          fi
-          if [ "$ZUIIO_ID" = "true" ] || [ "$SHARED" = "true" ]; then
-            echo "🔍 Typechecking zuiio-id..."
-            pnpm --filter zuiio-id exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
           fi
           if [ -n "$FAILED" ]; then
             echo ""
@@ -107,9 +97,8 @@ jobs:
           echo "✅ All deploying apps passed typecheck"
 
   # ─── Deploy only changed apps ───
-  # NOTE: zer and tolom moved to standalone repos (themuuln/zer, themuuln/tolom)
-  # and deploy from their own CI. apps/zer + apps/tolom archived at apps/archive/ (2026-08-14).
-  # website, sms-pay, tumurch-rn likewise moved to standalone repos; source archived (2026-08-14).
+  # NOTE: zer, tolom, website, sms-pay, tumurch-rn, zuiio-id moved to standalone repos
+  # and deploy from their own CI. Source archived at apps/archive/ (2026-08-14).
 
   deploy-agent-gateway:
     needs: [detect-changes, typecheck]
@@ -126,19 +115,3 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_AGENT }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_AGENT }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_AGENT }}
-
-  deploy-zuiio-id:
-    needs: [detect-changes, typecheck]
-    if: |
-      always() && !cancelled() &&
-      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'zuiio-id' || needs.detect-changes.outputs['zuiio-id'] == 'true' || needs.detect-changes.outputs.shared == 'true')
-    uses: ./.github/workflows/_deploy-vercel.yml
-    with:
-      app: zuiio-id
-      turbo-filter: zuiio-id
-      author-email: "themuuln6@gmail.com"
-    secrets:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZUIIO_ID }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ZUIIO_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZUIIO_ID }}

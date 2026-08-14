@@ -4,7 +4,14 @@ import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
 
 export async function createClient() {
-  const cookieStore = await cookies();
+  // `cookies()` can throw outside a request scope (PPR shell prerender).
+  // Fall back to an empty store so the client stays usable sessionless.
+  let cookieStore: Awaited<ReturnType<typeof cookies>> | null = null;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    cookieStore = null;
+  }
   const { anonKey, url } = getSupabaseEnv();
 
   // Production cookies are host-only — each Supabase project keeps its own session.
@@ -13,6 +20,7 @@ export async function createClient() {
   return createServerClient(url, anonKey, {
     cookies: {
       getAll() {
+        if (!cookieStore) return [];
         try {
           return cookieStore.getAll();
         } catch {
@@ -20,6 +28,7 @@ export async function createClient() {
         }
       },
       setAll(cookiesToSet) {
+        if (!cookieStore) return;
         try {
           for (const { name, value, options } of cookiesToSet) {
             cookieStore.set(name, value, options);
