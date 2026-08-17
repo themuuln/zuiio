@@ -8,6 +8,7 @@ import {
   Package,
   Plus,
   ShoppingCart,
+  TextT,
 } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
@@ -45,6 +46,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { productKeys } from "@/lib/query/keys";
@@ -70,6 +72,11 @@ const productSchema = z.object({
   category_name: z.string().optional(),
   brand_id: z.string().optional(),
   brand_name: z.string().optional(),
+  description: z.string().optional(),
+  material_type: z.string().optional(),
+  additional_info: z.string().optional(),
+  usage_instructions: z.string().optional(),
+  care_instructions: z.string().optional(),
   cost_price: z.number().min(0),
   sale_price: z.number().min(0),
   current_stock: z.number().min(0),
@@ -189,6 +196,11 @@ export function ProductCreateDrawer({
       category_name: "",
       brand_id: "",
       brand_name: "",
+      description: "",
+      material_type: "",
+      additional_info: "",
+      usage_instructions: "",
+      care_instructions: "",
       cost_price: 0,
       sale_price: 0,
       current_stock: 0,
@@ -259,6 +271,7 @@ export function ProductCreateDrawer({
         category_name: formData.get("category_name")?.toString() || null,
         brand_name: matchedBrand?.name ?? (brandName || null),
         brand_logo_url: matchedBrand?.logo_url ?? null,
+        description: formData.get("description")?.toString() || null,
         cost_price: Number(formData.get("cost_price") ?? 0),
         sale_price: Number(formData.get("sale_price") ?? 0),
         current_stock: Number(formData.get("current_stock") ?? 0),
@@ -278,6 +291,11 @@ export function ProductCreateDrawer({
     formData.append("unit", data.unit);
     formData.append("category_name", data.category_name ?? "");
     formData.append("brand_name", data.brand_name ?? "");
+    formData.append("description", data.description ?? "");
+    formData.append("material_type", data.material_type ?? "");
+    formData.append("additional_info", data.additional_info ?? "");
+    formData.append("usage_instructions", data.usage_instructions ?? "");
+    formData.append("care_instructions", data.care_instructions ?? "");
     formData.append("cost_price", String(data.cost_price));
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
@@ -440,6 +458,28 @@ export function ProductCreateDrawer({
               </FieldGroup>
             </div>
 
+            {/* Description */}
+            <div className="space-y-4">
+              <SectionHeader icon={TextT} label="Тайлбар" />
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="description">
+                    Бүтээгдэхүүний тайлбар
+                  </FieldLabel>
+                  <Textarea
+                    id="description"
+                    placeholder="Жишээ нь: Өндөр чанартай, байгалийн гаралтай цай..."
+                    rows={3}
+                    {...register("description")}
+                  />
+                  <FieldDescription>
+                    Нийтийн дэлгүүр, каталогийн хуудсанд бүтээгдэхүүний тайлбар
+                    хэсэгт харагдана.
+                  </FieldDescription>
+                </Field>
+              </FieldGroup>
+            </div>
+
             {/* Prices & Stock */}
             <div className="space-y-4">
               <SectionHeader icon={ShoppingCart} label="Үнэ ба үлдэгдэл" />
@@ -562,6 +602,47 @@ export function ProductCreateDrawer({
                       Бүтээгдэхүүний зургийн холбоос. Дэлгүүрийн харагдац болон
                       каталогт харагдана.
                     </FieldDescription>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="material_type">Материал</FieldLabel>
+                    <Input
+                      id="material_type"
+                      placeholder="Жишээ нь: хөвөн, арьс, хуванцар"
+                      {...register("material_type")}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="additional_info">
+                      Нэмэлт мэдээлэл
+                    </FieldLabel>
+                    <Textarea
+                      id="additional_info"
+                      placeholder="Жин, хэмжээ, багцалсан хэлбэр гэх мэт"
+                      rows={2}
+                      {...register("additional_info")}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="usage_instructions">
+                      Ашиглах заавар
+                    </FieldLabel>
+                    <Textarea
+                      id="usage_instructions"
+                      placeholder="Хэрэглэх арга, заавар"
+                      rows={2}
+                      {...register("usage_instructions")}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="care_instructions">
+                      Арчилгааны заавар
+                    </FieldLabel>
+                    <Textarea
+                      id="care_instructions"
+                      placeholder="Угаах, арчлах, хадгалах заавар"
+                      rows={2}
+                      {...register("care_instructions")}
+                    />
                   </Field>
                 </FieldGroup>
               )}

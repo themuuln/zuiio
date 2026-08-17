@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
+import { Textarea } from "@/components/ui/textarea";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import {
   useProductVariants,
@@ -66,6 +67,11 @@ export interface ProductEditData {
   brand_id: string | null;
   brand_name: string | null;
   brand_logo_url: string | null;
+  description: string | null;
+  material_type: string | null;
+  additional_info: string | null;
+  usage_instructions: string | null;
+  care_instructions: string | null;
   cost_price: number | null;
   sale_price: number | null;
   current_stock: number | null;
@@ -97,6 +103,11 @@ const productEditSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
   sku: z.string(),
   barcode: z.string(),
+  description: z.string(),
+  material_type: z.string(),
+  additional_info: z.string(),
+  usage_instructions: z.string(),
+  care_instructions: z.string(),
   cost_price: z.number().min(0),
   sale_price: z.number().min(0),
   current_stock: z.number().min(0),
@@ -185,6 +196,11 @@ export function ProductEditDrawer({
       name: product.name,
       sku: product.sku ?? "",
       barcode: product.barcode ?? "",
+      description: product.description ?? "",
+      material_type: product.material_type ?? "",
+      additional_info: product.additional_info ?? "",
+      usage_instructions: product.usage_instructions ?? "",
+      care_instructions: product.care_instructions ?? "",
       cost_price: product.cost_price ?? 0,
       sale_price: product.sale_price ?? 0,
       current_stock: product.current_stock ?? 0,
@@ -198,6 +214,11 @@ export function ProductEditDrawer({
       name: product.name,
       sku: product.sku ?? "",
       barcode: product.barcode ?? "",
+      description: product.description ?? "",
+      material_type: product.material_type ?? "",
+      additional_info: product.additional_info ?? "",
+      usage_instructions: product.usage_instructions ?? "",
+      care_instructions: product.care_instructions ?? "",
       cost_price: product.cost_price ?? 0,
       sale_price: product.sale_price ?? 0,
       current_stock: product.current_stock ?? 0,
@@ -208,6 +229,11 @@ export function ProductEditDrawer({
     product.name,
     product.sku,
     product.barcode,
+    product.description,
+    product.material_type,
+    product.additional_info,
+    product.usage_instructions,
+    product.care_instructions,
     product.cost_price,
     product.sale_price,
     product.current_stock,
@@ -252,6 +278,7 @@ export function ProductEditDrawer({
       unit: formData.get("unit")?.toString() ?? "ширхэг",
       category_name: formData.get("category_name")?.toString() || null,
       brand_id: formData.get("brand_id")?.toString() || null,
+      description: formData.get("description")?.toString() || null,
       cost_price: Number(formData.get("cost_price") ?? 0),
       sale_price: Number(formData.get("sale_price") ?? 0),
       min_stock: Number(formData.get("min_stock") ?? 0),
@@ -327,6 +354,11 @@ export function ProductEditDrawer({
     formData.append("unit", selectedUnit ?? "ширхэг");
     formData.append("category_name", selectedCategory ?? "");
     formData.append("brand_id", selectedBrandId ?? "");
+    formData.append("description", data.description);
+    formData.append("material_type", data.material_type);
+    formData.append("additional_info", data.additional_info);
+    formData.append("usage_instructions", data.usage_instructions);
+    formData.append("care_instructions", data.care_instructions);
     formData.append("cost_price", String(data.cost_price));
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
@@ -598,6 +630,20 @@ export function ProductEditDrawer({
                 </ComboboxContent>
               </Combobox>
             </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-description">
+                Бүтээгдэхүүний тайлбар
+              </FieldLabel>
+              <Textarea
+                id="edit-description"
+                placeholder="Жишээ нь: Өндөр чанартай, байгалийн гаралтай цай..."
+                rows={3}
+                {...register("description")}
+              />
+              <FieldDescription>
+                Нийтийн дэлгүүр, каталогийн хуудсанд харагдана.
+              </FieldDescription>
+            </Field>
           </FieldGroup>
 
           <FieldGroup>
@@ -655,6 +701,47 @@ export function ProductEditDrawer({
                 min="0"
                 step="0.01"
                 {...register("min_stock", { valueAsNumber: true })}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-material_type">Материал</FieldLabel>
+              <Input
+                id="edit-material_type"
+                placeholder="Жишээ нь: хөвөн, арьс, хуванцар"
+                {...register("material_type")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-additional_info">
+                Нэмэлт мэдээлэл
+              </FieldLabel>
+              <Textarea
+                id="edit-additional_info"
+                placeholder="Жин, хэмжээ, багцалсан хэлбэр гэх мэт"
+                rows={2}
+                {...register("additional_info")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-usage_instructions">
+                Ашиглах заавар
+              </FieldLabel>
+              <Textarea
+                id="edit-usage_instructions"
+                placeholder="Хэрэглэх арга, заавар"
+                rows={2}
+                {...register("usage_instructions")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-care_instructions">
+                Арчилгааны заавар
+              </FieldLabel>
+              <Textarea
+                id="edit-care_instructions"
+                placeholder="Угаах, арчлах, хадгалах заавар"
+                rows={2}
+                {...register("care_instructions")}
               />
             </Field>
           </FieldGroup>

@@ -35,6 +35,7 @@ export type ProductDetailData = {
   min_stock: number | null;
   image_url?: string | null;
   image_urls?: string[] | null;
+  description?: string | null;
   variants?:
     | {
         id: string;
@@ -202,6 +203,16 @@ export function ProductDetailDrawer({
             label="Нэр"
             value={product.name}
           />
+          {product.description && (
+            <div className="py-3">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                Тайлбар
+              </p>
+              <p className="text-sm leading-relaxed whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
+          )}
           <InfoRow
             icon={<Tag className="size-4" />}
             label="SKU"

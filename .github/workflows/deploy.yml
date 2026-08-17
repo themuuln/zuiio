@@ -16,6 +16,7 @@ on:
         type: choice
         options:
           - ""
+
           - agent-gateway
 
 permissions:
@@ -26,6 +27,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
+
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       shared: ${{ steps.filter.outputs.shared }}
     steps:
@@ -34,6 +36,7 @@ jobs:
         id: filter
         with:
           filters: |
+
             agent-gateway:
               - 'apps/agent-gateway/**'
             # Shared packages and root config affect ALL apps
@@ -57,6 +60,7 @@ jobs:
         with:
           submodules: false
           sparse-checkout: |
+
             apps/agent-gateway
             packages
             config
@@ -81,10 +85,12 @@ jobs:
       - name: Typecheck deploying apps
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
+
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
         run: |
           # Only typecheck apps that will actually deploy (matching deploy-* job conditions)
           FAILED=""
+
           if [ "$AGENT_GW" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
             pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"

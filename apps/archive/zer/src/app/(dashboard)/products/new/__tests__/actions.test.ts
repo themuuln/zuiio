@@ -99,6 +99,30 @@ describe("createProduct action", () => {
     expect(insertMock.mock.calls[0]?.[0]).toMatchObject({ has_variants: true });
   });
 
+  it("passes description and extra info fields into the insert payload", async () => {
+    const formData = new FormData();
+    formData.append("name", "Тест бүтээгдэхүүн");
+    formData.append("description", "  Өндөр чанартай цай  ");
+    formData.append("material_type", "хөвөн");
+    formData.append("additional_info", "500гр багц");
+    formData.append("usage_instructions", "Буцалсан усаар");
+    formData.append("care_instructions", "Сэрүүн газар хадгална");
+
+    const insertMock = buildMock();
+
+    const { createProduct } = await import("../actions");
+    const result = await createProduct(undefined, formData);
+
+    expect(result).toEqual({ success: true });
+    expect(insertMock.mock.calls[0]?.[0]).toMatchObject({
+      description: "Өндөр чанартай цай",
+      material_type: "хөвөн",
+      additional_info: "500гр багц",
+      usage_instructions: "Буцалсан усаар",
+      care_instructions: "Сэрүүн газар хадгална",
+    });
+  });
+
   it("sets has_variants false when no variant payload is provided", async () => {
     const formData = new FormData();
     formData.append("name", "Тест бүтээгдэхүүн");
