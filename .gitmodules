@@ -16,9 +16,6 @@
 [submodule "apps/zunch"]
 	path = apps/zunch
 	url = https://github.com/themuuln/zunch.git
-[submodule "apps/zatly"]
-	path = apps/zatly
-	url = https://github.com/themuuln/zatly.git
 [submodule "apps/zer-app"]
 	path = apps/zer-app
 	url = https://github.com/themuuln/zer-app.git
