@@ -27,10 +27,7 @@ describe("createCompactToken / verifyCompactToken", () => {
 		const payload = Buffer.from(token.split(".")[0], "base64url");
 		payload[32] = (payload[32] ?? 0) | 0b11;
 		const payloadBase64 = payload.toString("base64url");
-		const signature = createHmac(
-			"sha256",
-			"dev-secret-change-in-production",
-		)
+		const signature = createHmac("sha256", "dev-secret-change-in-production")
 			.update(payloadBase64)
 			.digest("base64url")
 			.slice(0, 12);
@@ -42,13 +39,16 @@ describe("createCompactToken / verifyCompactToken", () => {
 		expect(verifyCompactToken(`${token.slice(0, -1)}X`)).toBeNull();
 	});
 
-	it.each(["not-a-token", "", "a.b.c"])("rejects malformed token %j", (token) => {
-		expect(verifyCompactToken(token)).toBeNull();
-	});
+	it.each(["not-a-token", "", "a.b.c"])(
+		"rejects malformed token %j",
+		(token) => {
+			expect(verifyCompactToken(token)).toBeNull();
+		},
+	);
 
 	it("uses a fixed wire length for every product", () => {
-		const lengths = ["zer", "tolom", "zatly"].map((productType) =>
-			createCompactToken(orgId, userId, productType).length,
+		const lengths = ["zer", "tolom", "zatly"].map(
+			(productType) => createCompactToken(orgId, userId, productType).length,
 		);
 		expect(new Set(lengths).size).toBe(1);
 	});

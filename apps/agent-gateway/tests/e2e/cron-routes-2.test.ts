@@ -23,9 +23,10 @@ vi.mock("@/channels/telegram", () => ({
 		isChatAvailable = mockIsChatAvailable;
 	},
 }));
-vi.mock("@/channels/facebook", () => ({
+vi.mock("@zuiio/gateway-facebook", () => ({
 	FacebookChannel: class {
 		sendMessage = mockSendMessage;
+		constructor(_options?: unknown) {}
 	},
 }));
 

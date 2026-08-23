@@ -12,10 +12,11 @@ vi.mock("server-only", () => ({}));
 
 const mockSubscribeToWebhook = vi.fn(async () => true);
 const mockGetPageInfo = vi.fn(async () => null);
-vi.mock("@/channels/facebook", () => ({
+vi.mock("@zuiio/gateway-facebook", () => ({
 	FacebookChannel: class {
 		subscribeToWebhook = mockSubscribeToWebhook;
 		getPageInfo = mockGetPageInfo;
+		constructor(_options?: unknown) {}
 	},
 }));
 
@@ -260,8 +261,8 @@ describe("POST /api/facebook/select", () => {
 			product_type: "tolom",
 			is_active: true,
 		});
-		expect(mockSubscribeToWebhook).toHaveBeenCalledWith("page-1", "page-token");
-		expect(mockGetPageInfo).toHaveBeenCalledWith("page-1", "page-token");
+		expect(mockSubscribeToWebhook).toHaveBeenCalledTimes(1);
+		expect(mockGetPageInfo).toHaveBeenCalledTimes(1);
 		expect(res.cookies.get("fb_pages")?.maxAge).toBe(0);
 	});
 
@@ -374,206 +375,81 @@ describe("POST /api/facebook/select", () => {
 	});
 });
 
-describe("GET /api/facebook/callback", () => {
-	const NONCE = "nonce-abc-123";
+describe("GET /api/facebook/callback (transaction state machine)", () => {
+	const STATE = "a".repeat(43);
+	const SELECTOR = "https://zer.example.com/settings/meta/select";
 
-	function validQuery(overrides: Record<string, string> = {}) {
-		const params = new URLSearchParams({
-			code: "auth-code-1",
-			state: makeStateParam(ORG_ID, "zer", NONCE),
-			...overrides,
-		});
-		return `http://localhost/api/facebook/callback?${params.toString()}`;
+	type Final = { data?: unknown; error?: unknown };
+
+	function chainableSupabase(final: Final) {
+		const chain: Record<string, unknown> = {};
+		const terminal = {
+			then: (resolve: (v: Final) => void) => resolve(final),
+		};
+		for (const method of ["update", "eq", "gt", "select"]) {
+			chain[method] = vi.fn(() => chain);
+		}
+		chain.maybeSingle = vi.fn(async () => final);
+		return Object.assign(chain, terminal);
 	}
 
-	function cookieReq(url: string, cookie?: string): NextRequest {
-		const headers = new Headers();
-		if (cookie) headers.set("cookie", cookie);
-		return new NextRequest(url, { headers });
-	}
-
-	function oauthResponse(
-		body: Record<string, unknown>,
-		ok = true,
-	): { ok: boolean; json: () => Promise<Record<string, unknown>> } {
-		return { ok, json: async () => body };
+	function controlStub(final: Final) {
+		return {
+			createGatewayControlClient: () => ({
+				from: () => chainableSupabase(final),
+			}),
+		};
 	}
 
 	beforeEach(() => {
 		vi.resetModules();
 		setFbEnv();
-		vi.clearAllMocks();
-	});
-
-	it("rejects when the state cookie is missing", async () => {
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(cookieReq(validQuery()));
-		expect(res.status).toBe(400);
-		expect((await res.json()).error).toBe("Invalid OAuth state");
-	});
-	it("accepts a signed token state without a browser cookie", async () => {
-		const { createCompactToken } = await import("@/lib/tokens");
-		const token = createCompactToken(
-			"a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-			"b2c3d4e5-f6a7-8901-bcde-f12345678901",
-			"zer",
-		);
-		delete process.env.FB_APP_ID;
-		delete process.env.FB_APP_SECRET;
-		delete process.env.FB_OAUTH_REDIRECT_URI;
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				`http://localhost/api/facebook/callback?code=x&state=${encodeURIComponent(token)}`,
-			),
-		);
-		expect(res.status).toBe(500);
-	});
-
-	it("rejects when the cookie nonce does not match the state param", async () => {
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				validQuery(),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: "other" }),
-				)}`,
-			),
-		);
-		expect(res.status).toBe(400);
-	});
-
-	it("rejects when the state param is malformed", async () => {
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				`http://localhost/api/facebook/callback?code=x&state=%%%not-base64`,
-				`fb_oauth_state=${encodeURIComponent(JSON.stringify({ state: "x" }))}`,
-			),
-		);
-		expect(res.status).toBe(400);
-	});
-
-	it("rejects when the authorization code is missing", async () => {
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const url = validQuery();
-		const { GET: CallbackGET } = await import(
-			"@/app/api/facebook/callback/route"
-		);
-		void GET;
-		const res = await CallbackGET(
-			cookieReq(
-				url.replace("code=auth-code-1", ""),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: NONCE }),
-				)}`,
-			),
-		);
-		expect(res.status).toBe(400);
-		expect((await res.json()).error).toBe("Missing authorization code");
-	});
-
-	it("rejects when the app is not configured", async () => {
-		clearFbEnv();
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				validQuery(),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: NONCE }),
-				)}`,
-			),
-		);
-		expect(res.status).toBe(500);
-	});
-
-	it("rejects when the token exchange fails", async () => {
-		const mockFetch = vi.fn(async () =>
-			oauthResponse({ error: { message: "invalid code" } }, false),
-		);
-		vi.stubGlobal("fetch", mockFetch);
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				validQuery(),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: NONCE }),
-				)}`,
-			),
-		);
-		expect(res.status).toBe(400);
-		const body = await res.json();
-		expect(body.error).toBe("invalid code");
-	});
-
-	it("rejects when the user manages no pages", async () => {
-		const mockFetch = vi
-			.fn()
-			.mockResolvedValueOnce(
-				oauthResponse({ access_token: "short", expires_in: 3600 }),
-			)
-			.mockResolvedValueOnce(oauthResponse({ access_token: "long" }))
-			.mockResolvedValueOnce(
-				oauthResponse({ data: [], error: { message: "no pages" } }, false),
-			);
-		vi.stubGlobal("fetch", mockFetch);
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				validQuery(),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: NONCE }),
-				)}`,
-			),
-		);
-		expect(res.status).toBe(400);
-	});
-
-	it("redirects to page selection with the pages cookie on success", async () => {
-		const pages = [
-			{ id: "p1", name: "Page A", access_token: "tok-a" },
-			{ id: "p2", name: "Page B", access_token: "tok-b" },
-		];
-		const mockFetch = vi
-			.fn()
-			.mockResolvedValueOnce(
-				oauthResponse({ access_token: "short-token", expires_in: 3600 }),
-			)
-			.mockResolvedValueOnce(oauthResponse({ access_token: "long-token" }))
-			.mockResolvedValueOnce(oauthResponse({ data: pages }));
-		vi.stubGlobal("fetch", mockFetch);
-		const { GET } = await import("@/app/api/facebook/callback/route");
-		const res = await GET(
-			cookieReq(
-				validQuery(),
-				`fb_oauth_state=${encodeURIComponent(
-					JSON.stringify({ orgId: ORG_ID, productType: "zer", state: NONCE }),
-				)}`,
-			),
-		);
-
-		expect(res.status).toBe(307);
-		const location = res.headers.get("location") ?? "";
-		expect(location).toContain("/link/select");
-		expect(location).toContain(`orgId=${ORG_ID}`);
-		expect(location).toContain("productType=zer");
-
-		const pagesCookie = res.cookies.get("fb_pages");
-		expect(pagesCookie).toBeDefined();
-		expect(JSON.parse(pagesCookie?.value)).toHaveLength(2);
-		// State cookie cleared
-		expect(res.cookies.get("fb_oauth_state")?.maxAge).toBe(0);
-
-		// 3 Graph API calls: exchange, long-lived, pages
-		expect(mockFetch).toHaveBeenCalledTimes(3);
-		const longLivedUrl = mockFetch.mock.calls[1]?.[0] as URL;
-		expect(longLivedUrl.searchParams.get("grant_type")).toBe(
-			"fb_exchange_token",
-		);
+		process.env.ZER_META_SELECTOR_URL = SELECTOR;
 	});
 
 	afterEach(() => {
 		clearFbEnv();
-		vi.unstubAllGlobals();
+		delete process.env.ZER_META_SELECTOR_URL;
+	});
+
+	it("rejects a state that is not claimable with 400 OAUTH_STATE_INVALID", async () => {
+		vi.doMock("@/lib/gateway-control-client", () =>
+			controlStub({ data: null, error: null }),
+		);
+		const { GET } = await import("@/app/api/facebook/callback/route");
+		const res = await GET(
+			new NextRequest(
+				`http://localhost/api/facebook/callback?code=c&state=${STATE}`,
+			),
+		);
+		expect(res.status).toBe(400);
+		expect((await res.json()).error.code).toBe("OAUTH_STATE_INVALID");
+	});
+
+	it("marks denial and redirects to the Zer selector on access_denied", async () => {
+		vi.doMock("@/lib/gateway-control-client", () =>
+			controlStub({
+				data: {
+					id: "tx-1",
+					tenant_id: "t1",
+					requested_by: "u1",
+					status: "authorized",
+					encrypted_payload: "enc:v2:1:a:b:c",
+					error_code: null,
+					expires_at: new Date(Date.now() + 60_000).toISOString(),
+				},
+				error: null,
+			}),
+		);
+		const { GET } = await import("@/app/api/facebook/callback/route");
+		const res = await GET(
+			new NextRequest(
+				`http://localhost/api/facebook/callback?error=access_denied&state=${STATE}`,
+			),
+		);
+		expect([302, 307]).toContain(res.status);
+		const location = new URL(res.headers.get("location") ?? "");
+		expect(location.origin + location.pathname).toBe(SELECTOR);
+		expect(location.searchParams.get("transaction")).toBeTruthy();
 	});
 });

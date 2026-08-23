@@ -27,23 +27,32 @@ vi.mock("@/flow-executor", () => ({
 vi.mock("@/gateway/webhook-helpers", () => ({
 	systemPromptFor: vi.fn(async () => "prompt"),
 	getProductTools: vi.fn(() => []),
+	getRawWriteTool: (...a: unknown[]) => mockGetRawWriteTool(...(a as [string])),
 }));
 
-// Confirmation store — deterministic per-test staged actions.
-const mockConfirmAction = vi.fn(() => null);
-const mockRejectAction = vi.fn();
+// Durable confirmation boundary — deterministic per-test outcomes.
+const mockResolveDurablePostback = vi.fn(async () => ({
+	handled: false,
+	reply: "",
+}));
 vi.mock("@/runtime/confirmation", () => ({
-	confirmAction: (...a: unknown[]) => mockConfirmAction(...a),
-	rejectAction: (...a: unknown[]) => mockRejectAction(...a),
+	resolveDurablePostback: (...a: unknown[]) =>
+		mockResolveDurablePostback(...(a as [unknown])),
+}));
+
+const mockGetRawWriteTool = vi.fn(() => null);
+vi.mock("@/state/pending-action-repository", () => ({
+	pendingActionRepository: () => ({}),
 }));
 
 // Channel adapter — capture outgoing messages instead of hitting the Graph API.
 const mockSendMessage = vi.fn(async () => {});
 const mockSendSenderAction = vi.fn(async () => {});
-vi.mock("@/channels/facebook", () => ({
+vi.mock("@zuiio/gateway-facebook", () => ({
 	FacebookChannel: class {
 		sendMessage = mockSendMessage;
 		sendSenderAction = mockSendSenderAction;
+		constructor(_options?: unknown) {}
 	},
 }));
 
@@ -179,24 +188,26 @@ describe("facebook webhook — event paths", () => {
 
 	it("executes a staged action on confirm: postback", async () => {
 		const execute = vi.fn(async () => ({ ok: true, id: "sale-1" }));
-		mockConfirmAction.mockReturnValue({
-			toolName: "createSale",
-			args: { amount: 1000 },
-			execute,
-		});
+		mockGetRawWriteTool.mockReturnValue({ name: "createSale", execute });
+		mockResolveDurablePostback.mockImplementation(
+			async (input: {
+				payload: string;
+				executeTool: (
+					toolName: string,
+					args: Record<string, unknown>,
+				) => Promise<unknown>;
+			}) => {
+				const result = await input.executeTool("createSale", { amount: 1000 });
+				return { handled: true, reply: `✅ ${JSON.stringify(result)}` };
+			},
+		);
 		const { POST } = await import("@/app/api/facebook/webhook/route");
 		const res = await POST(
 			post(messengerEvent({ postback: { payload: "confirm:nonce-1" } })),
 		);
 
 		expect(res.status).toBe(200);
-		expect(mockConfirmAction).toHaveBeenCalledWith(
-			"nonce-1",
-			PAGE_ID,
-			"psid-1",
-		);
-		expect(execute).toHaveBeenCalledWith({ amount: 1000 });
-		// The formatted write result is sent back to the sender.
+		expect(execute).toHaveBeenCalledWith({ amount: 1000 }, expect.anything());
 		expect(mockSendMessage).toHaveBeenCalledWith(
 			"psid-1",
 			expect.stringContaining("sale-1"),
@@ -204,7 +215,10 @@ describe("facebook webhook — event paths", () => {
 	});
 
 	it("answers a stale confirm: postback instead of executing", async () => {
-		mockConfirmAction.mockReturnValue(null);
+		mockResolveDurablePostback.mockResolvedValue({
+			handled: true,
+			reply: "Баталгаажуулах хүсэлт олдсонгүй эсвэл хугацаа нь дууссан.",
+		});
 		const { POST } = await import("@/app/api/facebook/webhook/route");
 		const res = await POST(
 			post(messengerEvent({ postback: { payload: "confirm:expired" } })),
@@ -213,18 +227,23 @@ describe("facebook webhook — event paths", () => {
 		expect(res.status).toBe(200);
 		expect(mockSendMessage).toHaveBeenCalledWith(
 			"psid-1",
-			expect.stringContaining("хугацаа дууссан"),
+			"Баталгаажуулах хүсэлт олдсонгүй эсвэл хугацаа нь дууссан.",
 		);
 	});
 
 	it("rejects a staged action on reject: postback", async () => {
+		mockResolveDurablePostback.mockImplementation(
+			async (input: { payload: string }) => ({
+				handled: input.payload === "reject:nonce-1",
+				reply: "❌ Цуцаллаа.",
+			}),
+		);
 		const { POST } = await import("@/app/api/facebook/webhook/route");
 		const res = await POST(
 			post(messengerEvent({ postback: { payload: "reject:nonce-1" } })),
 		);
 
 		expect(res.status).toBe(200);
-		expect(mockRejectAction).toHaveBeenCalledWith("nonce-1");
 		expect(mockSendMessage).toHaveBeenCalledWith(
 			"psid-1",
 			expect.stringContaining("Цуцаллаа"),

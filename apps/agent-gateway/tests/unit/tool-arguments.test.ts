@@ -1,5 +1,5 @@
+import { type ToolParam, validateToolArguments } from "@zuiio/gateway-core";
 import { describe, expect, it } from "vitest";
-import { validateToolArguments, type ToolParam } from "@zuiio/gateway-core";
 
 const parameters: ToolParam[] = [
 	{
