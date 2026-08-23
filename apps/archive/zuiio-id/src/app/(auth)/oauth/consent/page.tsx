@@ -26,9 +26,13 @@ export default function ConsentPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   return (
-    <Suspense fallback={<ConsentLoading />}>
-      <ConsentFormWrapper searchParams={searchParams} />
-    </Suspense>
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8 sm:px-6 sm:py-12">
+      <div className="w-full max-w-xl">
+        <Suspense fallback={<ConsentLoading />}>
+          <ConsentFormWrapper searchParams={searchParams} />
+        </Suspense>
+      </div>
+    </main>
   );
 }
 
