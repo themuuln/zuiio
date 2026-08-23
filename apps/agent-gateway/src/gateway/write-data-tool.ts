@@ -2,7 +2,6 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import type { GatewayTool } from "@zuiio/gateway-core";
-import type { ToolDependencies } from "./tool-dependencies";
 import { runWrite } from "@/write-engine";
 import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
 import zerWriteCatalog from "@/write-engine/catalogs/zer-write.json";
@@ -11,6 +10,7 @@ import type {
 	WriteOperationKind,
 	WritePlan,
 } from "@/write-engine/types";
+import type { ToolDependencies } from "./tool-dependencies";
 
 /**
  * Per-product write catalog map. A product is wired to the dynamic `writeData`

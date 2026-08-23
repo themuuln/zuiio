@@ -70,9 +70,11 @@ export function createCompactToken(
  * Verify a compact link token.
  * Returns the decoded payload if the signature is valid and not expired.
  */
-export function verifyCompactToken(
-	token: string,
-): { orgId: string; userId: string; productType: "tolom" | "zer" | "zatly" } | null {
+export function verifyCompactToken(token: string): {
+	orgId: string;
+	userId: string;
+	productType: "tolom" | "zer" | "zatly";
+} | null {
 	const dotIdx = token.lastIndexOf(".");
 	if (dotIdx < 0) return null;
 

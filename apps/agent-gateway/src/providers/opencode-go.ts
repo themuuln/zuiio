@@ -1,10 +1,10 @@
 import "server-only";
 
+import type { AiProvider, GatewayTool, ToolContext } from "@zuiio/gateway-core";
 import {
 	type LoopHistoryMessage,
 	runOpenAiCompatibleLoop,
 } from "./openai-compatible-loop";
-import type { AiProvider, GatewayTool, ToolContext } from "@zuiio/gateway-core";
 
 /**
  * OpenCodeGo provider (OpenAI-compatible endpoint).

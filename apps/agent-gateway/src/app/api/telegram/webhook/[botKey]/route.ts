@@ -1,18 +1,24 @@
 import { capture } from "@zuiio/capture";
-import { NextResponse } from "next/server";
-import { TelegramChannel } from "@zuiio/gateway-telegram";
 import type { TelegramUpdate } from "@zuiio/gateway-telegram";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import { NextResponse } from "next/server";
 import {
 	createTelegramResponseStream,
 	startTypingLoop,
 } from "@/channels/typing-loop";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromBotKey } from "@/gateway/mode-b";
-import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { toToolContext, toToolDependencies } from "@/gateway/tool-dependencies";
+import {
+	getProductTools,
+	getRawWriteTool,
+	systemPromptFor,
+} from "@/gateway/webhook-helpers";
 import { createServiceClient } from "@/lib/supabase";
-import { confirmAction, rejectAction } from "@/runtime/confirmation";
+import { resolveDurablePostback } from "@/runtime/confirmation";
 import { runAgentWithFallback } from "@/state/async-job";
 import { enqueueJob } from "@/state/job-queue";
+import { pendingActionRepository } from "@/state/pending-action-repository";
 import { transcribeVoice } from "@/stt/groq";
 
 // ─── Lazy singleton ─────────────────────────────────────────────────────────
@@ -63,22 +69,47 @@ export async function POST(
 			const userId = cq.from.id;
 			const [action, nonce] = data.split(":");
 
-			if (action === "confirm") {
-				const staged = confirmAction(nonce, String(chatId), String(userId));
-				if (!staged) {
-					await tg.answerCallbackQuery(cq.id, "Энэ үйлдлийн хугацаа дууссан.");
+			if (action === "confirm" || action === "reject") {
+				const orgCtx = await resolveOrgFromBotKey(sb, botKey);
+				if (!orgCtx) {
+					await tg.answerCallbackQuery(cq.id, "Энэ бот идэвхгүй байна.");
 					return NextResponse.json({ ok: true });
 				}
+				const deps = toToolDependencies(
+					{
+						...orgCtx,
+						conversationId: `legacy:telegram:${botKey}:${chatId}:${userId}`,
+						channelChatId: String(chatId),
+						channelUserId: String(userId),
+						traceId: crypto.randomUUID(),
+					},
+					sb,
+				);
+				const outcome = await resolveDurablePostback({
+					payload: data,
+					conversationId: deps.conversationId,
+					traceId: deps.traceId,
+					repository: pendingActionRepository(),
+					executeTool:
+						action === "confirm"
+							? async (toolName, args) => {
+									const tool = getRawWriteTool(
+										orgCtx.productType,
+										deps,
+										toolName,
+									);
+									if (!tool) throw new Error("CONFIRM_TOOL_NOT_FOUND");
+									return tool.execute(args, toToolContext(deps));
+								}
+							: async () => null,
+				});
 				await tg.editMessageText(
 					chatId,
 					messageId,
-					`✅ Баталгаажууллаа: ${staged.summary}`,
+					outcome.reply ||
+						(action === "confirm" ? "✅ Баталгаажууллаа." : "❌ Цуцаллаа."),
 				);
-				await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
-			} else if (action === "reject") {
-				rejectAction(nonce);
-				await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
-				await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+				await tg.answerCallbackQuery(cq.id, outcome.reply ? "✅" : "❌");
 			}
 			return NextResponse.json({ ok: true });
 		}

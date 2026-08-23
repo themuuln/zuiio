@@ -50,7 +50,11 @@ export async function handleFlowMessage(
 	}
 
 	// 2. Check if a flow should be triggered by this message
-	const flow = await findActiveFlow(supabase, ctx.externalOrganizationId, ctx.channel);
+	const flow = await findActiveFlow(
+		supabase,
+		ctx.externalOrganizationId,
+		ctx.channel,
+	);
 
 	if (!flow) {
 		return null; // No flow active — let the AI agent handler take over

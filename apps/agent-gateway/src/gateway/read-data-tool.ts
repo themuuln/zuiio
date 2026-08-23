@@ -2,11 +2,11 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import type { GatewayTool } from "@zuiio/gateway-core";
-import type { ToolDependencies } from "./tool-dependencies";
 import { createReadEngine } from "@/read-engine";
 import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
 import zerReadCatalog from "@/read-engine/catalogs/zer.json";
 import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
+import type { ToolDependencies } from "./tool-dependencies";
 
 /**
  * Per-product read catalog map. A product is wired to the dynamic `readData`

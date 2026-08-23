@@ -18,7 +18,9 @@ import type { ToolDependencies } from "./tool-dependencies";
  *   (internal margin data).
  * - No writes, no joins into sales/stock internals.
  */
-export function createCustomerProductTool(context: ToolDependencies): GatewayTool {
+export function createCustomerProductTool(
+	context: ToolDependencies,
+): GatewayTool {
 	const { supabase, externalOrganizationId: orgId } = context;
 
 	return {

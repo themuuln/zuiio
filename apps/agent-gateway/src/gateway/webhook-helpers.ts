@@ -2,14 +2,15 @@ import { capture } from "@zuiio/capture";
 
 import "server-only";
 
+import type { GatewayTool } from "@zuiio/gateway-core";
 import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
+import type { ToolDependencies } from "@/gateway/tool-dependencies";
+import { toToolContext } from "@/gateway/tool-dependencies";
 import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
 import { createServiceClient, getSupabaseForProduct } from "@/lib/supabase";
-import type { GatewayTool } from "@zuiio/gateway-core";
-import type { ToolDependencies } from "@/gateway/tool-dependencies";
 import { gateWriteTool } from "@/runtime/write-gate";
 
 /**
@@ -1141,4 +1142,27 @@ export function getProductTools(
 	}
 
 	return tools;
+}
+
+/**
+ * Ungated write-tool lookup for durable confirmation postbacks. The staged
+ * claim already proves user approval, so the confirmation gate must not run.
+ */
+export function getRawWriteTool(
+	productType: "tolom" | "zer" | "zatly",
+	dependencies: ToolDependencies,
+	toolName: string,
+): GatewayTool | null {
+	const candidates =
+		productType === "tolom"
+			? [createWriteDataTool("tolom", dependencies)]
+			: [
+					...zerWriteTools(dependencies),
+					createWriteDataTool("zer", dependencies),
+				];
+	return (
+		candidates
+			.filter((tool): tool is GatewayTool => tool !== null)
+			.find((tool) => tool.name === toolName) ?? null
+	);
 }

@@ -1,16 +1,13 @@
 import { capture } from "@zuiio/capture";
 import type { GatewayTool } from "@zuiio/gateway-core";
-import type { ToolDependencies } from "./tool-dependencies";
 import {
 	formatCustomerMemory,
 	recallCustomerFacts,
 	rememberCustomerFact,
 } from "@/state/customer-memory";
+import type { ToolDependencies } from "./tool-dependencies";
 
-type Ctx = Pick<
-	ToolDependencies,
-	"supabase" | "externalOrganizationId"
->;
+type Ctx = Pick<ToolDependencies, "supabase" | "externalOrganizationId">;
 
 /**
  * Resolve a customer id from a phone number within the org.

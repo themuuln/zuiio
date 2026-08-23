@@ -98,7 +98,8 @@ export function withAudit(
 					toolName: tool.name,
 					toolArgs: args,
 					toolResult: null,
-					error: error instanceof Error ? error.message : "Tool execution failed",
+					error:
+						error instanceof Error ? error.message : "Tool execution failed",
 					durationMs: Math.round(performance.now() - start),
 				});
 				throw error;

@@ -1,11 +1,11 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
-import { NextResponse } from "next/server";
+import type { GatewayContext } from "@zuiio/gateway-core";
 import { TelegramChannel } from "@zuiio/gateway-telegram";
 import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
+import { NextResponse } from "next/server";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import type { GatewayContext } from "@zuiio/gateway-core";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { createServiceClient } from "@/lib/supabase";
 import { claimJobs, completeJob, type JobPayload } from "@/state/job-queue";

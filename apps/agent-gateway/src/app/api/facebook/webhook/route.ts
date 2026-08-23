@@ -1,22 +1,28 @@
 import crypto from "node:crypto";
 import { capture } from "@zuiio/capture";
-
+import type {
+	MetaMessagingEvent,
+	MetaWebhookPayload,
+} from "@zuiio/gateway-facebook";
+import { FacebookChannel } from "@zuiio/gateway-facebook";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-import { FacebookChannel } from "@zuiio/gateway-facebook";
-import type { MetaMessagingEvent, MetaWebhookPayload } from "@zuiio/gateway-facebook";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { toToolContext, toToolDependencies } from "@/gateway/tool-dependencies";
+import {
+	getProductTools,
+	getRawWriteTool,
+	systemPromptFor,
+} from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
-import { formatWriteResult } from "@/lib/format-result";
 import {
 	createServiceClient,
 	getSupabaseForProduct,
 	type ServiceClient,
 } from "@/lib/supabase";
-import { confirmAction, rejectAction } from "@/runtime/confirmation";
+import { resolveDurablePostback } from "@/runtime/confirmation";
+import { pendingActionRepository } from "@/state/pending-action-repository";
 
 const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "";
 const APP_SECRET = process.env.FB_APP_SECRET || "";
@@ -419,42 +425,44 @@ async function handlePostback(
 		pageAccessToken: ctx.pageAccessToken,
 	});
 
-	// Handle confirmation postbacks via the shared confirmation store
-	if (ctx.payload.startsWith("confirm:")) {
-		const confirmId = ctx.payload.replace("confirm:", "");
-		// Staged actions key on (channelChatId=pageId, channelUserId=sender).
-		const staged = confirmAction(confirmId, ctx.pageId, ctx.senderId);
-		if (!staged) {
-			await channel.sendMessage(
-				ctx.senderId,
-				"Энэ үйлдлийн хугацаа дууссан эсвэл буруу байна.",
-			);
-			return;
-		}
-		// Re-execute the staged action deterministically — never via LLM re-prompt.
-		if (staged.execute) {
-			try {
-				const result = await staged.execute(staged.args);
-				await channel.sendMessage(ctx.senderId, formatWriteResult(result));
-			} catch (err) {
-				capture(err, {
-					context: "agent-gateway: confirm staged action (meta)",
-				});
-				await channel.sendMessage(
-					ctx.senderId,
-					"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
-				);
-			}
-		} else {
-			await channel.sendMessage(ctx.senderId, "✅ Амжилттай.");
-		}
-		return;
-	}
-
-	if (ctx.payload.startsWith("reject:")) {
-		const rejectId = ctx.payload.replace("reject:", "");
-		rejectAction(rejectId);
-		await channel.sendMessage(ctx.senderId, "❌ Цуцаллаа.");
+	if (ctx.payload.startsWith("confirm:") || ctx.payload.startsWith("reject:")) {
+		const deps = toToolDependencies(
+			{
+				externalOrganizationId: ctx.orgId,
+				userId: ctx.userId,
+				productType: ctx.productType,
+				audience: "customer",
+				channel: ctx.channel,
+				endpointId: ctx.pageId,
+				conversationId: `legacy:${ctx.channel}:${ctx.pageId}:${ctx.senderId}`,
+				channelChatId: ctx.pageId,
+				channelUserId: ctx.senderId,
+				traceId: crypto.randomUUID(),
+			},
+			supabase,
+		);
+		const outcome = await resolveDurablePostback({
+			payload: ctx.payload,
+			conversationId: deps.conversationId,
+			traceId: deps.traceId,
+			repository: pendingActionRepository(),
+			executeTool: ctx.payload.startsWith("confirm:")
+				? async (toolName, args) => {
+						const tool = getRawWriteTool(ctx.productType, deps, toolName);
+						if (!tool) throw new Error("CONFIRM_TOOL_NOT_FOUND");
+						return tool.execute(args, toToolContext(deps));
+					}
+				: async () => null,
+		});
+		await channel.sendMessage(
+			ctx.senderId,
+			outcome.handled
+				? outcome.reply ||
+						(ctx.payload.startsWith("confirm:")
+							? "✅ Амжилттай."
+							: "❌ Цуцаллаа.")
+				: "Энэ үйлдлийн хугацаа дууссан эсвэл буруу байна.",
+		);
 		return;
 	}
 

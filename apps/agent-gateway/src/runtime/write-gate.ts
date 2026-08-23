@@ -1,10 +1,13 @@
 import "server-only";
 
 import type { GatewayTool } from "@zuiio/gateway-core";
-import { TelegramChannel } from "@zuiio/gateway-telegram";
-import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
 import type { ToolDependencies } from "@/gateway/tool-dependencies";
-import { confirmButtons, stageAction } from "./confirmation";
+import { createGatewayControlClient } from "@/lib/gateway-control-client";
+import { createPendingActionRepository } from "@/state/pending-action-repository";
+import {
+	type PendingActionRepository,
+	stagePendingAction,
+} from "./confirmation";
 
 export function summarizeWriteAction(
 	toolName: string,
@@ -19,47 +22,46 @@ export function summarizeWriteAction(
 	return `${toolName}${dataset}${operation}${id}${fields}`;
 }
 
-/** Legacy non-Meta confirmation gate. Meta uses durable pending actions. */
+let _repository: PendingActionRepository | null = null;
+
+function pendingActionRepository(): PendingActionRepository {
+	_repository ??= createPendingActionRepository(createGatewayControlClient());
+	return _repository;
+}
+
+/**
+ * Durable confirmation gate. The staged action plus its confirmation
+ * quick-replies live in the control plane, so a cold restart can still
+ * complete or reject the action. No channel adapter runs here.
+ */
 export function gateWriteTool(
 	tool: GatewayTool,
 	dependencies: ToolDependencies,
 ): GatewayTool {
+	if (tool.effect !== "write" || tool.approval !== "required") {
+		throw new Error(`WRITE_TOOL_REQUIRES_APPROVAL: ${tool.name}`);
+	}
 	return {
 		...tool,
-		execute: async (args, executionContext) => {
-			const summary = summarizeWriteAction(tool.name, args);
-			const staged = stageAction(
-				tool.name,
-				args,
-				dependencies.channel,
-				dependencies.channelChatId,
-				dependencies.channelUserId,
-				summary,
-				undefined,
-				undefined,
-				(actionArgs) => tool.execute(actionArgs, executionContext),
-			);
-
+		execute: async (args) => {
 			try {
-				if (dependencies.channel === "telegram") {
-					await new TelegramChannel().sendInlineKeyboard(
-						dependencies.channelChatId,
-						`⚡ Баталгаажуулах үйлдэл: ${summary}`,
-						confirmButtons(staged.nonce),
-					);
-				} else if (dependencies.channel === "whatsapp") {
-					await new WhatsAppChannel().sendInlineKeyboard(
-						dependencies.channelUserId,
-						`⚡ Баталгаажуулах үйлдэл: ${summary}`,
-						confirmButtons(staged.nonce),
-					);
-				} else {
-					return "Энэ сувгаар бичих үйлдэл дэмжигдээгүй байна.";
-				}
+				await stagePendingAction({
+					repository: pendingActionRepository(),
+					context: {
+						externalOrganizationId: dependencies.externalOrganizationId,
+						userId: dependencies.userId,
+						productType: dependencies.productType,
+						audience: dependencies.audience,
+						conversationId: dependencies.conversationId,
+						traceId: dependencies.traceId,
+					},
+					tool,
+					arguments: args,
+					summary: summarizeWriteAction(tool.name, args),
+				});
 			} catch {
-				return "Баталгаажуулах санал илгээхэд алдаа гарлаа. Дахин оролдоно уу.";
+				return "Баталгаажуулах санал үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.";
 			}
-
 			return "Хэрэглэгчид баталгаажуулах санал илгээгдлээ. Тэдний хариултыг хүлээнэ үү. Үйлдлийг бүү давтаарай.";
 		},
 	};

@@ -1,7 +1,7 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
 import { TelegramChannel } from "@zuiio/gateway-telegram";
+import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";

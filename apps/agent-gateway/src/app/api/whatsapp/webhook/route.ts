@@ -1,16 +1,22 @@
 import { capture } from "@zuiio/capture";
-import { NextResponse } from "next/server";
+import type { LinkRecord } from "@zuiio/gateway-core";
 import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
+import { NextResponse } from "next/server";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromBotKey } from "@/gateway/mode-b";
-import type { LinkRecord } from "@zuiio/gateway-core";
-import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { toToolContext, toToolDependencies } from "@/gateway/tool-dependencies";
+import {
+	getProductTools,
+	getRawWriteTool,
+	systemPromptFor,
+} from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
 import { formatWriteResult } from "@/lib/format-result";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { createServiceClient } from "@/lib/supabase";
-import { confirmAction, rejectAction } from "@/runtime/confirmation";
+import { resolveDurablePostback } from "@/runtime/confirmation";
+import { pendingActionRepository } from "@/state/pending-action-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -174,48 +180,34 @@ export async function POST(request: Request) {
 
 					// Handle confirmation callbacks
 					if (text.startsWith("confirm:") || text.startsWith("reject:")) {
-						const isConfirm = text.startsWith("confirm:");
-						const nonce = text.split(":")[1] ?? "";
-
-						if (isConfirm) {
-							const action = confirmAction(
-								nonce,
-								ctx.context.channelChatId,
-								ctx.context.channelUserId,
-							);
-							const wa = channelForMsg;
-							if (action) {
-								await wa.sendMessage(
-									msg.from,
-									`✅ Баталгаажлаа: ${action.summary}`,
-								);
-								// Re-execute the staged action deterministically.
-								if (action.execute) {
-									try {
-										const result = await action.execute(action.args);
-										await wa.sendMessage(msg.from, formatWriteResult(result));
-									} catch (err) {
-										capture(err, {
-											context:
-												"agent-gateway: confirm staged action (whatsapp)",
-										});
-										await wa.sendMessage(
-											msg.from,
-											"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+						const wa = channelForMsg;
+						const deps = toToolDependencies(ctx.context, createServiceClient());
+						const outcome = await resolveDurablePostback({
+							payload: text,
+							conversationId: ctx.context.conversationId,
+							traceId: ctx.context.traceId,
+							repository: pendingActionRepository(),
+							executeTool: text.startsWith("confirm:")
+								? async (toolName, args) => {
+										const tool = getRawWriteTool(
+											ctx?.context.productType ?? "zer",
+											deps,
+											toolName,
 										);
+										if (!tool) throw new Error("CONFIRM_TOOL_NOT_FOUND");
+										return tool.execute(args, toToolContext(deps));
 									}
-								}
-							} else {
-								await wa.sendMessage(
-									msg.from,
-									"Энэ үйлдлийн хугацаа дууссан эсвэл буруу байна.",
-								);
-							}
-						} else {
-							rejectAction(nonce);
-							const wa = channelForMsg;
-							await wa.sendMessage(msg.from, "❌ Цуцлагдлаа.");
-						}
+								: async () => null,
+						});
+						await wa.sendMessage(
+							msg.from,
+							outcome.handled
+								? outcome.reply ||
+										(text.startsWith("confirm:")
+											? "✅ Баталгаажлаа."
+											: "❌ Цуцлагдлаа.")
+								: "Энэ үйлдлийн хугацаа дууссан эсвэл буруу байна.",
+						);
 						continue;
 					}
 

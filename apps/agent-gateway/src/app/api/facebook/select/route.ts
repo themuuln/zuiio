@@ -1,11 +1,9 @@
 import { capture } from "@zuiio/capture";
+import { FacebookChannel } from "@zuiio/gateway-facebook";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-import { FacebookChannel } from "@zuiio/gateway-facebook";
 import { encryptSecret } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase";
-
 
 /**
  * POST: Select a Facebook Page to connect.

@@ -1,9 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-	ChannelConnection,
-	ResolutionResult,
-} from "@zuiio/gateway-core";
+import type { ChannelConnection, ResolutionResult } from "@zuiio/gateway-core";
 
 /** Resolve an active shared Telegram link to a credential-free context. */
 export async function resolveOrgFromChatUser(

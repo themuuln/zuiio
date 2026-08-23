@@ -1,8 +1,10 @@
 import { capture } from "@zuiio/capture";
+import type { ResolutionResult } from "@zuiio/gateway-core";
+import { AiGateway } from "@zuiio/gateway-core";
+import type { TelegramUpdate } from "@zuiio/gateway-telegram";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
 import { after, NextResponse } from "next/server";
 import { onUserLinked, onWelcome } from "@/bot-ux";
-import { TelegramChannel } from "@zuiio/gateway-telegram";
-import type { TelegramUpdate } from "@zuiio/gateway-telegram";
 import {
 	createTelegramResponseStream,
 	startTypingLoop,
@@ -10,8 +12,12 @@ import {
 import { handleFlowCallback, handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
-import type { ResolutionResult } from "@zuiio/gateway-core";
-import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { toToolContext, toToolDependencies } from "@/gateway/tool-dependencies";
+import {
+	getProductTools,
+	getRawWriteTool,
+	systemPromptFor,
+} from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
 import { openAiConfig, openCodeGoConfig } from "@/lib/env";
 import { formatWriteResult } from "@/lib/format-result";
@@ -24,8 +30,8 @@ import {
 import { verifyCompactToken } from "@/lib/tokens";
 import { GptMiniProvider } from "@/providers/gpt-mini";
 import { OpenCodeGoProvider } from "@/providers/opencode-go";
-import { AiGateway } from "@zuiio/gateway-core";
-import { confirmAction, rejectAction } from "@/runtime/confirmation";
+import { resolveDurablePostback } from "@/runtime/confirmation";
+import { pendingActionRepository } from "@/state/pending-action-repository";
 import { transcribeVoice } from "@/stt/groq";
 export const dynamic = "force-dynamic";
 
@@ -911,36 +917,62 @@ export async function POST(request: Request): Promise<NextResponse> {
 			);
 			await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
 		} else if (action === "confirm") {
-			const staged = confirmAction(nonce, String(chatId), String(userId));
-			if (!staged) {
-				await tg.answerCallbackQuery(cq.id, "Энэ үйлдлийн хугацаа дууссан.");
-				return;
-			}
-			await tg.editMessageText(
-				chatId,
-				messageId,
-				`✅ Баталгаажууллаа: ${staged.summary}`,
-			);
-			await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
-			// Re-execute the staged action deterministically — never via LLM.
-			if (staged.execute) {
-				try {
-					const result = await staged.execute(staged.args);
-					await tg.sendMessage(chatId, formatWriteResult(result));
-				} catch (err) {
-					capture(err, {
-						context: "agent-gateway: confirm staged action",
-					});
-					await tg.sendMessage(
-						chatId,
-						"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
-					);
-				}
+			try {
+				const resolved = await resolveOrgFromChatUser(
+					getSupabase(),
+					chatId,
+					userId,
+				);
+				const deps = toToolDependencies(resolved.context, getSupabase());
+				const outcome = await resolveDurablePostback({
+					payload: data,
+					conversationId: resolved.context.conversationId,
+					traceId: resolved.context.traceId,
+					repository: pendingActionRepository(),
+					executeTool: async (toolName, args) => {
+						const tool = getRawWriteTool(
+							resolved.context.productType,
+							deps,
+							toolName,
+						);
+						if (!tool) throw new Error("CONFIRM_TOOL_NOT_FOUND");
+						return tool.execute(args, toToolContext(deps));
+					},
+				});
+				await tg.editMessageText(
+					chatId,
+					messageId,
+					outcome.reply || "✅ Баталгаажууллаа.",
+				);
+				await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
+			} catch (err) {
+				capture(err, { context: "agent-gateway: confirm staged action" });
+				await tg.answerCallbackQuery(
+					cq.id,
+					"Үйлдлийн хугацаа дууссан эсвэл алдаа гарлаа.",
+				);
 			}
 		} else if (action === "reject") {
-			rejectAction(nonce);
-			await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
-			await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+			try {
+				const resolved = await resolveOrgFromChatUser(
+					getSupabase(),
+					chatId,
+					userId,
+				);
+				const outcome = await resolveDurablePostback({
+					payload: data,
+					conversationId: resolved.context.conversationId,
+					traceId: resolved.context.traceId,
+					repository: pendingActionRepository(),
+					executeTool: async () => null,
+				});
+				if (outcome.handled) {
+					await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
+					await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+				}
+			} catch (err) {
+				capture(err, { context: "agent-gateway: reject staged action" });
+			}
 		} else if (action === "flow") {
 			// Flow button callback: "flow:{runId}:{buttonValue}"
 			const [runId, ...buttonParts] = nonce.split(":");

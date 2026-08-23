@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
 	AgentAudience,
 	ChannelType,
+	GatewayContext,
 	ProductType,
 	ToolContext,
 } from "@zuiio/gateway-core";
@@ -20,9 +21,7 @@ export interface ToolDependencies {
 	traceId: string;
 }
 
-export function toToolContext(
-	dependencies: ToolDependencies,
-): ToolContext {
+export function toToolContext(dependencies: ToolDependencies): ToolContext {
 	return {
 		externalOrganizationId: dependencies.externalOrganizationId,
 		userId: dependencies.userId,
@@ -30,5 +29,23 @@ export function toToolContext(
 		audience: dependencies.audience,
 		conversationId: dependencies.conversationId,
 		traceId: dependencies.traceId,
+	};
+}
+
+export function toToolDependencies(
+	context: GatewayContext,
+	supabase: SupabaseClient,
+): ToolDependencies {
+	return {
+		supabase,
+		externalOrganizationId: context.externalOrganizationId,
+		userId: context.userId,
+		productType: context.productType,
+		audience: context.audience,
+		channel: context.channel,
+		channelChatId: context.channelChatId,
+		channelUserId: context.channelUserId,
+		conversationId: context.conversationId,
+		traceId: context.traceId,
 	};
 }
