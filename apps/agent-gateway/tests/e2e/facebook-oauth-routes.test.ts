@@ -105,10 +105,9 @@ describe("GET /api/facebook/connect", () => {
 			FB_ENV.FB_OAUTH_REDIRECT_URI,
 		);
 		expect(url.searchParams.get("response_type")).toBe("code");
-		expect(url.searchParams.get("scope")).toContain("pages_messaging");
-		expect(url.searchParams.get("scope")).toContain(
-			"instagram_manage_messages",
-		);
+		expect(url.searchParams.get("scope")).toContain("pages_show_list");
+		expect(url.searchParams.get("scope")).toContain("pages_manage_metadata");
+		expect(url.searchParams.get("scope")).not.toContain("instagram_");
 
 		// State param round-trips the orgId/productType
 		const stateParam = url.searchParams.get("state") ?? "";
@@ -129,6 +128,18 @@ describe("GET /api/facebook/connect", () => {
 		expect(cookieData.orgId).toBe(ORG_ID);
 		expect(cookieData.state).toBe(decoded.state);
 		expect(cookie?.maxAge).toBe(600);
+	});
+
+	it("never adds Instagram permissions to the Facebook dialog", async () => {
+		process.env.FB_ENABLE_INSTAGRAM = "1";
+		const { GET } = await import("@/app/api/facebook/connect/route");
+		const res = await GET(
+			new Request(
+				`http://localhost/api/facebook/connect?orgId=${ORG_ID}&productType=zer`,
+			),
+		);
+		const url = new URL(res.headers.get("location") ?? "");
+		expect(url.searchParams.get("scope")).not.toContain("instagram_");
 	});
 });
 

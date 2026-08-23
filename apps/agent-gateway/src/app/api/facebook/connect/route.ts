@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { getFacebookOAuthScopes } from "@/lib/facebook-scopes";
+
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_OAUTH_REDIRECT_URI = process.env.FB_OAUTH_REDIRECT_URI || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
@@ -44,13 +46,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			new URLSearchParams({
 				client_id: FB_APP_ID,
 				redirect_uri: FB_OAUTH_REDIRECT_URI,
-				scope: [
-					"pages_messaging",
-					"pages_show_list",
-					"pages_manage_metadata",
-					"instagram_basic",
-					"instagram_manage_messages",
-				].join(","),
+				scope: getFacebookOAuthScopes(),
 				state: Buffer.from(stateData).toString("base64url"),
 				response_type: "code",
 			}),
