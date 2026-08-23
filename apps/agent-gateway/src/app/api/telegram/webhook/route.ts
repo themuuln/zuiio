@@ -1,8 +1,8 @@
 import { capture } from "@zuiio/capture";
 import { after, NextResponse } from "next/server";
 import { onUserLinked, onWelcome } from "@/bot-ux";
-import { TelegramChannel } from "@/channels/telegram";
-import type { TelegramUpdate } from "@/channels/types";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import type { TelegramUpdate } from "@zuiio/gateway-telegram";
 import {
 	createTelegramResponseStream,
 	startTypingLoop,
@@ -10,7 +10,7 @@ import {
 import { handleFlowCallback, handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
-import type { ResolutionResult } from "@/gateway/types";
+import type { ResolutionResult } from "@zuiio/gateway-core";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
 import { openAiConfig, openCodeGoConfig } from "@/lib/env";
@@ -24,7 +24,7 @@ import {
 import { verifyCompactToken } from "@/lib/tokens";
 import { GptMiniProvider } from "@/providers/gpt-mini";
 import { OpenCodeGoProvider } from "@/providers/opencode-go";
-import { AiGateway } from "@/providers/types";
+import { AiGateway } from "@zuiio/gateway-core";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
 import { transcribeVoice } from "@/stt/groq";
 export const dynamic = "force-dynamic";
@@ -533,7 +533,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 		try {
 			const resolved = await resolveOrgFromChatUser(sb, chatId, userId);
-			const { orgId, productType } = resolved.context;
+			const { externalOrganizationId: orgId, productType } = resolved.context;
 
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
@@ -569,9 +569,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 					userMessage: "Өнөөдрийн борлуулалтын хураангуй өгөөч",
 					tools: [],
 					context: {
-						orgId,
+						externalOrganizationId: orgId,
 						userId: String(userId),
-						supabase: sb,
+						productType,
+						audience: "internal",
+						conversationId: `legacy:telegram:${chatId}:${userId}`,
+						traceId: crypto.randomUUID(),
 					},
 					maxRounds: 1,
 				});
@@ -594,7 +597,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 		try {
 			const resolved = await resolveOrgFromChatUser(sb, chatId, userId);
-			const { orgId, productType } = resolved.context;
+			const { externalOrganizationId: orgId, productType } = resolved.context;
 
 			if (productType === "tolom") {
 				const { data } = await sb
@@ -637,9 +640,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 					userMessage: "Сүүлийн захиалгуудыг харуул",
 					tools: [],
 					context: {
-						orgId,
+						externalOrganizationId: orgId,
 						userId: String(userId),
-						supabase: sb,
+						productType,
+						audience: "internal",
+						conversationId: `legacy:telegram:${chatId}:${userId}`,
+						traceId: crypto.randomUUID(),
 					},
 					maxRounds: 1,
 				});
@@ -671,7 +677,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 		try {
 			const resolved = await resolveOrgFromChatUser(sb, chatId, userId);
-			const { orgId, productType } = resolved.context;
+			const { externalOrganizationId: orgId, productType } = resolved.context;
 
 			if (productType === "tolom") {
 				// Search customers

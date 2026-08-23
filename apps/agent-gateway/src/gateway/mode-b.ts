@@ -1,16 +1,9 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GatewayContext } from "./types";
+import type { GatewayContext } from "@zuiio/gateway-core";
 
-/**
- * Mode B resolver — custom bot per organization.
- *
- * Custom bots are pre-mapped to an org via the custom_bots table.
- * No QR linking needed — the bot IS the organization.
- *
- * Resolution by `botKey` (opaque UUID that maps to custom_bots.id).
- */
+/** Resolve one custom Telegram bot to a credential-free tenant context. */
 export async function resolveOrgFromBotKey(
 	supabase: SupabaseClient,
 	botKey: string,
@@ -21,31 +14,28 @@ export async function resolveOrgFromBotKey(
 		.eq("id", botKey)
 		.eq("is_active", true)
 		.single();
+	if (error || !data) return null;
 
-	if (error || !data) {
-		return null;
-	}
-
-	// Resolve audience from channel_connections (default "customer" —
-	// custom bots are customer-facing unless explicitly configured internal).
-	const { data: conn } = await supabase
+	const { data: connection } = await supabase
 		.from("channel_connections")
 		.select("audience")
 		.eq("bot_key", botKey)
 		.eq("is_active", true)
 		.maybeSingle();
-
-	const audience = (conn?.audience ?? "customer") as "internal" | "customer";
+	const audience = (connection?.audience ?? "customer") as
+		| "internal"
+		| "customer";
 
 	return {
-		orgId: data.organization_id,
+		externalOrganizationId: data.organization_id,
 		userId: data.organization_id,
 		productType: data.product_type as "tolom" | "zer",
 		audience,
-		chatId: 0,
-		telegramUserId: 0,
 		channel: "telegram",
+		endpointId: botKey,
+		conversationId: `legacy:telegram:${botKey}`,
 		channelChatId: "0",
 		channelUserId: "0",
+		traceId: crypto.randomUUID(),
 	};
 }

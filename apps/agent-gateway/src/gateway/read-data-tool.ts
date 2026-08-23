@@ -1,7 +1,8 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import type { ToolDependencies } from "./tool-dependencies";
 import { createReadEngine } from "@/read-engine";
 import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
 import zerReadCatalog from "@/read-engine/catalogs/zer.json";
@@ -33,15 +34,17 @@ const READ_CATALOGS: Record<string, ProductCatalog> = {
  */
 export function createReadDataTool(
 	productType: string,
-	context: ToolContext,
+	context: ToolDependencies,
 ): GatewayTool | null {
 	const catalog = READ_CATALOGS[productType];
 	if (!catalog) return null;
 
-	const { supabase, orgId } = context;
+	const { supabase, externalOrganizationId: orgId } = context;
 
 	return {
 		name: "readData",
+		effect: "read",
+		approval: "none",
 		description:
 			"Бүх бизнес өгөгдөл унших нэгдмэл багаж (Read Engine). " +
 			"LLM нь ReadPlan объект дуудна: { queries: [...], derivation?, responseFormat? }. " +

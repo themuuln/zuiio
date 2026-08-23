@@ -2,13 +2,7 @@ import { capture } from "@zuiio/capture";
 import { markdownToMessengerFormat } from "@zuiio/gateway-core";
 import type { Channel, InlineButton, SendMessageOptions } from "@zuiio/gateway-core";
 
-/**
- * WhatsApp Cloud API channel adapter.
- * Uses credentials from WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN env vars.
- *
- * To enable: set WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN in .env.local.
- * Business Solution Provider (BSP) like 360dialog, Twilio, or Wati.
- */
+/** WhatsApp Cloud API channel adapter. */
 export class WhatsAppChannel implements Channel {
 	private baseUrl: string;
 	private accessToken: string;
@@ -16,13 +10,11 @@ export class WhatsAppChannel implements Channel {
 	constructor(phoneNumberId?: string, accessToken?: string) {
 		const id = phoneNumberId ?? process.env.WHATSAPP_PHONE_NUMBER_ID;
 		const token = accessToken ?? process.env.WHATSAPP_ACCESS_TOKEN;
-
 		if (!id || !token) {
 			throw new Error(
 				"WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN are required for WhatsApp channel",
 			);
 		}
-
 		this.baseUrl = `https://graph.facebook.com/v22.0/${id}`;
 		this.accessToken = token;
 	}
@@ -31,7 +23,7 @@ export class WhatsAppChannel implements Channel {
 		endpoint: string,
 		body: Record<string, unknown>,
 	): Promise<Response> {
-		const res = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -39,30 +31,29 @@ export class WhatsAppChannel implements Channel {
 			},
 			body: JSON.stringify(body),
 		});
-
-		if (!res.ok) {
-			const err = await res.text().catch(() => "unknown");
-			capture(new Error(`WhatsApp ${endpoint} failed: ${res.status} ${err}`), {
-				context: "gateway-whatsapp: api",
-			});
+		if (!response.ok) {
+			const error = await response.text().catch(() => "unknown");
+			capture(
+				new Error(`WhatsApp ${endpoint} failed: ${response.status} ${error}`),
+				{ context: "gateway-whatsapp: api" },
+			);
 		}
-
-		return res;
+		return response;
 	}
 
 	async sendMessage(
 		chatId: number | string,
 		text: string,
 		_options?: SendMessageOptions,
-	): Promise<void> {
-		const formatted = markdownToMessengerFormat(text);
-		await this.api("messages", {
+	): Promise<boolean> {
+		const response = await this.api("messages", {
 			messaging_product: "whatsapp",
 			recipient_type: "individual",
-			to: chatId.toString(),
+			to: String(chatId),
 			type: "text",
-			text: { body: formatted.substring(0, 4096) },
+			text: { body: markdownToMessengerFormat(text).substring(0, 4096) },
 		});
+		return response.ok;
 	}
 
 	async sendInlineKeyboard(
@@ -70,23 +61,21 @@ export class WhatsAppChannel implements Channel {
 		text: string,
 		buttons: InlineButton[][],
 	): Promise<void> {
-		// WhatsApp uses interactive message with button replies
-		const flatButtons = buttons.flat().slice(0, 3); // WhatsApp max 3 buttons
-
+		const flatButtons = buttons.flat().slice(0, 3);
 		await this.api("messages", {
 			messaging_product: "whatsapp",
 			recipient_type: "individual",
-			to: chatId.toString(),
+			to: String(chatId),
 			type: "interactive",
 			interactive: {
 				type: "button",
 				body: { text: text.substring(0, 1024) },
 				action: {
-					buttons: flatButtons.map((btn) => ({
+					buttons: flatButtons.map((button) => ({
 						type: "reply",
 						reply: {
-							id: btn.callbackData.substring(0, 256),
-							title: btn.text.substring(0, 20),
+							id: button.callbackData.substring(0, 256),
+							title: button.text.substring(0, 20),
 						},
 					})),
 				},
@@ -97,33 +86,20 @@ export class WhatsAppChannel implements Channel {
 	async answerCallbackQuery(
 		_callbackQueryId: string,
 		_text?: string,
-	): Promise<void> {
-		// WhatsApp doesn't have callback queries like Telegram —
-		// button replies arrive as regular messages with button payload
-	}
+	): Promise<void> {}
 
 	async editMessageText(
 		_chatId: number | string,
 		_messageId: number,
 		_text: string,
-	): Promise<void> {
-		// WhatsApp doesn't support editing sent messages via Cloud API
-	}
+	): Promise<void> {}
 
-	/**
-	 * Register a webhook endpoint for WhatsApp.
-	 * @param url — public HTTPS URL for the webhook
-	 * @param verifyToken — token for webhook verification challenge
-	 */
 	async configureWebhook(url: string, verifyToken: string): Promise<void> {
 		const appId = process.env.WHATSAPP_APP_ID;
 		if (!appId) {
-			throw new Error(
-				"WHATSAPP_APP_ID is required for webhook configuration",
-			);
+			throw new Error("WHATSAPP_APP_ID is required for webhook configuration");
 		}
-
-		const res = await fetch(
+		const response = await fetch(
 			`https://graph.facebook.com/v22.0/${appId}/subscriptions`,
 			{
 				method: "POST",
@@ -139,10 +115,8 @@ export class WhatsAppChannel implements Channel {
 				}),
 			},
 		);
-
-		if (!res.ok) {
-			const err = await res.text();
-			throw new Error(`Failed to configure WhatsApp webhook: ${err}`);
+		if (!response.ok) {
+			throw new Error("Failed to configure WhatsApp webhook");
 		}
 	}
 }

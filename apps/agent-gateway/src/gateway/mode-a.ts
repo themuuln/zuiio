@@ -1,13 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ResolutionResult } from "./types";
+import type {
+	ChannelConnection,
+	ResolutionResult,
+} from "@zuiio/gateway-core";
 
-/**
- * Resolves a (chatId, userId) pair to an org context (Mode A — shared bot).
- * Queries telegram_links table for Telegram links.
- * Only returns active connections. Supports exactly one active connection per (chat, user) pair.
- * Throws a user-friendly Mongolian error if no active connection exists.
- */
+/** Resolve an active shared Telegram link to a credential-free context. */
 export async function resolveOrgFromChatUser(
 	supabase: SupabaseClient,
 	chatId: number,
@@ -22,7 +20,6 @@ export async function resolveOrgFromChatUser(
 		.order("last_active_at", { ascending: false })
 		.limit(1)
 		.single();
-
 	if (error || !data) {
 		throw new Error(
 			"Таны Telegram холбогдоогүй байна. /start командыг ашиглана уу.",
@@ -31,17 +28,17 @@ export async function resolveOrgFromChatUser(
 
 	return {
 		context: {
-			orgId: data.organization_id,
+			externalOrganizationId: data.organization_id,
 			userId: data.user_id ?? "",
 			productType: data.product_type,
-			// SSO-linked staff Telegram is always internal.
 			audience: "internal",
-			chatId: Number(data.telegram_chat_id),
-			telegramUserId: Number(data.telegram_user_id),
 			channel: "telegram",
+			endpointId: String(data.id),
+			conversationId: `legacy:telegram:${chatId}:${userId}`,
 			channelChatId: String(data.telegram_chat_id),
 			channelUserId: String(data.telegram_user_id),
+			traceId: crypto.randomUUID(),
 		},
-		connection: data as unknown as import("./types").ChannelConnection,
+		connection: data as unknown as ChannelConnection,
 	};
 }

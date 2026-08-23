@@ -1,7 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Channel } from "@/channels/types";
-import type { GatewayContext } from "@/gateway/types";
-import type { AiProvider } from "@/providers/types";
+import type { AiProvider, Channel, GatewayContext } from "@zuiio/gateway-core";
 import { interpretFlow, resumeFlow } from "./interpreter";
 import { buttonValueFromCallback } from "./nodes/ask-question";
 import {
@@ -34,7 +32,7 @@ export async function handleFlowMessage(
 	// 1. Check if user has an active run
 	const existingRun = await loadActiveRun(
 		supabase,
-		ctx.orgId,
+		ctx.externalOrganizationId,
 		ctx.channel,
 		ctx.channelChatId,
 		ctx.channelUserId,
@@ -52,7 +50,7 @@ export async function handleFlowMessage(
 	}
 
 	// 2. Check if a flow should be triggered by this message
-	const flow = await findActiveFlow(supabase, ctx.orgId, ctx.channel);
+	const flow = await findActiveFlow(supabase, ctx.externalOrganizationId, ctx.channel);
 
 	if (!flow) {
 		return null; // No flow active — let the AI agent handler take over
@@ -93,9 +91,12 @@ export async function handleFlowMessage(
 							images: undefined,
 							tools: [],
 							context: {
-								orgId: ctx.orgId,
+								externalOrganizationId: ctx.externalOrganizationId,
 								userId: ctx.userId,
-								supabase,
+								productType: ctx.productType,
+								audience: ctx.audience,
+								conversationId: ctx.conversationId,
+								traceId: ctx.traceId,
 							},
 							maxRounds: params.maxRounds,
 							conversationHistory: undefined,
@@ -255,9 +256,12 @@ async function resumeExistingRun(
 							images: undefined,
 							tools: [],
 							context: {
-								orgId: gatewayCtx.orgId,
+								externalOrganizationId: gatewayCtx.externalOrganizationId,
 								userId: gatewayCtx.userId,
-								supabase,
+								productType: gatewayCtx.productType,
+								audience: gatewayCtx.audience,
+								conversationId: gatewayCtx.conversationId,
+								traceId: gatewayCtx.traceId,
 							},
 							maxRounds: params.maxRounds,
 							conversationHistory: undefined,

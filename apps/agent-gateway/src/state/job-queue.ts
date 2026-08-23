@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
-import type { GatewayContext } from "@/gateway/types";
+import type { GatewayContext } from "@zuiio/gateway-core";
 
 /**
  * Durable async job queue for agent-gateway.
@@ -51,7 +51,7 @@ export async function enqueueJob(
 	const { data, error } = await sb
 		.from("agent_async_jobs")
 		.insert({
-			organization_id: ctx.orgId,
+			organization_id: ctx.externalOrganizationId,
 			channel: ctx.channel,
 			payload: {
 				ctx,

@@ -1,87 +1,77 @@
 import { capture } from "@zuiio/capture";
 import type { Channel, InlineButton, SendMessageOptions } from "@zuiio/gateway-core";
+import {
+	MetaGraphClient,
+	MetaGraphError,
+	type MetaPageInfo,
+} from "./graph-client";
 
-const GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
-const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
+export interface FacebookChannelOptions {
+	pageId: string;
+	pageAccessToken: string;
+	client?: MetaGraphClient;
+	appId?: string;
+	appSecret?: string;
+	apiVersion?: string;
+}
 
-/**
- * Facebook Messenger + Instagram channel adapter.
- * Uses the Meta Graph API to send messages via Page Access Tokens.
- *
- * Both Messenger and Instagram use the same API endpoint:
- * POST /{page_id}/messages with the page's access token.
- *
- * Key differences:
- * - Messenger: supports Button Template, Generic Template, Quick Replies, Postbacks
- * - Instagram: supports Quick Replies only (no button templates, no postbacks)
- */
+/** Messenger and Instagram adapter with method-local credential access. */
 export class FacebookChannel implements Channel {
-	private apiVersion: string;
-	pageId?: string;
-	pageAccessToken?: string;
+	private readonly pageId: string;
+	private readonly pageAccessToken: string;
+	private readonly client: MetaGraphClient;
 
-	constructor(config?: {
-		apiVersion?: string;
-		pageId?: string;
-		pageAccessToken?: string;
-	}) {
-		this.apiVersion = config?.apiVersion ?? GRAPH_API_VERSION;
-		this.pageId = config?.pageId;
-		this.pageAccessToken = config?.pageAccessToken;
+	constructor(options: FacebookChannelOptions) {
+		this.pageId = options.pageId;
+		this.pageAccessToken = options.pageAccessToken;
+		this.client =
+			options.client ??
+			new MetaGraphClient({
+				appId:
+					options.appId ??
+					process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ??
+					process.env.FB_APP_ID ??
+					"",
+				appSecret: options.appSecret ?? process.env.FB_APP_SECRET ?? "",
+				apiVersion: options.apiVersion ?? process.env.FB_GRAPH_API_VERSION,
+			});
+	}
+
+	private captureFailure(operation: string, error: unknown): void {
+		const safeError =
+			error instanceof MetaGraphError
+				? new Error(`${operation} failed: ${error.code}`)
+				: new Error(`${operation} failed`);
+		capture(safeError, {
+			context: "gateway-facebook",
+			operation,
+			...(error instanceof MetaGraphError
+				? {
+						status: error.status,
+						code: error.code,
+						retryable: error.retryable,
+					}
+				: {}),
+		});
 	}
 
 	async sendMessage(
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void> {
-		const pageId = this.pageId;
-		const pageAccessToken = this.pageAccessToken;
-		if (!pageId || !pageAccessToken) {
-			capture(
-				new Error(
-					"Facebook sendMessage missing pageId or pageAccessToken",
-				),
-				{
-					context: "gateway-facebook",
-				},
-			);
-			return;
-		}
-
+	): Promise<boolean> {
 		try {
-			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
-
-			const payload: Record<string, unknown> = {
-				recipient: { id: chatId.toString() },
-				messaging_type: "RESPONSE",
-				message: { text },
-			};
-
-			// Add quick replies if provided
-			if (options?.quickReplies?.length) {
-				(payload.message as Record<string, unknown>).quick_replies =
-					options.quickReplies.map((qr) => ({
-						content_type: "text",
-						title: qr.text,
-						payload: qr.callbackData,
-					}));
-			}
-
-			const res = await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
+			await this.client.sendMessage({
+				pageId: this.pageId,
+				pageAccessToken: this.pageAccessToken,
+				recipientId: String(chatId),
+				text,
+				quickReplies: options?.quickReplies,
 			});
-
-			if (!res.ok) {
-				const err = await res.text().catch(() => "unknown");
-				capture(new Error(`Facebook send failed: ${res.status} ${err}`), {
-					context: "gateway-facebook",
-				});
-			}
-		} catch (err) {
-			capture(err, { context: "gateway-facebook: sendMessage" });
+			return true;
+		} catch (error) {
+			this.captureFailure("send_message", error);
+			return false;
 		}
 	}
 
@@ -90,191 +80,89 @@ export class FacebookChannel implements Channel {
 		text: string,
 		buttons: InlineButton[][],
 	): Promise<void> {
-		const pageId = this.pageId;
-		const pageAccessToken = this.pageAccessToken;
-		if (!pageId || !pageAccessToken) {
-			capture(
-				new Error(
-					"Facebook sendInlineKeyboard missing pageId or pageAccessToken",
-				),
-				{
-					context: "gateway-facebook",
-				},
-			);
-			return;
-		}
-
 		try {
-			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
-			const flatButtons = buttons.flat();
-
-			// Messenger: Button Template (max 3 buttons per template)
-			// Instagram: Quick Replies only (no button templates)
-			// Strategy: Use Quick Replies for both (works on both platforms)
-			const payload: Record<string, unknown> = {
-				recipient: { id: chatId.toString() },
-				messaging_type: "RESPONSE",
-				message: {
-					text,
-					quick_replies: flatButtons.slice(0, 11).map((btn) => ({
-						content_type: "text",
-						title: btn.text,
-						payload: btn.callbackData,
-					})),
-				},
-			};
-
-			const res = await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
+			await this.client.sendQuickReplies({
+				pageId: this.pageId,
+				pageAccessToken: this.pageAccessToken,
+				recipientId: String(chatId),
+				text,
+				quickReplies: buttons.flat(),
 			});
-
-			if (!res.ok) {
-				const err = await res.text().catch(() => "unknown");
-				capture(
-					new Error(
-						`Facebook inline keyboard failed: ${res.status} ${err}`,
-					),
-					{
-						context: "gateway-facebook",
-					},
-				);
-			}
-		} catch (err) {
-			capture(err, {
-				context: "gateway-facebook: sendInlineKeyboard",
-			});
+		} catch (error) {
+			this.captureFailure("send_quick_replies", error);
 		}
 	}
 
 	async answerCallbackQuery(
 		_callbackQueryId: string,
 		_text?: string,
-	): Promise<void> {
-		// Facebook/Instagram don't have callback queries like Telegram
-		// Messenger uses postbacks, Instagram has no equivalent
-		// This is a no-op for FB/IG channels
-	}
+	): Promise<void> {}
 
 	async editMessageText(
 		chatId: number | string,
 		_messageId: number,
 		text: string,
 	): Promise<void> {
-		// Facebook/Instagram don't support message editing
-		// Send a new message instead with an indicator
 		await this.sendMessage(chatId, `(засварласан) ${text}`);
 	}
 
-	/**
-	 * Send a confirmation prompt with Quick Replies.
-	 * Used for write tool confirmations on Messenger/Instagram.
-	 */
 	async sendConfirmation(
 		chatId: number | string,
 		text: string,
-		confirmId: string,
+		confirmationId: string,
 	): Promise<void> {
 		await this.sendInlineKeyboard(chatId, text, [
 			[
-				{ text: "✅ Баталгаажуулах", callbackData: `confirm:${confirmId}` },
-				{ text: "❌ Цуцлах", callbackData: `reject:${confirmId}` },
+				{
+					text: "✅ Баталгаажуулах",
+					callbackData: `confirm:${confirmationId}`,
+				},
+				{ text: "❌ Цуцлах", callbackData: `reject:${confirmationId}` },
 			],
 		]);
 	}
 
-	/**
-	 * Subscribe a page to webhook events.
-	 * Must be called after OAuth flow completes.
-	 */
 	async subscribeToWebhook(
-		pageId: string,
-		pageAccessToken: string,
-		subscribedFields = "messages,messaging_postbacks",
+		subscribedFields = ["messages", "messaging_postbacks"],
 	): Promise<boolean> {
 		try {
-			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;
-
-			const res = await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ subscribed_fields: subscribedFields }),
-			});
-
-			if (!res.ok) {
-				const err = await res.text().catch(() => "unknown");
-				capture(
-					new Error(`Webhook subscription failed: ${res.status} ${err}`),
-					{
-						context: "gateway-facebook",
-					},
-				);
-				return false;
-			}
-
+			await this.client.subscribePage(
+				this.pageId,
+				this.pageAccessToken,
+				subscribedFields,
+			);
 			return true;
-		} catch (err) {
-			capture(err, {
-				context: "gateway-facebook: subscribeToWebhook",
-			});
+		} catch (error) {
+			this.captureFailure("subscribe_page", error);
 			return false;
 		}
 	}
 
-	/**
-	 * Get page info including Instagram account if linked.
-	 */
-	async getPageInfo(
-		pageId: string,
-		pageAccessToken: string,
-	): Promise<{
-		id: string;
-		name: string;
-		instagramBusinessAccount?: { id: string };
-	} | null> {
+	async getPageInfo(): Promise<MetaPageInfo | null> {
 		try {
-			const url = `${GRAPH_API_BASE}/${pageId}?fields=id,name,instagram_business_account{id}&access_token=${pageAccessToken}`;
-
-			const res = await fetch(url);
-			if (!res.ok) return null;
-
-			const data = (await res.json()) as {
-				id: string;
-				name: string;
-				instagram_business_account?: { id: string };
-			};
-
-			return data;
-		} catch {
+			return await this.client.getPageInfo(
+				this.pageId,
+				this.pageAccessToken,
+			);
+		} catch (error) {
+			this.captureFailure("get_page_info", error);
 			return null;
 		}
 	}
 
-	/**
-	 * Send a sender action (typing_on, typing_off, mark_seen).
-	 * Used for streaming-like UX on Messenger/Instagram.
-	 */
 	async sendSenderAction(
 		recipientId: string,
 		action: "typing_on" | "typing_off" | "mark_seen",
 	): Promise<void> {
-		const pageId = this.pageId;
-		const pageAccessToken = this.pageAccessToken;
-		if (!pageId || !pageAccessToken) return;
-
 		try {
-			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
-			await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					recipient: { id: recipientId },
-					sender_action: action,
-				}),
+			await this.client.sendMessage({
+				pageId: this.pageId,
+				pageAccessToken: this.pageAccessToken,
+				recipientId,
+				senderAction: action,
 			});
-		} catch {
-			// Sender action failures are non-critical
+		} catch (error) {
+			this.captureFailure("send_sender_action", error);
 		}
 	}
 }

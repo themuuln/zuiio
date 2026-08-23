@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { TelegramChannel } from "./telegram";
+import type { TelegramChannel } from "@zuiio/gateway-telegram";
 
 const MAX_STREAM_PREVIEW_LENGTH = 4096;
 const DEFAULT_STREAM_UPDATE_INTERVAL_MS = 250;

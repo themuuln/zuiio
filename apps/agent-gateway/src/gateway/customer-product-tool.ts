@@ -1,7 +1,8 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import type { ToolDependencies } from "./tool-dependencies";
 
 /**
  * Customer-safe product catalog search for Zer.
@@ -17,11 +18,13 @@ import type { GatewayTool, ToolContext } from "@/providers/types";
  *   (internal margin data).
  * - No writes, no joins into sales/stock internals.
  */
-export function createCustomerProductTool(context: ToolContext): GatewayTool {
-	const { supabase, orgId } = context;
+export function createCustomerProductTool(context: ToolDependencies): GatewayTool {
+	const { supabase, externalOrganizationId: orgId } = context;
 
 	return {
 		name: "searchProducts",
+		effect: "read",
+		approval: "none",
 		description:
 			'Барааны каталог хайх (харилцагчид зориулсан). Нэр, SKU эсвэл баркодаар хайж, барааны нэр, тайлбар, борлуулалтын үнэ, үлдэгдэл тоо хэмжээг буцаана. Жишээ: searchProducts({ query: "гитар" }) эсвэл searchProducts({ query: "SKU-1024", limit: 5 }).',
 		parameters: [

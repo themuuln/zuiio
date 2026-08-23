@@ -1,7 +1,8 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import type { ToolDependencies } from "./tool-dependencies";
 import { runWrite } from "@/write-engine";
 import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
 import zerWriteCatalog from "@/write-engine/catalogs/zer-write.json";
@@ -37,15 +38,17 @@ const WRITE_CATALOGS: Record<string, WriteCatalog> = {
  */
 export function createWriteDataTool(
 	productType: string,
-	context: ToolContext,
+	context: ToolDependencies,
 ): GatewayTool | null {
 	const catalog = WRITE_CATALOGS[productType];
 	if (!catalog) return null;
 
-	const { supabase, orgId } = context;
+	const { supabase, externalOrganizationId: orgId } = context;
 
 	return {
 		name: "writeData",
+		effect: "write",
+		approval: "required",
 		description:
 			"Өгөгдөл бичих (үүсгэх, шинэчлэх, устгах) нэгдмэл багаж. " +
 			"Зөвхөн writeCatalog-д бүртгэлт хүснэгтүүдэд зориулагдсан. " +

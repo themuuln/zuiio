@@ -2,11 +2,10 @@ import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { FacebookChannel } from "@/channels/facebook";
+import { FacebookChannel } from "@zuiio/gateway-facebook";
 import { encryptSecret } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase";
 
-const facebookChannel = new FacebookChannel();
 
 /**
  * POST: Select a Facebook Page to connect.
@@ -23,6 +22,38 @@ const facebookChannel = new FacebookChannel();
  * 3. Subscribe page to webhook
  * 4. Check for Instagram account
  */
+/**
+ * GET: Read the non-sensitive page list from the OAuth session.
+ *
+ * Page access tokens stay in the httpOnly cookie and are never returned to
+ * browser JavaScript. The POST handler reads the same cookie when connecting.
+ */
+export async function GET(request: NextRequest): Promise<NextResponse> {
+	const pagesCookie = request.cookies.get("fb_pages")?.value;
+	if (!pagesCookie) {
+		return NextResponse.json(
+			{ error: "OAuth session expired. Please try again." },
+			{ status: 400 },
+		);
+	}
+
+	try {
+		const pages = JSON.parse(pagesCookie) as Array<{
+			id: string;
+			name: string;
+			access_token: string;
+		}>;
+		const safePages = pages.map(({ id, name }) => ({ id, name }));
+		return NextResponse.json({ pages: safePages });
+	} catch (err) {
+		capture(err, { context: "agent-gateway: facebook page list" });
+		return NextResponse.json(
+			{ error: "OAuth session is invalid. Please try again." },
+			{ status: 400 },
+		);
+	}
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
 		const body = (await request.json()) as {
@@ -108,17 +139,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// Subscribe page to webhook
-		const subscribed = await facebookChannel.subscribeToWebhook(
+		const facebookChannel = new FacebookChannel({
 			pageId,
-			selectedPage.access_token,
-		);
-
-		// Check for Instagram account
-		const pageInfo = await facebookChannel.getPageInfo(
-			pageId,
-			selectedPage.access_token,
-		);
+			pageAccessToken: selectedPage.access_token,
+		});
+		const subscribed = await facebookChannel.subscribeToWebhook();
+		const pageInfo = await facebookChannel.getPageInfo();
 
 		// If Instagram is linked, also store that connection
 		if (pageInfo?.instagramBusinessAccount) {

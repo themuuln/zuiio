@@ -1,3 +1,4 @@
+.git/
 # Test files
 tests/
 
@@ -16,3 +17,6 @@ biome.json
 
 # Dependencies
 node_modules/
+.next/
+.vercel/
+.turbo/

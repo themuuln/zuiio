@@ -2,9 +2,10 @@ import "server-only";
 import { capture } from "@zuiio/capture";
 import { after } from "next/server";
 
-import { TelegramChannel } from "@/channels/telegram";
-import type { GatewayContext } from "@/gateway/types";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import type { GatewayContext } from "@zuiio/gateway-core";
 import { debug } from "@/lib/debug";
+import { toToolContext, type ToolDependencies } from "@/gateway/tool-dependencies";
 import { openAiConfig, openCodeGoConfig, validateConfig } from "@/lib/env";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { createServiceClient, type ServiceClient } from "@/lib/supabase";
@@ -14,7 +15,7 @@ import {
 	AiGateway,
 	type GatewayTool,
 	type ToolContext,
-} from "@/providers/types";
+} from "@zuiio/gateway-core";
 import { formatProfileContext, loadAgentProfile } from "@/state/agent-profile";
 import { withAudit } from "@/state/audit";
 import {
@@ -83,7 +84,7 @@ async function escalateToHuman(
 		const chatId = Number(ctx.channelChatId) || 0;
 		const userId = Number(ctx.channelUserId) || 0;
 		const event = await triggerHandoff(sb, {
-			orgId: ctx.orgId,
+			orgId: ctx.externalOrganizationId,
 			chatId,
 			userId,
 			reason,
@@ -124,7 +125,7 @@ export interface AgentHandlerOptions {
 		lang?: string,
 	) => Promise<string>;
 	/** Get tools for the product type and context. */
-	getTools: (context: ToolContext) => GatewayTool[];
+	getTools: (context: ToolDependencies) => GatewayTool[];
 	/** Product-specific Supabase client. If omitted, uses the default Zer client. */
 	dataClient?: ServiceClient;
 	/** Called with each token chunk when streaming is enabled. */
@@ -143,34 +144,37 @@ export async function handleAgentMessage(
 	images?: string[],
 ): Promise<string> {
 	console.log(
-		`[agent-handler] START org=${ctx.orgId} chat=${ctx.channelChatId} user=${ctx.channelUserId} channel=${ctx.channel} textLen=${text.length}`,
+		`[agent-handler] START org=${ctx.externalOrganizationId} chat=${ctx.channelChatId} user=${ctx.channelUserId} channel=${ctx.channel} textLen=${text.length}`,
 	);
 	const timings: Record<string, number> = {};
 	const pipelineStart = performance.now();
 	const sb = getSb();
+	const dataClient = opts.dataClient ?? sb;
 	const gateway = getGateway();
-	const context: ToolContext = {
-		orgId: ctx.orgId,
+	const toolDependencies: ToolDependencies = {
+		supabase: dataClient,
+		externalOrganizationId: ctx.externalOrganizationId,
 		userId: ctx.userId,
-		supabase: opts.dataClient ?? sb,
-		audience: ctx.audience ?? "internal",
+		productType: ctx.productType,
+		audience: ctx.audience,
 		channel: ctx.channel,
 		channelChatId: ctx.channelChatId,
 		channelUserId: ctx.channelUserId,
-		pageId: ctx.pageId,
-		pageAccessToken: ctx.pageAccessToken,
+		conversationId: ctx.conversationId,
+		traceId: ctx.traceId,
 	};
+	const context: ToolContext = toToolContext(toolDependencies);
 
 	// Check budget
 	let t = performance.now();
-	const budget = await checkDailyBudget(sb, ctx.orgId);
+	const budget = await checkDailyBudget(sb, ctx.externalOrganizationId);
 	timings.budget = Math.round(performance.now() - t);
 	if (!budget.allowed) return budget.reason!;
 
 	// Rate limiting
 	t = performance.now();
 	const rateLimit = await checkRateLimit(
-		ctx.orgId,
+		ctx.externalOrganizationId,
 		RATE_LIMITS.messagesPerMinute,
 	);
 	timings.rateLimit = Math.round(performance.now() - t);
@@ -186,8 +190,8 @@ export async function handleAgentMessage(
 
 	// Check handoff triggers — if user wants a human, escalate immediately
 	const [handoffConfig, activeHandoff] = await Promise.all([
-		getHandoffConfig(sb, ctx.orgId).catch(() => null),
-		getActiveHandoff(sb, ctx.orgId, Number(ctx.channelChatId) || 0).catch(
+		getHandoffConfig(sb, ctx.externalOrganizationId).catch(() => null),
+		getActiveHandoff(sb, ctx.externalOrganizationId, Number(ctx.channelChatId) || 0).catch(
 			() => null,
 		),
 	]);
@@ -215,16 +219,18 @@ export async function handleAgentMessage(
 	// plus a collector that remembers the last tool result for confidence scoring.
 	let lastToolName: string | undefined;
 	let lastToolResult: unknown;
-	const rawTools = opts.getTools(context);
+	const rawTools = opts.getTools(toolDependencies);
 	const safeTools = rawTools.map((t) => {
 		const audited = withAudit(
 			t,
-			ctx.channel,
-			ctx.channelChatId,
-			ctx.channelUserId,
 			{
-				truncate: true,
+				supabase: dataClient,
+				externalOrganizationId: ctx.externalOrganizationId,
+				channel: ctx.channel,
+				channelChatId: ctx.channelChatId,
+				channelUserId: ctx.channelUserId,
 			},
+			{ truncate: true },
 		);
 		return {
 			...audited,
@@ -244,25 +250,25 @@ export async function handleAgentMessage(
 		await Promise.all([
 			loadSession(
 				sb,
-				ctx.orgId,
+				ctx.externalOrganizationId,
 				ctx.channelChatId,
 				ctx.channelUserId,
 				ctx.channel,
 			),
-			opts.getSystemPrompt(ctx.productType, ctx.orgId, chatType, detectedLang),
+			opts.getSystemPrompt(ctx.productType, ctx.externalOrganizationId, chatType, detectedLang),
 			// Audience-scoped org profile (personality/instructions) — never throws.
 			loadAgentProfile(
-				context.supabase,
-				ctx.orgId,
+				dataClient,
+				ctx.externalOrganizationId,
 				ctx.audience ?? "internal",
 			).catch(() => null),
-			searchKnowledge(context.supabase, ctx.orgId, sanitizedText, {
+			searchKnowledge(dataClient, ctx.externalOrganizationId, sanitizedText, {
 				limit: 3,
 				audience: ctx.audience ?? "internal",
 			}).catch(() => [] as KnowledgeChunk[]),
 			getWizardState(
 				sb,
-				ctx.orgId,
+				ctx.externalOrganizationId,
 				ctx.channelChatId,
 				ctx.channelUserId,
 				ctx.channel,
@@ -313,7 +319,7 @@ export async function handleAgentMessage(
 	if (response.includes("[WIZARD_CANCEL]")) {
 		await clearWizardState(
 			sb,
-			ctx.orgId,
+			ctx.externalOrganizationId,
 			ctx.channelChatId,
 			ctx.channelUserId,
 			ctx.channel,
@@ -321,7 +327,7 @@ export async function handleAgentMessage(
 	} else if (response.includes("[WIZARD_COMPLETE:")) {
 		await clearWizardState(
 			sb,
-			ctx.orgId,
+			ctx.externalOrganizationId,
 			ctx.channelChatId,
 			ctx.channelUserId,
 			ctx.channel,
@@ -413,7 +419,7 @@ export async function handleAgentMessage(
 			await Promise.all([
 				saveSession(
 					sb,
-					ctx.orgId,
+					ctx.externalOrganizationId,
 					ctx.channelChatId,
 					ctx.channelUserId,
 					finalMessages,
@@ -422,7 +428,7 @@ export async function handleAgentMessage(
 				),
 				recordUsageAtomic(
 					sb,
-					ctx.orgId,
+					ctx.externalOrganizationId,
 					Math.ceil((sanitizedText.length + response.length) / 4),
 				),
 			]);

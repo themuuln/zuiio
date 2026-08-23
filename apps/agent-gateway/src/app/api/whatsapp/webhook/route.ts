@@ -1,10 +1,10 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { WhatsAppChannel } from "@/channels/whatsapp";
+import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromBotKey } from "@/gateway/mode-b";
-import type { LinkRecord } from "@/gateway/types";
+import type { LinkRecord } from "@zuiio/gateway-core";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
 import { formatWriteResult } from "@/lib/format-result";
@@ -43,7 +43,7 @@ interface WhatsAppEntry {
 }
 
 interface WrappedContext {
-	context: import("@/gateway/types").GatewayContext;
+	context: import("@zuiio/gateway-core").GatewayContext;
 	link: LinkRecord;
 }
 
@@ -143,14 +143,14 @@ export async function POST(request: Request) {
 							context: {
 								...resolved,
 								channel: "whatsapp",
-								chatId: parseInt(msg.from, 10) || 0,
-								telegramUserId: parseInt(msg.from, 10) || 0,
-								channelChatId: String(parseInt(msg.from, 10) || 0),
-								channelUserId: String(parseInt(msg.from, 10) || 0),
+								conversationId: `legacy:whatsapp:${msg.from}`,
+								channelChatId: msg.from,
+								channelUserId: msg.from,
+								traceId: crypto.randomUUID(),
 							},
 							link: {
 								id: "",
-								organization_id: resolved.orgId,
+								organization_id: resolved.externalOrganizationId,
 								user_id: resolved.userId,
 								telegram_chat_id: parseInt(msg.from, 10) || 0,
 								telegram_user_id: parseInt(msg.from, 10) || 0,
@@ -180,8 +180,8 @@ export async function POST(request: Request) {
 						if (isConfirm) {
 							const action = confirmAction(
 								nonce,
-								String(ctx.context.chatId),
-								String(ctx.context.telegramUserId),
+								ctx.context.channelChatId,
+								ctx.context.channelUserId,
 							);
 							const wa = channelForMsg;
 							if (action) {

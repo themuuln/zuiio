@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { GatewayTool, ToolContext } from "./types";
+import type { GatewayTool, ToolContext } from "@zuiio/gateway-core";
 
 /** History message shape accepted by the providers. */
 export interface LoopHistoryMessage {

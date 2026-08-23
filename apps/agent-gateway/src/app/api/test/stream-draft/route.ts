@@ -1,6 +1,6 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { TelegramChannel } from "@/channels/telegram";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
 
 export const dynamic = "force-dynamic";
 

@@ -8,7 +8,7 @@ type Status = "ready" | "error" | "connecting" | "connected";
 interface LinkClientProps {
 	orgId: string;
 	userId: string;
-	productType: "tolom" | "zer";
+	productType: "tolom" | "zer" | "zatly";
 	channel: Channel;
 	telegramUrl: string;
 	token: string;

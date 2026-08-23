@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -27,8 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		return NextResponse.json({ error: "token is required" }, { status: 400 });
 	}
 
-	const decoded = verifyCompactToken(body.token);
-	if (!decoded) {
+	if (!verifyCompactToken(body.token)) {
 		return NextResponse.json(
 			{ error: "Invalid or expired link token" },
 			{ status: 401 },
@@ -42,34 +40,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		);
 	}
 
-	// State carries orgId + productType (from the verified token) plus a nonce.
-	const nonce = crypto.randomUUID();
-	const stateData = JSON.stringify({
-		orgId: decoded.orgId,
-		productType: decoded.productType,
-		state: nonce,
-	});
-
 	const dialogUrl =
 		`https://www.facebook.com/${FB_GRAPH_API_VERSION}/dialog/oauth?` +
 		new URLSearchParams({
 			client_id: FB_APP_ID,
 			redirect_uri: FB_OAUTH_REDIRECT_URI,
 			scope: getFacebookOAuthScopes(),
-			state: Buffer.from(stateData).toString("base64url"),
+			// The compact token is HMAC-authenticated and carries the org and
+			// product. The callback can verify it without a browser cookie;
+			// Zer calls this route server-to-server before browser navigation.
+			state: body.token,
 			response_type: "code",
 		});
 
-	const response = NextResponse.json({ redirectUrl: dialogUrl });
-
-	// State cookie for the callback round-trip verification.
-	response.cookies.set("fb_oauth_state", stateData, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
-		path: "/",
-		maxAge: 600, // 10 minutes
-	});
-
-	return response;
+	return NextResponse.json({ redirectUrl: dialogUrl });
 }

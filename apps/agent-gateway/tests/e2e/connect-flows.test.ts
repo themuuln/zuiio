@@ -63,9 +63,11 @@ describe("POST /api/facebook/start", () => {
 		const json = (await res.json()) as { redirectUrl: string };
 		expect(json.redirectUrl).toContain("facebook.com");
 		expect(json.redirectUrl).toContain("dialog/oauth");
-		expect(
-			res.headers.getSetCookie().some((c) => c.startsWith("fb_oauth_state=")),
-		).toBe(true);
+		const dialogUrl = new URL(json.redirectUrl);
+		expect(dialogUrl.searchParams.get("state")).toBe(validToken());
+		expect(res.headers.getSetCookie()).not.toContain(
+			expect.stringContaining("fb_oauth_state="),
+		);
 	});
 
 	it("401s for an invalid token", async () => {

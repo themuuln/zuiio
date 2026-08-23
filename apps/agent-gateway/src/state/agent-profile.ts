@@ -1,7 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import type { AgentAudience } from "@zuiio/gateway-core";
-import type { AgentProfile } from "@/gateway/types";
+
+export interface AgentProfile {
+	id?: string;
+	organizationId: string;
+	audience: AgentAudience;
+	assistantName: string | null;
+	businessSummary: string | null;
+	responseLanguage: string | null;
+	tone: string | null;
+	contactDetails: string | null;
+	businessHours: Record<string, unknown> | null;
+	responseRules: string | null;
+	handoffMessage: string | null;
+	isActive: boolean;
+	updatedBy: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
 
 /**
  * Load an active agent context profile for the given org and audience.

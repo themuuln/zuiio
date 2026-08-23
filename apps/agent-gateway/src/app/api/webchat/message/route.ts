@@ -2,7 +2,7 @@ import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import type { GatewayContext } from "@/gateway/types";
+import type { GatewayContext } from "@zuiio/gateway-core";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { createServiceClient, type ServiceClient } from "@/lib/supabase";
@@ -86,15 +86,16 @@ export async function POST(request: Request): Promise<NextResponse> {
 	}
 
 	const ctx: GatewayContext = {
-		orgId: widget.organization_id,
+		externalOrganizationId: widget.organization_id,
 		userId: visitorId,
 		productType: widget.product_type,
 		audience: "customer",
 		channel: "webchat",
+		endpointId: widget.id,
+		conversationId: `legacy:webchat:${widget.id}:${visitorId}`,
 		channelChatId: visitorId,
 		channelUserId: visitorId,
-		chatId: 0,
-		telegramUserId: 0,
+		traceId: crypto.randomUUID(),
 	};
 
 	// Timeout guard: the browser widget shows a polite fallback instead of

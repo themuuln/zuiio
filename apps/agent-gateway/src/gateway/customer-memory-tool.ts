@@ -1,16 +1,16 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
-import type { GatewayTool } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import type { ToolDependencies } from "./tool-dependencies";
 import {
 	formatCustomerMemory,
 	recallCustomerFacts,
 	rememberCustomerFact,
 } from "@/state/customer-memory";
 
-type Ctx = {
-	orgId: string;
-	supabase: SupabaseClient;
-};
+type Ctx = Pick<
+	ToolDependencies,
+	"supabase" | "externalOrganizationId"
+>;
 
 /**
  * Resolve a customer id from a phone number within the org.
@@ -23,7 +23,7 @@ async function resolveCustomerIdByPhone(
 	const { data } = await ctx.supabase
 		.from("customers")
 		.select("id")
-		.eq("organization_id", ctx.orgId)
+		.eq("organization_id", ctx.externalOrganizationId)
 		.eq("phone", phone)
 		.is("deleted_at", null)
 		.limit(1);
@@ -45,6 +45,8 @@ async function resolveCustomerIdByPhone(
 export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 	const recallTool: GatewayTool = {
 		name: "recallCustomerMemory",
+		effect: "read",
+		approval: "none",
 		description:
 			"Харилцагчийн өмнөх харилцааны түүх, таамаглал, дуртай зүйл зэрэг хадгалагдсан мэдээллийг авах. Харилцагчийн ID-г readData-ээр олсны дараа дуудна. Хэрэглэгчийн ID эсвэл утасны дугаараар ажиллана.",
 		parameters: [
@@ -77,7 +79,7 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 				}
 				const facts = await recallCustomerFacts(
 					context.supabase,
-					context.orgId,
+					context.externalOrganizationId,
 					customerId,
 				);
 				if (facts.length === 0) {
@@ -89,7 +91,7 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 				const { data: cust } = await context.supabase
 					.from("customers")
 					.select("full_name")
-					.eq("organization_id", context.orgId)
+					.eq("organization_id", context.externalOrganizationId)
 					.eq("id", customerId)
 					.limit(1);
 				const name =
@@ -106,6 +108,8 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 
 	const rememberTool: GatewayTool = {
 		name: "rememberCustomerFact",
+		effect: "read",
+		approval: "none",
 		description:
 			"Харилцагчийн тухай шинэ, бат бөх мэдээллийг хадгалах (жишээ нь: 'Боб гэж хайхар', 'SMS-ээр холбогдохыг илүүд үздэг', 'засварын төлбөрийг бэлнээр тооцооздог'). Хэрэглэгч шууд хэлсэн эсвэл мэдэгдсэн байнгын шинж чанарыг л хадгал. Нэг удаагийн хүсэлт, нууц мэдээлэл (картын дугаар гэх мэт) БҮҮ хадгал.",
 		parameters: [
@@ -151,7 +155,7 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 					const { data: cust } = await context.supabase
 						.from("customers")
 						.select("full_name")
-						.eq("organization_id", context.orgId)
+						.eq("organization_id", context.externalOrganizationId)
 						.eq("id", customerId)
 						.limit(1);
 					if (cust && cust.length > 0) {
@@ -164,7 +168,7 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 					};
 				}
 				await rememberCustomerFact(context.supabase, {
-					orgId: context.orgId,
+					orgId: context.externalOrganizationId,
 					customerId,
 					customerName,
 					fact: String(args.fact).trim(),

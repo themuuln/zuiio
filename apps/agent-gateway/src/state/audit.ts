@@ -1,15 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { GatewayTool, ToolContext } from "@zuiio/gateway-core";
 import { truncateResult } from "@/lib/sanitize";
-import type { GatewayTool, ToolContext } from "@/providers/types";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface AuditOptions {
 	truncate?: boolean;
 }
 
+interface AuditDependencies {
+	supabase: SupabaseClient;
+	externalOrganizationId: string;
+	channel: string;
+	channelChatId: string;
+	channelUserId: string;
+}
+
 interface LogToolCallParams {
-	orgId: string;
+	organizationId: string;
 	userId: string;
 	channel: string;
 	channelChatId: string;
@@ -21,20 +27,13 @@ interface LogToolCallParams {
 	durationMs: number;
 }
 
-// ─── Logger ──────────────────────────────────────────────────────────────────
-
-/**
- * Records a single tool execution in the audit log.
- * Fire-and-forget: the insert is awaited but errors are silently caught.
- * MUST never throw — callers never wait on this.
- */
 export async function logToolCall(
 	supabase: SupabaseClient,
 	params: LogToolCallParams,
 ): Promise<void> {
 	try {
 		await supabase.from("agent_audit_log").insert({
-			organization_id: params.orgId,
+			organization_id: params.organizationId,
 			user_id: params.userId,
 			channel: params.channel,
 			channel_chat_id: params.channelChatId,
@@ -46,19 +45,10 @@ export async function logToolCall(
 			duration_ms: params.durationMs,
 		});
 	} catch {
-		// Audit logging is non-critical — silently drop on failure
+		// Audit logging is non-critical.
 	}
 }
 
-/**
- * Normalizes a tool result for the jsonb audit column.
- *
- * Object/array results pass through as structured JSON. String results are
- * parsed back into JSON when possible (tools return `JSON.stringify`ed
- * payloads), falling back to a plain string — both are valid jsonb values.
- * Never double-encodes: a JSON object stored as a JSON *string* breaks
- * `tool_result ? 'error'` style queries and analytics.
- */
 function normalizeToolResult(result: unknown): unknown {
 	if (result === null || typeof result !== "string") return result;
 	try {
@@ -68,21 +58,13 @@ function normalizeToolResult(result: unknown): unknown {
 	}
 }
 
-// ─── Wrapper ─────────────────────────────────────────────────────────────────
-
-/**
- * Wraps a GatewayTool's execute with timing and audit logging.
- * Pure wrapper: preserves original behavior, adds invisible audit trail.
- */
+/** Add timing and audit logging without adding credentials to ToolContext. */
 export function withAudit(
 	tool: GatewayTool,
-	channel: string,
-	channelChatId: string,
-	channelUserId: string,
+	dependencies: AuditDependencies,
 	options?: AuditOptions,
 ): GatewayTool {
 	const originalExecute = tool.execute;
-
 	return {
 		...tool,
 		execute: async (args: Record<string, unknown>, context: ToolContext) => {
@@ -90,16 +72,15 @@ export function withAudit(
 			try {
 				let result = await originalExecute(args, context);
 				const durationMs = Math.round(performance.now() - start);
-				// Apply truncation if requested
 				if (options?.truncate && typeof result === "string") {
 					result = truncateResult(result);
 				}
-				logToolCall(context.supabase, {
-					orgId: context.orgId,
+				void logToolCall(dependencies.supabase, {
+					organizationId: dependencies.externalOrganizationId,
 					userId: context.userId,
-					channel,
-					channelChatId,
-					channelUserId,
+					channel: dependencies.channel,
+					channelChatId: dependencies.channelChatId,
+					channelUserId: dependencies.channelUserId,
 					toolName: tool.name,
 					toolArgs: args,
 					toolResult: result,
@@ -107,21 +88,20 @@ export function withAudit(
 					durationMs,
 				});
 				return result;
-			} catch (err) {
-				const durationMs = Math.round(performance.now() - start);
-				logToolCall(context.supabase, {
-					orgId: context.orgId,
+			} catch (error) {
+				void logToolCall(dependencies.supabase, {
+					organizationId: dependencies.externalOrganizationId,
 					userId: context.userId,
-					channel,
-					channelChatId,
-					channelUserId,
+					channel: dependencies.channel,
+					channelChatId: dependencies.channelChatId,
+					channelUserId: dependencies.channelUserId,
 					toolName: tool.name,
 					toolArgs: args,
 					toolResult: null,
-					error: err instanceof Error ? err.message : String(err),
-					durationMs,
+					error: error instanceof Error ? error.message : "Tool execution failed",
+					durationMs: Math.round(performance.now() - start),
 				});
-				throw err;
+				throw error;
 			}
 		},
 	};

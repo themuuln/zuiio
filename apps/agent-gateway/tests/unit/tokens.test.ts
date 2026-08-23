@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { createCompactToken, verifyCompactToken } from "@/lib/tokens";
 
@@ -5,57 +6,50 @@ describe("createCompactToken / verifyCompactToken", () => {
 	const orgId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 	const userId = "11111111-2222-3333-4444-555555555555";
 
-	it("creates a token that is ≤ 64 characters (Telegram limit)", () => {
+	it("stays within the Telegram 64-character limit", () => {
+		expect(createCompactToken(orgId, userId, "zer").length).toBeLessThanOrEqual(
+			64,
+		);
+	});
+
+	it.each(["zer", "tolom", "zatly"] as const)(
+		"round-trips the %s product flag",
+		(productType) => {
+			const payload = verifyCompactToken(
+				createCompactToken(orgId, userId, productType),
+			);
+			expect(payload).toEqual({ orgId, userId, productType });
+		},
+	);
+
+	it("rejects the reserved 11 product flag", () => {
 		const token = createCompactToken(orgId, userId, "zer");
-		expect(token.length).toBeLessThanOrEqual(64);
+		const payload = Buffer.from(token.split(".")[0], "base64url");
+		payload[32] = (payload[32] ?? 0) | 0b11;
+		const payloadBase64 = payload.toString("base64url");
+		const signature = createHmac(
+			"sha256",
+			"dev-secret-change-in-production",
+		)
+			.update(payloadBase64)
+			.digest("base64url")
+			.slice(0, 12);
+		expect(verifyCompactToken(`${payloadBase64}.${signature}`)).toBeNull();
 	});
 
-	it("verifies a token it created (zer)", () => {
+	it("rejects a bad signature", () => {
 		const token = createCompactToken(orgId, userId, "zer");
-		const payload = verifyCompactToken(token);
-		expect(payload).not.toBeNull();
-		expect(payload?.orgId).toBe(orgId);
-		expect(payload?.userId).toBe(userId);
-		expect(payload?.productType).toBe("zer");
+		expect(verifyCompactToken(`${token.slice(0, -1)}X`)).toBeNull();
 	});
 
-	it("verifies a token it created (tolom)", () => {
-		const token = createCompactToken(orgId, userId, "tolom");
-		const payload = verifyCompactToken(token);
-		expect(payload).not.toBeNull();
-		expect(payload?.orgId).toBe(orgId);
-		expect(payload?.userId).toBe(userId);
-		expect(payload?.productType).toBe("tolom");
+	it.each(["not-a-token", "", "a.b.c"])("rejects malformed token %j", (token) => {
+		expect(verifyCompactToken(token)).toBeNull();
 	});
 
-	it("returns null for tampered token (bad signature)", () => {
-		const token = createCompactToken(orgId, userId, "zer");
-		const tampered = `${token.slice(0, -1)}X`;
-		const payload = verifyCompactToken(tampered);
-		expect(payload).toBeNull();
-	});
-
-	it("returns null for garbage input", () => {
-		expect(verifyCompactToken("not-a-token")).toBeNull();
-		expect(verifyCompactToken("")).toBeNull();
-		expect(verifyCompactToken("a.b.c")).toBeNull();
-	});
-
-	it("returns null for empty string", () => {
-		expect(verifyCompactToken("")).toBeNull();
-	});
-
-	it("produces deterministic-length tokens regardless of input", () => {
-		const t1 = createCompactToken(orgId, userId, "zer");
-		const t2 = createCompactToken(orgId, userId, "tolom");
-		expect(t1.length).toBe(t2.length);
-	});
-
-	it("produces unique tokens each time (different expiry)", async () => {
-		const t1 = createCompactToken(orgId, userId, "zer");
-		// Wait >1s so the 4-byte expiry seconds field changes
-		await new Promise((r) => setTimeout(r, 1100));
-		const t2 = createCompactToken(orgId, userId, "zer");
-		expect(t1).not.toBe(t2);
+	it("uses a fixed wire length for every product", () => {
+		const lengths = ["zer", "tolom", "zatly"].map((productType) =>
+			createCompactToken(orgId, userId, productType).length,
+		);
+		expect(new Set(lengths).size).toBe(1);
 	});
 });

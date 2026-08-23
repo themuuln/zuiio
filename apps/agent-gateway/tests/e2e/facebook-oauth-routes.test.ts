@@ -41,6 +41,7 @@ function setFbEnv() {
 	process.env.FB_APP_SECRET = FB_ENV.FB_APP_SECRET;
 	process.env.FB_OAUTH_REDIRECT_URI = FB_ENV.FB_OAUTH_REDIRECT_URI;
 	process.env.FB_GRAPH_API_VERSION = FB_ENV.FB_GRAPH_API_VERSION;
+	process.env.TOKEN_SIGNING_SECRET = "test-token-secret";
 }
 
 function clearFbEnv() {
@@ -48,6 +49,7 @@ function clearFbEnv() {
 	delete process.env.FB_APP_SECRET;
 	delete process.env.FB_OAUTH_REDIRECT_URI;
 	delete process.env.FB_GRAPH_API_VERSION;
+	delete process.env.TOKEN_SIGNING_SECRET;
 }
 
 /** base64url(JSON) state param — matches what connect stores. */
@@ -164,6 +166,17 @@ describe("POST /api/facebook/select", () => {
 		vi.clearAllMocks();
 		mockSubscribeToWebhook.mockResolvedValue(true);
 		mockGetPageInfo.mockResolvedValue(null);
+	});
+	it("returns page names without exposing access tokens", async () => {
+		const { GET } = await import("@/app/api/facebook/select/route");
+		const req = new NextRequest("http://localhost/api/facebook/select", {
+			headers: { cookie: `fb_pages=${encodeURIComponent(pagesCookie)}` },
+		});
+		const res = await GET(req);
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body.pages).toEqual([{ id: "page-1", name: "Авто Сервис" }]);
+		expect(JSON.stringify(body)).not.toContain("page-token");
 	});
 
 	it("rejects when required fields are missing", async () => {
@@ -397,6 +410,24 @@ describe("GET /api/facebook/callback", () => {
 		const res = await GET(cookieReq(validQuery()));
 		expect(res.status).toBe(400);
 		expect((await res.json()).error).toBe("Invalid OAuth state");
+	});
+	it("accepts a signed token state without a browser cookie", async () => {
+		const { createCompactToken } = await import("@/lib/tokens");
+		const token = createCompactToken(
+			"a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+			"b2c3d4e5-f6a7-8901-bcde-f12345678901",
+			"zer",
+		);
+		delete process.env.FB_APP_ID;
+		delete process.env.FB_APP_SECRET;
+		delete process.env.FB_OAUTH_REDIRECT_URI;
+		const { GET } = await import("@/app/api/facebook/callback/route");
+		const res = await GET(
+			cookieReq(
+				`http://localhost/api/facebook/callback?code=x&state=${encodeURIComponent(token)}`,
+			),
+		);
+		expect(res.status).toBe(500);
 	});
 
 	it("rejects when the cookie nonce does not match the state param", async () => {

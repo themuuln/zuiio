@@ -1,14 +1,11 @@
 import "server-only";
 
-import { FacebookChannel } from "@/channels/facebook";
-import { TelegramChannel } from "@/channels/telegram";
-import { WhatsAppChannel } from "@/channels/whatsapp";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
+import type { ToolDependencies } from "@/gateway/tool-dependencies";
 import { confirmButtons, stageAction } from "./confirmation";
 
-/**
- * Human-readable summary of a write action for the confirmation prompt.
- */
 export function summarizeWriteAction(
 	toolName: string,
 	args: Record<string, unknown>,
@@ -22,82 +19,44 @@ export function summarizeWriteAction(
 	return `${toolName}${dataset}${operation}${id}${fields}`;
 }
 
-/**
- * Wrap a write tool so its action is STAGED for user confirmation instead of
- * executing immediately. The confirm/reject buttons are pushed on the channel
- * directly from the tool, and the original execute is stored on the staged
- * action for deterministic re-execution on confirm (never via LLM re-prompt).
- *
- * Channel identity is read from the per-call context, so the 5-minute tool
- * cache can safely serve multiple chats.
- */
+/** Legacy non-Meta confirmation gate. Meta uses durable pending actions. */
 export function gateWriteTool(
 	tool: GatewayTool,
-	context: ToolContext,
+	dependencies: ToolDependencies,
 ): GatewayTool {
 	return {
 		...tool,
-		execute: async (args, execContext) => {
-			const ctx = execContext ?? context;
-			const { channel, channelChatId, channelUserId, pageId, pageAccessToken } =
-				ctx;
-
-			if (!channel || !channelChatId || !channelUserId) {
-				// No channel context (tests, non-messaging callers) — execute directly.
-				return tool.execute(args, ctx);
-			}
-
+		execute: async (args, executionContext) => {
 			const summary = summarizeWriteAction(tool.name, args);
 			const staged = stageAction(
 				tool.name,
 				args,
-				channel,
-				channelChatId,
-				channelUserId,
+				dependencies.channel,
+				dependencies.channelChatId,
+				dependencies.channelUserId,
 				summary,
-				pageId,
-				pageAccessToken,
-				// Re-execution closure uses the same per-request context.
-				(a) => tool.execute(a, ctx),
+				undefined,
+				undefined,
+				(actionArgs) => tool.execute(actionArgs, executionContext),
 			);
 
-			// Push the confirmation UI on the channel, then tell the LLM the
-			// user is being asked. The final write happens only on confirm.
-			let sent = false;
 			try {
-				if (channel === "telegram") {
-					const tg = new TelegramChannel();
-					await tg.sendInlineKeyboard(
-						channelChatId,
+				if (dependencies.channel === "telegram") {
+					await new TelegramChannel().sendInlineKeyboard(
+						dependencies.channelChatId,
 						`⚡ Баталгаажуулах үйлдэл: ${summary}`,
 						confirmButtons(staged.nonce),
 					);
-					sent = true;
-				} else if (channel === "messenger" || channel === "instagram") {
-					const fb = new FacebookChannel({
-						pageId: pageId ?? channelChatId,
-						pageAccessToken,
-					});
-					await fb.sendInlineKeyboard(
-						channelUserId,
+				} else if (dependencies.channel === "whatsapp") {
+					await new WhatsAppChannel().sendInlineKeyboard(
+						dependencies.channelUserId,
 						`⚡ Баталгаажуулах үйлдэл: ${summary}`,
 						confirmButtons(staged.nonce),
 					);
-					sent = true;
-				} else if (channel === "whatsapp") {
-					const wa = new WhatsAppChannel();
-					await wa.sendInlineKeyboard(
-						channelUserId,
-						`⚡ Баталгаажуулах үйлдэл: ${summary}`,
-						confirmButtons(staged.nonce),
-					);
-					sent = true;
+				} else {
+					return "Энэ сувгаар бичих үйлдэл дэмжигдээгүй байна.";
 				}
 			} catch {
-				sent = false;
-			}
-
-			if (!sent) {
 				return "Баталгаажуулах санал илгээхэд алдаа гарлаа. Дахин оролдоно уу.";
 			}
 

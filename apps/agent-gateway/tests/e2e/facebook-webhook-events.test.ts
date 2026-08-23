@@ -62,6 +62,8 @@ vi.mock("@/lib/supabase", () => ({
 		);
 		chain.order = vi.fn(() => chain);
 		chain.limit = vi.fn(() => Promise.resolve({ data: [], error: null }));
+		chain.insert = vi.fn(() => Promise.resolve({ data: null, error: null }));
+		chain.delete = vi.fn(() => chain);
 		// Awaited queries resolve with the configured connection rows.
 		chain.then = (resolve: (v: unknown) => unknown) =>
 			resolve({ data: mockConnections, error: null });

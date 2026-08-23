@@ -2,14 +2,13 @@ import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { FacebookChannel } from "@/channels/facebook";
+import { verifyCompactToken } from "@/lib/tokens";
 
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
 const FB_OAUTH_REDIRECT_URI = process.env.FB_OAUTH_REDIRECT_URI || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 
-const _facebookChannel = new FacebookChannel();
 
 /**
  * GET: Facebook OAuth callback handler.
@@ -25,42 +24,60 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	const { searchParams } = new URL(request.url);
 	const code = searchParams.get("code");
 	const state = searchParams.get("state");
-
-	// Verify state: the param is base64url(JSON), the cookie is the raw JSON.
-	// Compare the embedded nonce, not the whole payload (string forms differ).
 	const stateCookie = request.cookies.get("fb_oauth_state")?.value;
 	let stateData: { orgId: string; productType: string; state?: string } | null =
 		null;
-	try {
-		const parsed = state
-			? (JSON.parse(Buffer.from(state, "base64url").toString()) as {
-					orgId: string;
-					productType: string;
-					state?: string;
-				})
-			: null;
-		stateData = parsed;
-	} catch {
-		stateData = null;
-	}
+	// Token-verified starts use the signed compact token as state. The legacy
+	// /api/facebook/connect route still uses the cookie-backed JSON state.
+	const stateToken = state ? verifyCompactToken(state) : null;
+	if (stateToken) {
+		stateData = {
+			orgId: stateToken.orgId,
+			productType: stateToken.productType,
+		};
+	} else {
+		try {
+			const parsed = state
+				? (JSON.parse(Buffer.from(state, "base64url").toString()) as {
+						orgId: string;
+						productType: string;
+						state?: string;
+					})
+				: null;
+			stateData = parsed;
+		} catch {
+			stateData = null;
+		}
 
-	if (
-		!stateData?.state ||
-		!stateCookie ||
-		!stateData.orgId ||
-		!stateData.productType
-	) {
-		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
-	}
-	try {
-		const cookieData = JSON.parse(stateCookie) as { state?: string };
-		if (cookieData.state !== stateData.state) {
+		if (
+			!stateData?.state ||
+			!stateCookie ||
+			!stateData.orgId ||
+			!stateData.productType
+		) {
 			return NextResponse.json(
 				{ error: "Invalid OAuth state" },
 				{ status: 400 },
 			);
 		}
-	} catch {
+
+		try {
+			const cookieData = JSON.parse(stateCookie) as { state?: string };
+			if (cookieData.state !== stateData.state) {
+				return NextResponse.json(
+					{ error: "Invalid OAuth state" },
+					{ status: 400 },
+				);
+			}
+		} catch {
+			return NextResponse.json(
+				{ error: "Invalid OAuth state" },
+				{ status: 400 },
+			);
+		}
+	}
+
+	if (!stateData?.orgId || !stateData.productType) {
 		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
 	}
 

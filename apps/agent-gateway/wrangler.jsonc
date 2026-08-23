@@ -13,5 +13,11 @@
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "agent-gateway"
 		}
+	],
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "agent-gateway-supabase-hyperdrive"
+		}
 	]
 }

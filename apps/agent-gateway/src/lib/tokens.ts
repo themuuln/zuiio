@@ -32,8 +32,16 @@ export function createCompactToken(
 	// Pack user ID (16 bytes binary — treat as UUID-like)
 	const userBytes = uuidToBytes(userId);
 
-	// Flags byte: bit 0 = productType (0=zer, 1=tolom), bits 1-7 reserved
-	const flags = productType === "tolom" ? 0x01 : 0x00;
+	// Bits 0-1: 00=zer, 01=tolom, 10=zatly, 11=invalid.
+	const flagsByProduct: Record<string, number> = {
+		zer: 0b00,
+		tolom: 0b01,
+		zatly: 0b10,
+	};
+	const flags = flagsByProduct[productType];
+	if (flags === undefined) {
+		throw new Error(`Unsupported product type: ${productType}`);
+	}
 
 	// Expiry as 4-byte big-endian seconds since epoch
 	const expSec = Math.floor((Date.now() + TOKEN_EXPIRY_MS) / 1000);
@@ -64,7 +72,7 @@ export function createCompactToken(
  */
 export function verifyCompactToken(
 	token: string,
-): { orgId: string; userId: string; productType: "tolom" | "zer" } | null {
+): { orgId: string; userId: string; productType: "tolom" | "zer" | "zatly" } | null {
 	const dotIdx = token.lastIndexOf(".");
 	if (dotIdx < 0) return null;
 
@@ -101,7 +109,10 @@ export function verifyCompactToken(
 	// Check expiry
 	if (expSec * 1000 < Date.now()) return null;
 
-	const productType = flags & 0x01 ? "tolom" : "zer";
+	const productFlag = flags & 0b11;
+	const productTypes = ["zer", "tolom", "zatly"] as const;
+	const productType = productTypes[productFlag];
+	if (!productType) return null;
 
 	return { orgId, userId, productType };
 }

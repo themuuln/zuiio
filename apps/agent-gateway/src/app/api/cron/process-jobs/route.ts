@@ -2,10 +2,10 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { TelegramChannel } from "@/channels/telegram";
-import { WhatsAppChannel } from "@/channels/whatsapp";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import type { GatewayContext } from "@/gateway/types";
+import type { GatewayContext } from "@zuiio/gateway-core";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { createServiceClient } from "@/lib/supabase";
 import { claimJobs, completeJob, type JobPayload } from "@/state/job-queue";
@@ -80,6 +80,6 @@ async function deliverReply(ctx: GatewayContext, reply: string): Promise<void> {
 			await new WhatsAppChannel().sendMessage(ctx.channelChatId, reply);
 			return;
 		default:
-			await new TelegramChannel().sendMessage(ctx.chatId, reply);
+			await new TelegramChannel().sendMessage(ctx.channelChatId, reply);
 	}
 }

@@ -8,7 +8,8 @@ import { createReadDataTool } from "@/gateway/read-data-tool";
 import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
 import { createServiceClient, getSupabaseForProduct } from "@/lib/supabase";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import type { GatewayTool } from "@zuiio/gateway-core";
+import type { ToolDependencies } from "@/gateway/tool-dependencies";
 import { gateWriteTool } from "@/runtime/write-gate";
 
 /**
@@ -125,8 +126,8 @@ Organization ID: ${orgId}${groupWarning}`;
 
 // ─── Tolom Tools ───────────────────────────────────────────────────────────
 
-function tolomTools(context: ToolContext): GatewayTool[] {
-	const { supabase, orgId } = context;
+function tolomTools(context: ToolDependencies): GatewayTool[] {
+	const { supabase, externalOrganizationId: orgId } = context;
 	const now = new Date();
 	const today = new Date(
 		now.getFullYear(),
@@ -156,6 +157,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 	return [
 		{
 			name: "getDailySummary",
+			effect: "read",
+			approval: "none",
 			description:
 				"Өнөөдрийн болон өчигдрийн хураангуй: орлого, идэвхтэй ажлын тоо, шинэ харилцагч",
 			parameters: [],
@@ -210,6 +213,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getWorkOrderDetails",
+			effect: "read",
+			approval: "none",
 			description: "Ажлын захиалгын дэлгэрэнгүй: сэлбэг, нэмэлт мэдээлэл",
 			parameters: [
 				{
@@ -278,6 +283,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getVehicleAnalytics",
+			effect: "read",
+			approval: "none",
 			description: "Машин бүрийн засвар аналитик: тоо, орлого.",
 			parameters: [
 				{
@@ -398,6 +405,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getFinancialSummary",
+			effect: "read",
+			approval: "none",
 			description: "Орлого, зарлага, төлбөрийн хураангуй.",
 			parameters: [
 				{
@@ -516,6 +525,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "exportData",
+			effect: "read",
+			approval: "none",
 			description: "Өгөгдлийг CSV болгож экспортлох.",
 			parameters: [
 				{
@@ -610,6 +621,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "partsLookup",
+			effect: "read",
+			approval: "none",
 			description: "Сэлбэгийн үнийн мэдээлэл хайх.",
 			parameters: [
 				{
@@ -669,6 +682,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getSparePartsSales",
+			effect: "read",
+			approval: "none",
 			description: "Сэлбэгийн борлуулалтын хураангуй.",
 			parameters: [
 				{
@@ -791,11 +806,13 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 
 // ─── Zer Write Tools ─────────────────────────────────────────────────────
 
-function zerWriteTools(context: ToolContext): GatewayTool[] {
-	const { supabase, orgId } = context;
+function zerWriteTools(context: ToolDependencies): GatewayTool[] {
+	const { supabase, externalOrganizationId: orgId } = context;
 	return [
 		{
 			name: "createSale",
+			effect: "write",
+			approval: "required",
 			description: "Борлуулалт бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
@@ -867,6 +884,8 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "recordPayment",
+			effect: "write",
+			approval: "required",
 			description:
 				"Дутуу төлөлттэй борлуулалтанд төлбөр бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
@@ -938,11 +957,13 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 
 // ─── Zer Read Tools ──────────────────────────────────────────────────────────────
 
-function zerTools(context: ToolContext): GatewayTool[] {
-	const { supabase, orgId } = context;
+function zerTools(context: ToolDependencies): GatewayTool[] {
+	const { supabase, externalOrganizationId: orgId } = context;
 	return [
 		{
 			name: "getSalesByCategory",
+			effect: "read",
+			approval: "none",
 			description: "Ангиллаар борлуулалтын хураангуй.",
 			parameters: [
 				{
@@ -1058,7 +1079,7 @@ const TOOL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
  */
 export function getProductTools(
 	productType: "tolom" | "zer" | "zatly",
-	context: ToolContext,
+	context: ToolDependencies,
 	options?: { readOnly?: boolean },
 ): GatewayTool[] {
 	// Zatly has no tools yet — return empty set
@@ -1071,7 +1092,7 @@ export function getProductTools(
 		return productType === "zer" ? [createCustomerProductTool(context)] : [];
 	}
 	const audienceKey = context.audience ?? "internal";
-	const cacheKey = `${productType}:${context.orgId}:${audienceKey}:${options?.readOnly ?? false}`;
+	const cacheKey = `${productType}:${context.externalOrganizationId}:${audienceKey}:${options?.readOnly ?? false}`;
 	const cached = toolCache.get(cacheKey);
 
 	if (cached && cached.expires > Date.now()) {

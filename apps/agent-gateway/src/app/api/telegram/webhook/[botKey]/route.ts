@@ -1,7 +1,7 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { TelegramChannel } from "@/channels/telegram";
-import type { TelegramUpdate } from "@/channels/types";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
+import type { TelegramUpdate } from "@zuiio/gateway-telegram";
 import {
 	createTelegramResponseStream,
 	startTypingLoop,
@@ -100,7 +100,13 @@ export async function POST(
 		}
 
 		// Set per-message identity
-		const ctx = { ...orgCtx, chatId, telegramUserId: userId };
+		const ctx = {
+			...orgCtx,
+			conversationId: `legacy:telegram:${botKey}:${chatId}:${userId}`,
+			channelChatId: String(chatId),
+			channelUserId: String(userId),
+			traceId: crypto.randomUUID(),
+		};
 
 		// Handle voice messages
 		if (msg.voice) {

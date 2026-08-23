@@ -31,22 +31,26 @@ export default function SelectPage() {
 		setProductType(params.get("productType") ?? "zer");
 		document.title = productPageTitle(params.get("productType"));
 
-		const raw = document.cookie
-			.split("; ")
-			.find((c) => c.startsWith("fb_pages="))
-			?.split("=")[1];
-		if (!raw) {
-			setStatus("error");
-			setError("OAuth session дууссан байна. Дахин холбохыг оролдоно уу.");
-			return;
-		}
-		try {
-			setPages(JSON.parse(decodeURIComponent(raw)) as FbPage[]);
+		const loadPages = async () => {
+			const res = await fetch("/api/facebook/select");
+			const data = (await res.json()) as {
+				pages?: FbPage[];
+				error?: string;
+			};
+			if (!res.ok || !data.pages?.length) {
+				throw new Error(
+					data.error ??
+						"OAuth session дууссан байна. Дахин холбохыг оролдоно уу.",
+				);
+			}
+			setPages(data.pages);
 			setStatus("ready");
-		} catch {
+		};
+
+		void loadPages().catch((err: unknown) => {
 			setStatus("error");
-			setError("Хуудасны жагсаалт унших боломжгүй байна.");
-		}
+			setError(err instanceof Error ? err.message : "OAuth session хүчингүй.");
+		});
 	}, []);
 
 	const connect = async (page: FbPage) => {

@@ -4,8 +4,8 @@ import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { FacebookChannel } from "@/channels/facebook";
-import type { MetaWebhookPayload } from "@/channels/types";
+import { FacebookChannel } from "@zuiio/gateway-facebook";
+import type { MetaMessagingEvent, MetaWebhookPayload } from "@zuiio/gateway-facebook";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
@@ -122,63 +122,94 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 			const channel = instagramConnection ? "instagram" : "messenger";
 
-			// Tokens are stored encrypted (encryptSecret) — decrypt once per event.
-			const pageAccessToken = decryptSecret(connection.page_access_token ?? "");
+			// Replay guard — Meta redelivers until acked; skip events already
+			// processed so retries never double-reply or re-spend LLM.
+			const eventKey = eventDedupKey(channel, entryId, senderId, event);
+			if (!(await claimEvent(supabase, channel, eventKey))) continue;
 
-			// entryId is the correct Graph API recipient id for both channels:
-			// FB page id for Messenger events, IG business account id for Instagram.
-			// It also serves as the stable session-chat key per channel.
-			const pageId = entryId;
+			// Dispatch the claimed event. Any unexpected error here — including
+			// token decryption — must NOT strand the dedup claim: Meta's retry
+			// would hit the unique constraint and the message would be lost
+			// forever. Release the claim and fail this delivery (non-2xx) so
+			// Meta redelivers.
+			try {
+				// Tokens are stored encrypted (encryptSecret) — decrypt once per event.
+				const pageAccessToken = decryptSecret(
+					connection.page_access_token ?? "",
+				);
 
-			// Dispatch the event. A Meta messaging event carries exactly one of:
-			// postback (button click), quick_reply payload, or plain text — but a
-			// quick reply ALSO carries message.text (the displayed label), so
-			// these branches MUST be exclusive or the message is processed twice
-			// (double agent call, double reply, double rate-limit/budget spend).
+				// entryId is the correct Graph API recipient id for both channels:
+				// FB page id for Messenger events, IG business account id for
+				// Instagram. It also serves as the stable session-chat key per channel.
+				const pageId = entryId;
 
-			// Handle postbacks (button clicks)
-			if (event.postback?.payload) {
-				await handlePostback(supabase, {
-					pageId,
-					senderId,
-					channel,
-					payload: event.postback.payload,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
-			} else if (event.message?.quick_reply?.payload) {
-				// Handle quick reply payloads
-				await handleQuickReply(supabase, {
-					pageId,
-					senderId,
-					channel,
-					payload: event.message.quick_reply.payload,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
-			} else if (event.message?.text) {
-				// Handle text messages
-				await handleMessage(supabase, {
-					pageId,
-					senderId,
-					channel,
-					text: event.message.text,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
+				// A Meta messaging event carries exactly one of: postback
+				// (button click), quick_reply payload, or plain text — but a
+				// quick reply ALSO carries message.text (the displayed label),
+				// so these branches MUST be exclusive or the message is
+				// processed twice (double agent call, double reply, double
+				// rate-limit/budget spend).
+
+				// Handle postbacks (button clicks)
+				if (event.postback?.payload) {
+					await handlePostback(supabase, {
+						pageId,
+						senderId,
+						channel,
+						payload: event.postback.payload,
+						pageAccessToken,
+						orgId: connection.organization_id,
+						userId: connection.user_id ?? senderId,
+						productType: connection.product_type as "tolom" | "zer",
+					});
+				} else if (event.message?.quick_reply?.payload) {
+					// Handle quick reply payloads
+					await handleQuickReply(supabase, {
+						pageId,
+						senderId,
+						channel,
+						payload: event.message.quick_reply.payload,
+						pageAccessToken,
+						orgId: connection.organization_id,
+						userId: connection.user_id ?? senderId,
+						productType: connection.product_type as "tolom" | "zer",
+					});
+				} else if (event.message?.text) {
+					// Handle text messages
+					await handleMessage(supabase, {
+						pageId,
+						senderId,
+						channel,
+						text: event.message.text,
+						pageAccessToken,
+						orgId: connection.organization_id,
+						userId: connection.user_id ?? senderId,
+						productType: connection.product_type as "tolom" | "zer",
+					});
+				}
+
+				// Update last_user_message_at for 24h window tracking
+				await supabase
+					.from("channel_connections")
+					.update({ last_user_message_at: new Date().toISOString() })
+					.eq("id", connection.id);
+			} catch (err) {
+				capture(err, { context: "agent-gateway: meta event dispatch" });
+				const { error: releaseError } = await supabase
+					.from("meta_webhook_events")
+					.delete()
+					.eq("channel", channel)
+					.eq("event_id", eventKey);
+				if (releaseError) {
+					capture(releaseError, {
+						context: "agent-gateway: release meta webhook claim",
+					});
+				}
+				return NextResponse.json(
+					{ error: "Event processing failed" },
+					{ status: 500 },
+				);
 			}
-
-			// Update last_user_message_at for 24h window tracking
-			await supabase
-				.from("channel_connections")
-				.update({ last_user_message_at: new Date().toISOString() })
-				.eq("id", connection.id);
 		}
 	}
 
@@ -208,6 +239,59 @@ function validateSignature(rawBody: string, signature: string | null): boolean {
 	} catch {
 		return false;
 	}
+}
+
+/**
+ * Stable dedup key for one messaging event. Meta retries deliveries until
+ * acked, so the same signed payload can arrive more than once. Prefer Meta's
+ * message id; postbacks/quick replies carry none, so fall back to a
+ * deterministic hash over the full event identity (channel + page + sender +
+ * timestamp + which branch fired).
+ */
+function eventDedupKey(
+	channel: "messenger" | "instagram",
+	entryId: string,
+	senderId: string,
+	event: MetaMessagingEvent,
+): string {
+	const mid = event.message?.mid;
+	if (mid) return mid;
+	return crypto
+		.createHash("sha256")
+		.update(
+			[
+				channel,
+				entryId,
+				senderId,
+				String(event.timestamp),
+				event.postback?.payload ? "postback" : "message",
+			].join(":"),
+		)
+		.digest("hex");
+}
+
+/**
+ * Insert-first claim on meta_webhook_events. Returns true when this caller
+ * owns the delivery; false on unique conflict (already-processed replay).
+ * Any other insert error is captured and treated as unseen — fail-open, so a
+ * transient DB error never silently drops a customer message.
+ */
+async function claimEvent(
+	supabase: ServiceClient,
+	channel: "messenger" | "instagram",
+	eventKey: string,
+): Promise<boolean> {
+	const { error } = await supabase.from("meta_webhook_events").insert({
+		channel,
+		event_id: eventKey,
+	});
+	if (!error) return true;
+	// Unique violation = already-processed replay.
+	if (error.code === "23505") return false;
+	// Any other DB error must not silently drop a customer message —
+	// log it and process the event (worst case: one duplicate reply).
+	capture(error, { context: "agent-gateway: webhook event dedup insert" });
+	return true;
 }
 
 interface MessageContext {
@@ -267,18 +351,16 @@ async function handleMessage(
 		await channel.sendSenderAction(ctx.senderId, "typing_on");
 		// Build gateway context for flow routing and agent handler
 		const gatewayCtx = {
-			orgId: ctx.orgId,
+			externalOrganizationId: ctx.orgId,
 			userId: ctx.userId,
 			productType: ctx.productType,
-			// Public customer channels — fail closed to the customer tool set.
 			audience: "customer" as const,
-			chatId: 0,
-			telegramUserId: 0,
 			channel: ctx.channel,
+			endpointId: ctx.pageId,
+			conversationId: `legacy:${ctx.channel}:${ctx.pageId}:${ctx.senderId}`,
 			channelChatId: ctx.pageId,
 			channelUserId: ctx.senderId,
-			pageId: ctx.pageId,
-			pageAccessToken: ctx.pageAccessToken,
+			traceId: crypto.randomUUID(),
 		};
 
 		// Try flow routing first — if a flow is active or triggered, handle it

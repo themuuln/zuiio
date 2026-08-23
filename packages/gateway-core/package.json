@@ -18,11 +18,7 @@
 		"@zuiio/capture": "workspace:*",
 		"zod": "^4.4.3"
 	},
-	"peerDependencies": {
-		"@supabase/supabase-js": "^2"
-	},
 	"devDependencies": {
-		"@supabase/supabase-js": "^2.110.6",
 		"@types/node": "^26.1.1",
 		"@typescript/native": "npm:typescript@^7.0.2",
 		"@zuiio/config": "workspace:*",

@@ -1,65 +1,54 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ToolParam } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
 
-// ─── Channel Types ──────────────────────────────────────────────────────────
-
 /** Supported messaging channels. */
-export type ChannelType = "telegram" | "messenger" | "instagram" | "whatsapp";
+export type ChannelType =
+	| "telegram"
+	| "messenger"
+	| "instagram"
+	| "whatsapp"
+	| "webchat";
 
 /** Supported product types. */
 export type ProductType = "tolom" | "zer" | "zatly";
 
-/** A button in an inline keyboard / quick reply. */
+/** Trusted audience classification. */
+export type AgentAudience = "internal" | "customer";
+
+/** Knowledge visibility for stored sources. */
+export type KnowledgeVisibility = "internal" | "customer" | "both";
+
+/** A button in an inline keyboard or quick reply. */
 export interface InlineButton {
 	text: string;
 	callbackData: string;
 }
 
-/** Options for sending a message. */
+/** Options for sending a channel message. */
 export interface SendMessageOptions {
 	parseMode?: "HTML" | "Markdown";
 	replyToMessageId?: number;
-	/** Channel-specific: Messenger quick replies, Instagram quick replies */
 	quickReplies?: InlineButton[];
 }
 
-/**
- * Generic channel adapter interface.
- *
- * Each messaging channel plugin (Telegram, Facebook, WhatsApp) implements
- * this interface to provide a uniform sending API to the gateway middleware.
- */
+/** Credential-free messaging adapter. */
 export interface Channel {
-	/** Page credentials for Meta channels (Messenger/Instagram). Optional for Telegram. */
-	pageId?: string;
-	pageAccessToken?: string;
-
-	/** Send a plain text message. */
 	sendMessage(
 		chatId: number | string,
 		text: string,
 		options?: SendMessageOptions,
-	): Promise<void>;
-
-	/** Send a message with inline keyboard buttons. */
+	): Promise<boolean>;
 	sendInlineKeyboard(
 		chatId: number | string,
 		text: string,
 		buttons: InlineButton[][],
 	): Promise<void>;
-
-	/** Respond to a callback query (button tap). No-op for channels without callbacks. */
 	answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>;
-
-	/** Edit a message's text. No-op for channels without editing. */
 	editMessageText(
 		chatId: number | string,
 		messageId: number,
 		text: string,
 	): Promise<void>;
-
-	/** Send a document/file. Optional — not all channels support it. */
 	sendDocument?(
 		chatId: number | string,
 		fileBuffer: Buffer,
@@ -68,53 +57,94 @@ export interface Channel {
 	): Promise<void>;
 }
 
-/** Incoming message from any channel — normalized by the webhook handler. */
+/** Incoming message normalized by a channel boundary. */
 export interface IncomingMessage {
-	/** Channel-specific ID: number for Telegram, string for FB/IG */
 	chatId: number | string;
-	/** Channel-specific user ID: number for Telegram, string for FB/IG */
 	userId: number | string;
-	/** The messaging channel */
 	channel: ChannelType;
 	text?: string;
-	/** If this is a callback query response (button tap) — Telegram only */
 	callbackQuery?: {
 		id: string;
 		data: string;
 		messageId: number;
 	};
-	/** Voice file ID if the message contains voice */
 	voiceFileId?: string;
-	/** FB/IG: page ID that received the message */
 	pageId?: string;
-	/** FB/IG: page access token for sending replies */
-	pageAccessToken?: string;
 }
 
-// ─── Gateway Context Types ──────────────────────────────────────────────────
-
-/** Trusted audience classification — resolved from DB, never from LLM output. */
-export type AgentAudience = "internal" | "customer";
-
-/** Knowledge visibility — which audiences can retrieve this source. */
-export type KnowledgeVisibility = "internal" | "customer" | "both";
-
-/** Resolved context for a gateway request. */
+/** Credential-free, tenant-resolved request context. */
 export interface GatewayContext {
-	orgId: string;
-	/** Trusted audience — internal (staff) or customer (public). */
-	audience: AgentAudience;
+	externalOrganizationId: string;
 	userId: string;
 	productType: ProductType;
-	/** Generic channel fields (used by all channels). */
+	audience: AgentAudience;
 	channel: ChannelType;
+	endpointId: string;
+	conversationId: string;
 	channelChatId: string;
 	channelUserId: string;
-	pageId?: string;
-	pageAccessToken?: string;
+	traceId: string;
 }
 
-/** A channel connection record from channel_connections table. */
+/** Credential-free context passed to product tools. */
+export interface ToolContext {
+	externalOrganizationId: string;
+	userId: string;
+	productType: ProductType;
+	audience: AgentAudience;
+	conversationId: string;
+	traceId: string;
+}
+
+/** A message that is safe to persist and deliver later. */
+export interface OutboundIntent {
+	conversationId: string;
+	kind: "text" | "quick_replies";
+	text: string;
+	quickReplies?: InlineButton[];
+	sourceEventId: string | null;
+	traceId: string;
+}
+
+/** Product-owned tool metadata. */
+export interface ToolDescriptor {
+	name: string;
+	description: string;
+	parameters: ToolParam[];
+	effect: "read" | "write";
+	approval: "none" | "required";
+}
+
+/** Product tool invocation sent across a signed service boundary. */
+export interface ProductToolExecution {
+	context: ToolContext;
+	toolName: string;
+	args: Record<string, unknown>;
+	idempotencyKey: string | null;
+}
+
+/** Executable tool used by an AI provider. */
+export interface GatewayTool extends ToolDescriptor {
+	execute(
+		args: Record<string, unknown>,
+		context: ToolContext,
+	): Promise<unknown>;
+}
+
+/** Versioned product-owned agent contract. */
+export interface ProductAgentManifest {
+	version: string;
+	systemPrompt: string;
+	tools: ToolDescriptor[];
+}
+
+/** Boundary between the gateway and one product. */
+export interface ProductAdapter {
+	getManifest(context: ToolContext): Promise<ProductAgentManifest>;
+	executeTool(input: ProductToolExecution): Promise<unknown>;
+}
+
+/** Legacy channel connection record used by non-Meta channels. */
 export interface ChannelConnection {
 	id: string;
 	organization_id: string;
@@ -132,67 +162,42 @@ export interface ChannelConnection {
 	webhook_subscribed_at?: string;
 	last_user_message_at?: string;
 	metadata?: Record<string, unknown>;
-	/** Knowledge visibility for this source. */
 	visibility?: KnowledgeVisibility;
 	created_at: string;
 	updated_at: string;
 }
 
-/** Result of resolving a chat/user to an org. */
+/** Result of resolving a non-Meta channel identity. */
 export interface ResolutionResult {
 	context: GatewayContext;
 	connection: ChannelConnection;
 }
 
-// ─── Tool & Provider Types ──────────────────────────────────────────────────
-
-/**
- * Context injected into every tool execution by the gateway layer.
- * orgId is resolved from the (chat_id, user_id) mapping — NEVER from LLM output.
- */
-export interface ToolContext {
-	orgId: string;
-	userId: string;
-	audience: AgentAudience;
-	supabase: SupabaseClient;
+/** Legacy Telegram link record. */
+export interface LinkRecord {
+	id: string;
+	organization_id: string;
+	user_id: string;
+	telegram_chat_id: number;
+	telegram_user_id: number;
+	telegram_username?: string;
+	first_name?: string;
+	last_name?: string;
+	notification_preferences?: Record<string, unknown>;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
 }
 
-/**
- * Enhanced tool for the gateway.
- * Same parameter format as @zuiio/ai-agent Tool, but execute() receives
- * context (orgId, userId, supabase) from the gateway layer.
- *
- * The tool MUST filter database queries by context.orgId.
- * The gateway guarantees this value is the resolved tenant.
- */
-export interface GatewayTool {
-	name: string;
-	description: string;
-	parameters: ToolParam[];
-	execute: (
-		args: Record<string, unknown>,
-		context: ToolContext,
-	) => Promise<unknown>;
-}
-
-/** Options for the LLM provider API call. */
+/** Options for a provider API call. */
 export interface ProviderOptions {
 	apiKey: string;
 	baseUrl?: string;
 	model?: string;
 }
 
-/**
- * AI Provider interface.
- * Each provider OWNS the multi-turn tool-calling loop.
- * The gateway is a thin dispatcher with fallback.
- */
+/** AI provider contract. */
 export interface AiProvider {
-	/**
-	 * Multi-turn tool-calling conversation.
-	 * Provider sends messages, parses tool calls, executes tools with context,
-	 * appends results, repeats until no more tool calls or maxRounds reached.
-	 */
 	runWithTools(params: {
 		system: string;
 		userMessage: string;
@@ -200,7 +205,6 @@ export interface AiProvider {
 		tools: GatewayTool[];
 		context: ToolContext;
 		maxRounds?: number;
-		/** Called with each token chunk when streaming is enabled. */
 		onToken?: (token: string) => void;
 		conversationHistory?: Array<{
 			role: "system" | "user" | "assistant" | "tool";
@@ -215,24 +219,17 @@ export interface AiProvider {
 	}): Promise<string>;
 }
 
-/**
- * Gateway-level dispatcher with fallback.
- * If primary provider fails, retries on fallback provider.
- */
+/** Provider dispatcher with one fallback. */
 export class AiGateway {
 	constructor(
 		private primary: AiProvider,
 		private fallback?: AiProvider,
 	) {}
 
-	/**
-	 * Detect rate-limit errors (HTTP 429) from providers.
-	 * Returns a user-facing Mongolian message when the API quota is exhausted.
-	 */
-	private isRateLimitError(err: unknown): boolean {
-		if (!(err instanceof Error)) return false;
-		const msg = err.message;
-		return /\b429\b/.test(msg) || /rate.?limit|usage.?limit|quota/i.test(msg);
+	private isRateLimitError(error: unknown): boolean {
+		if (!(error instanceof Error)) return false;
+		return /\b429\b/.test(error.message) ||
+			/rate.?limit|usage.?limit|quota/i.test(error.message);
 	}
 
 	async runWithTools(
@@ -240,17 +237,16 @@ export class AiGateway {
 	): Promise<string> {
 		try {
 			return await this.primary.runWithTools(params);
-		} catch (err) {
-			console.error(`[AiGateway] provider error:`, err);
-			if (this.isRateLimitError(err)) {
-				capture(err, { context: "agent-gateway: rate limit" });
+		} catch (error) {
+			if (this.isRateLimitError(error)) {
+				capture(error, { context: "agent-gateway: rate limit" });
 				return "⚠️ Үйлчилгээний хэрэглээ хязгаарт хүрсэн байна. Түр хүлээгээд дахин оролдоно уу.";
 			}
 			if (this.fallback) {
-				capture(err, { context: "agent-gateway: provider fallback" });
+				capture(error, { context: "agent-gateway: provider fallback" });
 				return await this.fallback.runWithTools(params);
 			}
-			throw err;
+			throw error;
 		}
 	}
 }

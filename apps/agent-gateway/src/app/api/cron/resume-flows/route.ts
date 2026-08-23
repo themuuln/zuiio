@@ -2,8 +2,8 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { FacebookChannel } from "@/channels/facebook";
-import { TelegramChannel } from "@/channels/telegram";
+import { FacebookChannel } from "@zuiio/gateway-facebook";
+import { TelegramChannel } from "@zuiio/gateway-telegram";
 import { resumeDelayedFlows } from "@/flow-executor";
 import { createServiceClient } from "@/lib/supabase";
 
