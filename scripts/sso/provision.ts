@@ -238,6 +238,7 @@ export async function applyProvisionPlan(
   identityClient: IdentityAdminClient,
   productClients: Map<string, ProductAdminClient>,
   products: ProductConfig[],
+  identityIssuer: string,
 ): Promise<ApplyResult[]> {
   const results: ApplyResult[] = [];
 
@@ -253,6 +254,7 @@ export async function applyProvisionPlan(
         identityClient,
         productClients,
         products,
+        identityIssuer,
       );
       results.push(result);
     } catch (err) {
@@ -272,6 +274,7 @@ async function executeAction(
   identityClient: IdentityAdminClient,
   productClients: Map<string, ProductAdminClient>,
   products: ProductConfig[],
+  identityIssuer: string,
 ): Promise<ApplyResult> {
   const product = products.find((p) => p.id === action.productId);
   const ssoProduct = SSO_PRODUCTS.find((p) => p.id === action.productId);
@@ -319,7 +322,7 @@ async function executeAction(
       // If we have the product client, configure the provider
       const productClientForCreate = productClients.get(product.id);
       if (productClientForCreate && product.supabaseUrl) {
-        const issuer = process.env.ZUIIO_OIDC_ISSUER ?? `https://id.zuiiotech.com`;
+        const issuer = process.env.ZUIIO_OIDC_ISSUER ?? identityIssuer;
         const { error: providerErr } =
           await productClientForCreate.upsertZuiioProvider({
             client_id: client!.client_id,
@@ -406,7 +409,7 @@ async function executeAction(
           error: "Cannot resolve client_id — has the OAuth client been created?",
         };
       }
-      const issuer = process.env.ZUIIO_OIDC_ISSUER ?? `https://id.zuiiotech.com`;
+      const issuer = process.env.ZUIIO_OIDC_ISSUER ?? identityIssuer;
       const { error } = await productClient.upsertZuiioProvider({
         client_id: clientId,
         client_secret: "",

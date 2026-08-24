@@ -231,6 +231,8 @@ async function main() {
     identityClient,
     productClients,
     env.products,
+    process.env.ZUIIO_OIDC_ISSUER ??
+      `${env.identity.supabaseUrl.replace(/\/$/, "")}/auth/v1`,
   );
 
   let successCount = 0;

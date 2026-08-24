@@ -8,15 +8,19 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
  */
 export async function GET() {
   const { url } = getSupabaseEnv();
-  const issuer = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
+  const publicOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const issuer = process.env.ZUIIO_OIDC_ISSUER ?? `${url}/auth/v1`;
   const oauthBase = `${url}/auth/v1/oauth`;
+  const isNativeIssuer = issuer === `${url}/auth/v1`;
   const metadata = {
     issuer,
     authorization_endpoint: `${oauthBase}/authorize`,
     token_endpoint: `${oauthBase}/token`,
     userinfo_endpoint: `${oauthBase}/userinfo`,
-    jwks_uri: `${issuer}/api/oauth/jwks`,
+    jwks_uri: isNativeIssuer
+      ? `${url}/auth/v1/.well-known/jwks.json`
+      : `${publicOrigin}/api/oauth/jwks`,
     scopes_supported: ["openid", "profile", "email", "phone", "offline_access"],
     response_types_supported: ["code"],
     response_modes_supported: ["query"],
@@ -39,13 +43,12 @@ export async function GET() {
       "updated_at",
     ],
     code_challenge_methods_supported: ["S256"],
-    revocation_endpoint: `${issuer}/api/oauth/revoke`,
-    end_session_endpoint: `${issuer}/api/oauth/logout`,
+    revocation_endpoint: `${publicOrigin}/api/oauth/revoke`,
+    end_session_endpoint: `${publicOrigin}/api/oauth/logout`,
     // Zuiio-specific extensions
     service_documentation: "https://docs.zuiio.com",
     ui_locales_supported: ["mn", "en"],
   };
-
   return NextResponse.json(metadata, {
     headers: {
       "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
