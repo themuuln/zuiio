@@ -88,10 +88,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 	);
 
 	// State cookie for the callback round-trip verification.
+	// Must be SameSite=None; Secure for cross-site POST (browser fetch from zer.mn -> agent.zuiiotech.com)
+	// then GET from facebook.com -> agent.zuiiotech.com. Lax is not sent on cross-site POST.
 	response.cookies.set("fb_oauth_state", stateData, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
+		secure: true,
+		sameSite: "none",
 		path: "/",
 		maxAge: 600, // 10 minutes
 	});

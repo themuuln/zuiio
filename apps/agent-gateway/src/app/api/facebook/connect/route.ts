@@ -54,8 +54,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	// Set state cookie
 	response.cookies.set("fb_oauth_state", stateData, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
+		secure: true,
+		sameSite: "none",
 		path: "/",
 		maxAge: 600, // 10 minutes
 	});
