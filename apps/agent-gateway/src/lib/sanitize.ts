@@ -1,12 +1,177 @@
+import type { ToolParam } from "@zuiio/ai-agent";
+
 /**
- * Sanitize a string for inclusion in an LLM prompt.
- * Strips Telegram metadata that could contain prompt injections.
+ * OWASP LLM Prompt Injection Prevention.
+ *
+ * Input is sanitized before it is placed in a prompt, then wrapped by the
+ * caller in explicit data delimiters. Sanitization is not the only control:
+ * the model also receives a system-level instruction to treat user content as
+ * untrusted data.
  */
+const INJECTION_PATTERNS = [
+	/ignore\s+previous\s+instructions/gi,
+	/ignore\s+all\s+instructions/gi,
+	/pretend\s+you\s+are/gi,
+	/\bDAN\b/gi,
+	/jailbreak/gi,
+	/system\s+prompt/gi,
+	/you\s+are\s+now/gi,
+	/\[SYSTEM\]/gi,
+	/```system/gi,
+];
+
+const FORBIDDEN_KEYS: Record<string, true> = {
+	["__proto__" as string]: true as const,
+	constructor: true as const,
+	prototype: true as const,
+} as const;
+const MAX_INPUT_LENGTH = 2000;
+
 export function sanitizeUserInput(input: string): string {
-	return input
-		.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "") // Strip control chars
-		.trim()
-		.slice(0, 2000); // Cap length
+	let sanitized = input.slice(0, MAX_INPUT_LENGTH);
+	// Remove zero-width / control chars (except \n, \t).
+	sanitized = sanitized.replace(
+		/[\u200B-\u200D\uFEFF\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,
+		"",
+	);
+	for (const pattern of INJECTION_PATTERNS) {
+		sanitized = sanitized.replace(pattern, "");
+	}
+	// Neutralize executable URL and script markers.
+	sanitized = sanitized
+		.replace(/javascript\s*:/gi, "")
+		.replace(/data\s*:/gi, "")
+		.replace(/<script/gi, "")
+		.replace(/<\s*\/?\s*user_input\s*>/gi, "");
+	return sanitized.trim().replace(/\s{3,}/g, "  ");
+}
+
+/** Wrap untrusted user text so the model must treat it as data. */
+export function wrapUserData(input: string): string {
+	return `<user_input>\n${sanitizeUserInput(input)}\n</user_input>`;
+}
+
+/** Detect known prompt-injection phrases before sanitization removes them. */
+export function containsInjectionAttempt(input: string): boolean {
+	return INJECTION_PATTERNS.some((pattern) => {
+		pattern.lastIndex = 0;
+		return pattern.test(input);
+	});
+}
+
+interface ValidToolArguments {
+	valid: true;
+	args: Record<string, unknown>;
+}
+
+interface InvalidToolArguments {
+	valid: false;
+	error: string;
+}
+
+/**
+ * Validate model-generated tool arguments against the tool parameter contract.
+ * Unknown top-level keys are rejected and prototype-pollution keys are removed
+ * from nested objects before the tool receives the value.
+ */
+export function validateToolArguments(
+	input: unknown,
+	parameters: readonly ToolParam[],
+): ValidToolArguments | InvalidToolArguments {
+	if (typeof input !== "object" || input === null || Array.isArray(input)) {
+		return {
+			valid: false,
+			error: "Хэрэгслийн параметр буруу форматтай байна.",
+		};
+	}
+
+	const source = input as Record<string, unknown>;
+	const known = new Map(
+		parameters.map((parameter) => [parameter.name, parameter]),
+	);
+	const args = Object.create(null) as Record<string, unknown>;
+
+	for (const key of Object.keys(source)) {
+		if (FORBIDDEN_KEYS[key] === true) {
+			continue;
+		}
+
+		const parameter = known.get(key);
+		if (!parameter) {
+			return {
+				valid: false,
+				error: `Хэрэгслийн зөвшөөрөгдөөгүй параметр: ${key}`,
+			};
+		}
+
+		const value = source[key];
+		if (!matchesToolType(value, parameter.type)) {
+			return {
+				valid: false,
+				error: `Хэрэгслийн параметрийн төрөл буруу: ${key}`,
+			};
+		}
+		if (
+			parameter.enum &&
+			typeof value === "string" &&
+			!parameter.enum.includes(value)
+		) {
+			return {
+				valid: false,
+				error: `Хэрэгслийн параметрийн утга зөвшөөрөгдөөгүй: ${key}`,
+			};
+		}
+
+		args[key] = cloneToolValue(value);
+	}
+
+	for (const parameter of parameters) {
+		if (parameter.required && !(parameter.name in args)) {
+			return {
+				valid: false,
+				error: `Хэрэгслийн шаардлагатай параметр дутуу: ${parameter.name}`,
+			};
+		}
+	}
+
+	return { valid: true, args };
+}
+
+function matchesToolType(value: unknown, type: ToolParam["type"]): boolean {
+	switch (type) {
+		case "string":
+			return typeof value === "string";
+		case "number":
+			return typeof value === "number" && Number.isFinite(value);
+		case "boolean":
+			return typeof value === "boolean";
+		case "array":
+			return Array.isArray(value);
+		case "object":
+			return (
+				typeof value === "object" && value !== null && !Array.isArray(value)
+			);
+		default:
+			return false;
+	}
+}
+
+function cloneToolValue(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		return value.map(cloneToolValue);
+	}
+	if (typeof value !== "object" || value === null) {
+		return value;
+	}
+
+	const source = value as Record<string, unknown>;
+	const clone = Object.create(null) as Record<string, unknown>;
+	for (const key of Object.keys(source)) {
+		if (FORBIDDEN_KEYS[key] !== true) {
+			clone[key] = cloneToolValue(source[key]);
+		}
+	}
+	return clone;
 }
 
 /**

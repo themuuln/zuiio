@@ -39,7 +39,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	// Generate state token with orgId + productType
 	const state = crypto.randomUUID();
 	const stateData = JSON.stringify({ orgId, productType, state });
-
 	// Store state in cookie for verification
 	const response = NextResponse.redirect(
 		`https://www.facebook.com/${FB_GRAPH_API_VERSION}/dialog/oauth?` +

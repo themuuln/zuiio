@@ -49,7 +49,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		productType: decoded.productType,
 		state: nonce,
 	});
-
 	const dialogUrl =
 		`https://www.facebook.com/${FB_GRAPH_API_VERSION}/dialog/oauth?` +
 		new URLSearchParams({

@@ -12,6 +12,12 @@ const FACEBOOK_SCOPES = [
 	"pages_manage_metadata",
 ];
 
+const INSTAGRAM_SCOPES = ["instagram_basic", "instagram_manage_messages"];
+
 export function getFacebookOAuthScopes(): string {
-	return FACEBOOK_SCOPES.join(",");
+	const scopes = [...FACEBOOK_SCOPES];
+	if (process.env.FB_ENABLE_INSTAGRAM === "1") {
+		scopes.push(...INSTAGRAM_SCOPES);
+	}
+	return scopes.join(",");
 }
