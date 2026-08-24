@@ -1,6 +1,7 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
+import { validateToolArguments } from "@/lib/sanitize";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 import { runWrite } from "@/write-engine";
 import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
@@ -43,6 +44,42 @@ export function createWriteDataTool(
 	if (!catalog) return null;
 
 	const { supabase, orgId } = context;
+	const parameters: GatewayTool["parameters"] = [
+		{
+			name: "dataset",
+			type: "string",
+			description:
+				"Бичих хүснэгтийн ID (жишээ: customers, vehicles, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices)",
+			required: true,
+		},
+		{
+			name: "operation",
+			type: "string",
+			description: "Үйлдлийн төрөл: insert, update, delete",
+			required: true,
+		},
+		{
+			name: "id",
+			type: "string",
+			description:
+				"update/delete үйлдлийн хувьд хөндлөх мөрийн ID. insert-д шаардлагагүй.",
+			required: false,
+		},
+		{
+			name: "data",
+			type: "object",
+			description:
+				"insert/update үйлдлийн багана → утга холбоос. Зөвхөн writeCatalog-д зөвшөөрөгдсөн багануудыг оруулна. organization_id, id, created_at, deleted_at багануудыг бүү оруул — систем автоматаар тохируулна.",
+			required: false,
+		},
+		{
+			name: "softDelete",
+			type: "boolean",
+			description:
+				"delete үйлдлийн хувьд үнэхүүн бол deleted_at цаг тэмдэглэгдэнэ (анхдагч). Хэрэггүй бол хоосон үлдээ.",
+			required: false,
+		},
+	];
 
 	return {
 		name: "writeData",
@@ -55,60 +92,43 @@ export function createWriteDataTool(
 			Object.entries(catalog.datasets)
 				.map(([id, ds]) => `- ${id}: ${ds.displayName}`)
 				.join("\n"),
-		parameters: [
-			{
-				name: "dataset",
-				type: "string",
-				description:
-					"Бичих хүснэгтийн ID (жишээ: customers, vehicles, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices)",
-				required: true,
-			},
-			{
-				name: "operation",
-				type: "string",
-				description: "Үйлдлийн төрөл: insert, update, delete",
-				required: true,
-				enum: ["insert", "update", "delete"],
-			},
-			{
-				name: "id",
-				type: "string",
-				description:
-					"update/delete үйлдлийн хувьд хөндлөх мөрийн ID. insert-д шаардлагагүй.",
-				required: false,
-			},
-			{
-				name: "data",
-				type: "object",
-				description:
-					"insert/update үйлдлийн багана → утга холбоос. Зөвхөн writeCatalog-д зөвшөөрөгдсөн багануудыг оруулна. organization_id, id, created_at, deleted_at багануудыг бүү оруул — систем автоматаар тохируулна.",
-				required: false,
-			},
-			{
-				name: "softDelete",
-				type: "boolean",
-				description:
-					"delete үйлдлийн хувьд үнэхүүн бол deleted_at цаг тэмдэглэгдэнэ (анхдагч). Хэрэггүй бол хоосон үлдээ.",
-				required: false,
-			},
-		],
+		parameters,
 		execute: async (args) => {
 			try {
-				const rawOp = String(args.operation ?? "insert");
+				const validation = validateToolArguments(args, parameters);
+				if (!validation.valid) {
+					return { error: validation.error };
+				}
+
+				const rawOp = String(validation.args.operation ?? "insert");
 				const operation = (
 					["insert", "update", "delete"].includes(rawOp) ? rawOp : "insert"
 				) as WriteOperationKind;
+				const dataset = String(validation.args.dataset ?? "");
 				const plan = {
-					dataset: String(args.dataset ?? ""),
+					dataset,
 					operation,
-					id: args.id !== undefined ? String(args.id) : undefined,
+					id:
+						validation.args.id !== undefined
+							? String(validation.args.id)
+							: undefined,
 					data:
-						typeof args.data === "object" && args.data !== null
-							? (args.data as Record<string, unknown>)
+						typeof validation.args.data === "object" &&
+						validation.args.data !== null
+							? (validation.args.data as Record<string, unknown>)
 							: undefined,
 					softDelete:
-						typeof args.softDelete === "boolean" ? args.softDelete : undefined,
+						typeof validation.args.softDelete === "boolean"
+							? validation.args.softDelete
+							: undefined,
 				} satisfies WritePlan;
+
+				capture(new Error("High-risk writeData execution"), {
+					context: "gateway: high-risk write",
+					dataset: plan.dataset,
+					operation: plan.operation,
+					orgId,
+				});
 
 				const result = await runWrite(
 					{ tenantId: orgId, catalog, supabase },

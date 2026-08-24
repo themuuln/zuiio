@@ -45,6 +45,15 @@ import {
 } from "@/state/session";
 import { clearWizardState, getWizardState } from "@/state/wizard";
 
+const SENSITIVE_OUTPUT_PATTERN = /sk-[a-zA-Z0-9]{20,}|organization_id/;
+
+function redactSensitiveOutput(output: string): string {
+	if (!SENSITIVE_OUTPUT_PATTERN.test(output)) return output;
+	return output
+		.replace(/sk-[a-zA-Z0-9]{20,}/g, "[REDACTED_API_KEY]")
+		.replace(/organization_id/g, "[REDACTED_FIELD]");
+}
+
 /** Shared gateway instance (lazy singleton). */
 let _gateway: AiGateway | null = null;
 function getGateway(): AiGateway {
@@ -160,6 +169,24 @@ export async function handleAgentMessage(
 		pageId: ctx.pageId,
 		pageAccessToken: ctx.pageAccessToken,
 	};
+	const injectionAttempt =
+		/ignore\s+(?:(?:all|previous)\s+)?instructions|pretend\s+you\s+are|\bDAN\b|jailbreak|system\s+prompt|you\s+are\s+now|\[SYSTEM\]|```system/i.test(
+			text,
+		);
+	if (injectionAttempt) {
+		const injectionError = new Error("Prompt injection attempt detected");
+		capture(injectionError, {
+			context: "gateway: prompt-injection",
+			orgId: ctx.orgId,
+			channel: ctx.channel,
+		});
+		console.warn("[agent-handler] prompt injection attempt", {
+			orgId: ctx.orgId,
+			channel: ctx.channel,
+			textLength: text.length,
+		});
+	}
+
 
 	// Check budget
 	let t = performance.now();
@@ -178,7 +205,8 @@ export async function handleAgentMessage(
 		return `⏳ Хэт олон хүсэлт илгээсэн байна. ${Math.ceil(rateLimit.resetInMs / 1000)} секундын дараа дахин оролдоно уу.`;
 	}
 
-	const sanitizedText = sanitizeUserInput(text);
+	const sanitizedText = sanitizeUserInput(text).slice(0, 2000);
+	const userMessage = `<user_input>\n${sanitizedText}\n</user_input>`;
 
 	// Detect language: Cyrillic → Mongolian, Latin → English
 	const isCyrillic = /[\u0400-\u04FF]/.test(sanitizedText);
@@ -286,24 +314,44 @@ export async function handleAgentMessage(
 		systemPrompt += formatKnowledgeContext(knowledgeChunks);
 	}
 	if (wizardState) {
-		systemPrompt += `\n\n## ACTIVE WIZARD\nYou are in the middle of a "${wizardState.type}" wizard (step ${wizardState.step}).\nThe user's next message is a response to your wizard question. Process it as step ${wizardState.step + 1} of the wizard.\nCollected data so far: ${JSON.stringify(wizardState.data)}\n\nWhen the wizard is complete (all steps done), respond with the result and include this marker at the end: [WIZARD_COMPLETE:${wizardState.type}]\nWhen the user wants to cancel the wizard, respond naturally and include: [WIZARD_CANCEL]`;
+		const wizardData = JSON.stringify(wizardState.data).replace(/[<>]/g, "");
+		systemPrompt += `\n\n## ACTIVE WIZARD\nYou are in the middle of a "${wizardState.type}" wizard (step ${wizardState.step}).\nThe user's next message is a response to your wizard question. Process it as step ${wizardState.step + 1} of the wizard.\nCollected data so far: <wizard_data>${wizardData}</wizard_data>\n\nWhen the wizard is complete (all steps done), respond with the result and include this marker at the end: [WIZARD_COMPLETE:${wizardState.type}]\nWhen the user wants to cancel the wizard, respond naturally and include: [WIZARD_CANCEL]`;
 	}
 	timings.contextLoad = Math.round(performance.now() - t);
 
 	// LLM call
 	t = performance.now();
-	const response = await gateway.runWithTools({
+	let response = await gateway.runWithTools({
 		system: systemPrompt,
-		userMessage: sanitizedText,
+		userMessage,
 		images,
 		tools: safeTools,
 		context,
 		maxRounds: REQUEST_LIMITS.maxToolRounds,
-		onToken: opts.onToken,
+		onToken: opts.onToken
+			? (token) => opts.onToken?.(redactSensitiveOutput(token))
+			: undefined,
 		conversationHistory:
 			session.messages.length > 0 ? session.messages : undefined,
 	});
 	timings.llm = Math.round(performance.now() - t);
+
+	// Never return provider output that contains a secret or schema identifier.
+	const redactedResponse = redactSensitiveOutput(response);
+	if (redactedResponse !== response) {
+		response = redactedResponse;
+		const outputError = new Error("Sensitive provider output redacted");
+		capture(outputError, {
+			context: "gateway: output-screening",
+			orgId: ctx.orgId,
+			channel: ctx.channel,
+		});
+		console.warn("[agent-handler] sensitive output redacted", {
+			orgId: ctx.orgId,
+			channel: ctx.channel,
+			responseLength: response.length,
+		});
+	}
 	debug("agent", "LLM call complete", {
 		responseLen: response.length,
 		preview: response.slice(0, 80),

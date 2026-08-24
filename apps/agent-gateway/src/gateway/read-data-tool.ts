@@ -1,6 +1,7 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
+import { validateToolArguments } from "@/lib/sanitize";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 import { createReadEngine } from "@/read-engine";
 import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
@@ -39,6 +40,15 @@ export function createReadDataTool(
 	if (!catalog) return null;
 
 	const { supabase, orgId } = context;
+	const parameters: GatewayTool["parameters"] = [
+		{
+			name: "plan",
+			type: "object",
+			description:
+				'ReadPlan объект. queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }]; derivation?: { type, queries?, label? }; responseFormat?: table|summary|comparison|detail. Жишээ: { queries: [{ dataset: "work_orders", filters: [{ field: "status", op: "eq", value: "in_progress" }], limit: 10 }] }',
+			required: true,
+		},
+	];
 
 	return {
 		name: "readData",
@@ -51,18 +61,18 @@ export function createReadDataTool(
 			Object.entries(catalog.datasets)
 				.map(([id, ds]) => `- ${id}: ${ds.displayName}`)
 				.join("\n"),
-		parameters: [
-			{
-				name: "plan",
-				type: "object",
-				description:
-					'ReadPlan объект. queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }]; derivation?: { type, queries?, label? }; responseFormat?: table|summary|comparison|detail. Жишээ: { queries: [{ dataset: "work_orders", filters: [{ field: "status", op: "eq", value: "in_progress" }], limit: 10 }] }',
-				required: true,
-			},
-		],
+		parameters,
 		execute: async (args) => {
 			try {
-				const rawPlan = args.plan;
+				if (args.plan === null) {
+					return { error: "readData: plan объект шаардлагатай" };
+				}
+				const validation = validateToolArguments(args, parameters);
+				if (!validation.valid) {
+					return { error: validation.error };
+				}
+
+				const rawPlan = validation.args.plan;
 				if (typeof rawPlan !== "object" || rawPlan === null) {
 					return { error: "readData: plan объект шаардлагатай" };
 				}
