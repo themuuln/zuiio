@@ -10,18 +10,19 @@ export async function GET() {
   const { url } = getSupabaseEnv();
   const issuer = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+  const oauthBase = `${url}/auth/v1/oauth`;
   const metadata = {
     issuer,
-    authorization_endpoint: `${url}/auth/v1/authorize`,
-    token_endpoint: `${url}/auth/v1/token`,
-    userinfo_endpoint: `${url}/auth/v1/userinfo`,
+    authorization_endpoint: `${oauthBase}/authorize`,
+    token_endpoint: `${oauthBase}/token`,
+    userinfo_endpoint: `${oauthBase}/userinfo`,
     jwks_uri: `${issuer}/api/oauth/jwks`,
-    registration_endpoint: `${url}/auth/v1/oidc/register`,
-    scopes_supported: ["openid", "profile", "email"],
+    scopes_supported: ["openid", "profile", "email", "phone", "offline_access"],
     response_types_supported: ["code"],
+    response_modes_supported: ["query"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     subject_types_supported: ["public"],
-    id_token_signing_alg_values_supported: ["HS256", "RS256"],
+    id_token_signing_alg_values_supported: ["RS256", "HS256", "ES256"],
     token_endpoint_auth_methods_supported: [
       "client_secret_basic",
       "client_secret_post",
