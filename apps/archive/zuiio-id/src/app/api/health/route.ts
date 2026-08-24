@@ -11,7 +11,6 @@ import { createAdminClient } from "@/lib/supabase/server";
  *
  * Returns 200 if healthy, 503 if degraded.
  */
-export const dynamic = "force-dynamic";
 
 export async function GET() {
   const checks: Record<string, { status: "ok" | "error"; latencyMs?: number }> =

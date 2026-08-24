@@ -1,1 +1,1 @@
-export { dynamic, GET } from "../health/route";
+export { GET } from "../health/route";
