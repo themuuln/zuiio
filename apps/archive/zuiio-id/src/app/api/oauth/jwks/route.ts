@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
@@ -16,6 +17,11 @@ export async function GET() {
     });
 
     if (!response.ok) {
+      Sentry.captureMessage("Zuiio ID JWKS upstream returned an error", {
+        level: "error",
+        tags: { auth_flow: "oauth", stage: "jwks" },
+        extra: { status: response.status },
+      });
       // Fallback: return empty key set with proper structure
       return NextResponse.json(
         { keys: [] },
@@ -36,7 +42,10 @@ export async function GET() {
         "Content-Type": "application/json",
       },
     });
-  } catch {
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "oauth", stage: "jwks" },
+    });
     // If Supabase is unreachable, return empty keys
     return NextResponse.json(
       { keys: [] },

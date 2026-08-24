@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import type { AuthErrorCode } from "@/lib/errors";
 import { checkApiRateLimit } from "@/lib/rate-limit";
@@ -65,6 +66,10 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
+    Sentry.captureMessage("Unauthenticated OAuth consent decision", {
+      level: "warning",
+      tags: { auth_flow: "oauth", stage: "consent" },
+    });
     return errorResponse("consent_failed", 401);
   }
 
@@ -82,6 +87,9 @@ export async function POST(request: NextRequest) {
   );
 
   if (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "oauth", stage: "decision" },
+    });
     // Protocol-level denial follows the SDK's registered client redirect.
     const redirectData = data as { redirect_url?: string } | null;
     if (redirectData?.redirect_url) {
@@ -104,6 +112,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!data?.redirect_url) {
+    Sentry.captureMessage("OAuth decision returned no redirect URL", {
+      level: "error",
+      tags: { auth_flow: "oauth", stage: "decision" },
+    });
     return errorResponse("consent_failed", 500);
   }
 

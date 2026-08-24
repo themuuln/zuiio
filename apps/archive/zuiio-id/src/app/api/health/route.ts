@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 
@@ -10,12 +11,13 @@ import { createAdminClient } from "@/lib/supabase/server";
  *
  * Returns 200 if healthy, 503 if degraded.
  */
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const checks: Record<string, { status: "ok" | "error"; latencyMs?: number }> =
     {};
   let healthy = true;
 
-  // Database connectivity check
   const dbStart = Date.now();
   try {
     const admin = createAdminClient();
@@ -25,10 +27,18 @@ export async function GET() {
       status: error ? "error" : "ok",
       latencyMs: Date.now() - dbStart,
     };
-    if (error) healthy = false;
-  } catch {
+    if (error) {
+      healthy = false;
+      Sentry.captureException(error, {
+        tags: { endpoint: "/api/health", dependency: "supabase" },
+      });
+    }
+  } catch (error) {
     checks.database = { status: "error", latencyMs: Date.now() - dbStart };
     healthy = false;
+    Sentry.captureException(error, {
+      tags: { endpoint: "/api/health", dependency: "supabase" },
+    });
   }
 
   return NextResponse.json(

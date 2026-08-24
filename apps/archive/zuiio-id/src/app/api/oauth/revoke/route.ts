@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import { getServiceRoleKey, getSupabaseEnv } from "@/lib/supabase/env";
@@ -56,7 +57,10 @@ export async function POST(request: NextRequest) {
         revoke_status: revokeResponse.status,
       },
     });
-  } catch {
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "oauth", stage: "revoke" },
+    });
     // Log but don't fail — RFC 7009 requires 200 even on errors
   }
 

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { verifyContinuation } from "@/lib/auth/continuation";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,10 @@ export async function GET(request: Request) {
     const payload = await verifyContinuation(continuation);
 
     if (!payload) {
+      Sentry.captureMessage("Invalid OAuth continuation token", {
+        level: "warning",
+        tags: { auth_flow: "oauth", stage: "continuation" },
+      });
       return NextResponse.redirect(
         new URL("/login?error=invalid_continuation", origin),
       );
@@ -39,6 +44,9 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
+        Sentry.captureException(error, {
+          tags: { auth_flow: "oauth", stage: "callback_exchange" },
+        });
         return NextResponse.redirect(
           new URL("/login?error=exchange_failed", origin),
         );
@@ -57,6 +65,9 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
+      Sentry.captureException(error, {
+        tags: { auth_flow: "oauth", stage: "callback_exchange" },
+      });
       return NextResponse.redirect(
         new URL("/login?error=exchange_failed", origin),
       );
@@ -113,8 +124,10 @@ async function setLinkedIdentitiesCookie(
         path: "/",
       });
     }
-  } catch (err) {
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "oauth", stage: "linked_identities" },
+    });
     // Non-fatal — don't block login
-    console.error("[callback] setLinkedIdentitiesCookie:", err);
   }
 }

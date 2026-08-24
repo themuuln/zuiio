@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { cookies, headers } from "next/headers";
@@ -69,6 +70,11 @@ export async function login(
     );
 
     if (resolveError || !resolved || resolved.length === 0) {
+      if (resolveError) {
+        Sentry.captureException(resolveError, {
+          tags: { auth_flow: "password", stage: "resolve_username" },
+        });
+      }
       return { formError: "Имэйл/нэр эсвэл нууц үг буруу байна." };
     }
 
@@ -86,6 +92,9 @@ export async function login(
   });
 
   if (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "password", stage: "sign_in" },
+    });
     recordLoginAttempt(identifier, false, ip);
     // Never reveal whether the account exists
     return { formError: "Имэйл/нэр эсвэл нууц үг буруу байна." };
@@ -156,11 +165,9 @@ export async function signInWithGoogle(
     });
 
     if (error) {
-      console.error(
-        "[signInWithGoogle] signInWithIdToken:",
-        error.message,
-        error.code,
-      );
+      Sentry.captureException(error, {
+        tags: { auth_flow: "google", stage: "sign_in" },
+      });
       return { formError: "Google нэвтрэхэд алдаа гарлаа." };
     }
 
@@ -175,7 +182,9 @@ export async function signInWithGoogle(
         .eq("id", data.user.id);
 
       if (profileError) {
-        console.error("[signInWithGoogle] profile update:", profileError);
+        Sentry.captureException(profileError, {
+          tags: { auth_flow: "google", stage: "profile_update" },
+        });
       }
     }
 
@@ -204,8 +213,10 @@ export async function signInWithGoogle(
           ? "/"
           : "/account";
     return { redirectTo: googleDestination };
-  } catch (err) {
-    console.error("[signInWithGoogle] Unexpected:", err);
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "google", stage: "sign_in" },
+    });
     return { formError: "Google нэвтрэхэд алдаа гарлаа." };
   }
 }
@@ -231,7 +242,10 @@ export async function signInWithApple(payload: {
   try {
     const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
     if (!clientId) {
-      console.error("[signInWithApple] Missing NEXT_PUBLIC_APPLE_CLIENT_ID");
+      Sentry.captureMessage("Apple client ID is not configured", {
+        level: "error",
+        tags: { auth_flow: "apple", stage: "config" },
+      });
       return { formError: "Apple нэвтрэх тохиргоо хийгдээгүй байна." };
     }
 
@@ -285,7 +299,9 @@ export async function signInWithApple(payload: {
 
     // "email_exists" means the user is already in the DB — that's fine.
     if (createErr && createErr.code !== "email_exists") {
-      console.error("[signInWithApple] createUser:", createErr);
+      Sentry.captureException(createErr, {
+        tags: { auth_flow: "apple", stage: "create_user" },
+      });
       return { formError: "Системд бүртгэхэд алдаа гарлаа." };
     }
 
@@ -297,7 +313,12 @@ export async function signInWithApple(payload: {
       });
 
     if (linkErr || !linkData) {
-      console.error("[signInWithApple] generateLink:", linkErr);
+      Sentry.captureException(
+        linkErr ?? new Error("Apple link was not created"),
+        {
+          tags: { auth_flow: "apple", stage: "generate_link" },
+        },
+      );
       return { formError: "Системд нэвтрэхэд алдаа гарлаа." };
     }
 
@@ -306,7 +327,10 @@ export async function signInWithApple(payload: {
     const actionUrl = new URL(linkData.properties.action_link);
     const verifyToken = actionUrl.searchParams.get("token");
     if (!verifyToken) {
-      console.error("[signInWithApple] No token in action_link");
+      Sentry.captureMessage("Apple action link did not contain a token", {
+        level: "error",
+        tags: { auth_flow: "apple", stage: "generate_link" },
+      });
       return { formError: "Системд нэвтрэхэд алдаа гарлаа." };
     }
 
@@ -330,7 +354,9 @@ export async function signInWithApple(payload: {
     );
 
     if (profileErr) {
-      console.error("[signInWithApple] profile upsert:", profileErr);
+      Sentry.captureException(profileErr, {
+        tags: { auth_flow: "apple", stage: "profile_update" },
+      });
       // Non-fatal — log but don't block login
     }
 
@@ -344,7 +370,9 @@ export async function signInWithApple(payload: {
     });
 
     if (verifyErr) {
-      console.error("[signInWithApple] verifyOtp:", verifyErr);
+      Sentry.captureException(verifyErr, {
+        tags: { auth_flow: "apple", stage: "verify_otp" },
+      });
       return { formError: "Системд нэвтрэхэд алдаа гарлаа." };
     }
 
@@ -372,8 +400,10 @@ export async function signInWithApple(payload: {
           ? "/"
           : "/account";
     return { redirectTo: appleDestination };
-  } catch (err) {
-    console.error("[signInWithApple] Unexpected:", err);
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "apple", stage: "sign_in" },
+    });
     return { formError: "Apple нэвтрэхэд алдаа гарлаа." };
   }
 }

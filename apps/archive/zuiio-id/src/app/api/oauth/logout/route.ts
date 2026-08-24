@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import { createClient } from "@/lib/supabase/server";
@@ -56,7 +57,10 @@ export async function GET(request: NextRequest) {
       userAgent: ua,
       metadata: { method: "rp_initiated_logout" },
     });
-  } catch {
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { auth_flow: "oauth", stage: "logout" },
+    });
     // Best-effort — still redirect
   }
 
