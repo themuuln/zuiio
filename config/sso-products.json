@@ -113,6 +113,14 @@
     "mobileStartUrl": "zuiio-zunch://auth/start"
   },
   {
+    "id": "oliy",
+    "displayName": "Oliy",
+    "authMode": "sso",
+    "appRoots": ["apps/oliy"],
+    "callbackPath": "/auth/callback",
+    "ssoStartPath": "/auth/sso"
+  },
+  {
     "id": "card",
     "displayName": "Card",
     "authMode": "none",
