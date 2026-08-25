@@ -14,6 +14,7 @@ function corsHeaders(origin: string | null): Record<string, string> {
 	const allowed =
 		origin &&
 		(origin.includes("zer.mn") ||
+			origin.includes("zuiiotech.com") ||
 			origin.includes("bujin.mn") ||
 			origin.includes("localhost") ||
 			origin.includes("192.168.") ||
@@ -57,28 +58,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			{ status: 401 },
 		);
 	}
-
-	if (!FB_APP_ID || !FB_OAUTH_REDIRECT_URI) {
-		return NextResponse.json(
-			{ error: "Facebook app not configured" },
-			{ status: 500 },
-		);
-	}
-
 	// State carries orgId + productType (from the verified token) plus a nonce.
+	// Sign it so the callback can verify without relying on a cookie (which
+	// fails for cross-site POST from http://192.168... to https://agent...).
 	const nonce = crypto.randomUUID();
-	const stateData = JSON.stringify({
+	const payload = JSON.stringify({
 		orgId: decoded.orgId,
 		productType: decoded.productType,
 		state: nonce,
 	});
+	const sig = crypto
+		.createHmac("sha256", process.env.TOKEN_SIGNING_SECRET || "dev-fallback")
+		.update(payload)
+		.digest("base64url")
+		.slice(0, 12);
+	const state = `${Buffer.from(payload).toString("base64url")}.${sig}`;
 	const dialogUrl =
 		`https://www.facebook.com/${FB_GRAPH_API_VERSION}/dialog/oauth?` +
 		new URLSearchParams({
 			client_id: FB_APP_ID,
 			redirect_uri: FB_OAUTH_REDIRECT_URI,
 			scope: getFacebookOAuthScopes(),
-			state: Buffer.from(stateData).toString("base64url"),
+			state,
 			response_type: "code",
 		});
 
@@ -87,15 +88,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		{ headers: corsHeaders(request.headers.get("origin")) },
 	);
 
-	// State cookie for the callback round-trip verification.
-	// Must be SameSite=None; Secure for cross-site POST (browser fetch from zer.mn -> agent.zuiiotech.com)
-	// then GET from facebook.com -> agent.zuiiotech.com. Lax is not sent on cross-site POST.
-	response.cookies.set("fb_oauth_state", stateData, {
-		httpOnly: true,
+	// State cookie for the callback round-trip verification (legacy fallback).
+	response.cookies.set("fb_oauth_state", payload, {
+	httpOnly: true,
 		secure: true,
 		sameSite: "none",
 		path: "/",
-		maxAge: 600, // 10 minutes
+		maxAge: 600,
 	});
 
 	return response;

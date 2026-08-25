@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -8,6 +10,26 @@ const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
 const FB_OAUTH_REDIRECT_URI = process.env.FB_OAUTH_REDIRECT_URI || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
+
+function tokenSecret(): string {
+	return process.env.TOKEN_SIGNING_SECRET || "dev-fallback";
+}
+
+function verifyStateSignature(
+	stateData: { orgId: string; productType: string; state: string },
+	sig: string,
+): boolean {
+	const payload = JSON.stringify({
+		orgId: stateData.orgId,
+		productType: stateData.productType,
+		state: stateData.state,
+	});
+	const expected = createHmac("sha256", tokenSecret())
+		.update(payload)
+		.digest("base64url")
+		.slice(0, 12);
+	return expected === sig;
+}
 
 const _facebookChannel = new FacebookChannel();
 
@@ -26,44 +48,89 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	const code = searchParams.get("code");
 	const state = searchParams.get("state");
 
-	// Verify state: the param is base64url(JSON), the cookie is the raw JSON.
-	// Compare the embedded nonce, not the whole payload (string forms differ).
+	// Verify state: new signed format is base64url(JSON with sig) + ".<sig12>",
+	// legacy is base64url(JSON) with cookie verifier. Support both for rollout.
 	const stateCookie = request.cookies.get("fb_oauth_state")?.value;
-	let stateData: { orgId: string; productType: string; state?: string } | null =
-		null;
+	let stateData: {
+		orgId: string;
+		productType: string;
+		state?: string;
+		sig?: string;
+	} | null = null;
 	try {
-		const parsed = state
-			? (JSON.parse(Buffer.from(state, "base64url").toString()) as {
-					orgId: string;
-					productType: string;
-					state?: string;
-				})
-			: null;
-		stateData = parsed;
+		if (!state) throw new Error("missing state");
+		// Try signed format first: "<payloadB64>.<sig12>"
+		const dot = state.lastIndexOf(".");
+		if (dot > 0 && state.length - dot - 1 === 12) {
+			const payloadB64 = state.slice(0, dot);
+			const sig = state.slice(dot + 1);
+			const parsed = JSON.parse(
+				Buffer.from(payloadB64, "base64url").toString(),
+			) as { orgId: string; productType: string; state?: string };
+			if (
+				parsed.state &&
+				verifyStateSignature(
+					{
+						orgId: parsed.orgId,
+						productType: parsed.productType,
+						state: parsed.state,
+					},
+					sig,
+				)
+			) {
+				stateData = { ...parsed, sig };
+			} else {
+				throw new Error("bad sig");
+			}
+		} else {
+			// Legacy: base64url(JSON) + cookie check
+			const parsedLegacy = JSON.parse(
+				Buffer.from(state, "base64url").toString(),
+			) as {
+				orgId: string;
+				productType: string;
+				state?: string;
+			};
+			stateData = parsedLegacy;
+			if (
+				!stateData?.state ||
+				!stateCookie ||
+				!stateData.orgId ||
+				!stateData.productType
+			)
+				throw new Error("missing fields");
+			const cookieData = JSON.parse(stateCookie) as { state?: string };
+			if (cookieData.state !== stateData.state) throw new Error("mismatch");
+		}
 	} catch {
 		stateData = null;
 	}
 
 	if (
 		!stateData?.state ||
-		!stateCookie ||
 		!stateData.orgId ||
 		!stateData.productType
 	) {
 		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
 	}
 	try {
-		const cookieData = JSON.parse(stateCookie) as { state?: string };
-		if (cookieData.state !== stateData.state) {
+		const _cookieData = stateCookie
+			? (JSON.parse(stateCookie) as { state?: string })
+			: null;
+		if (
+			stateData.sig == null &&
+			_cookieData &&
+			_cookieData.state !== stateData.state
+		) {
 			return NextResponse.json(
 				{ error: "Invalid OAuth state" },
 				{ status: 400 },
 			);
 		}
 	} catch {
-		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
+		if (stateData.sig == null)
+			return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
 	}
-
 	if (!code) {
 		return NextResponse.json(
 			{ error: "Missing authorization code" },
@@ -155,13 +222,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		);
 
 		response.cookies.set("fb_pages", JSON.stringify(pagesData.data), {
-			httpOnly: true,
+			httpOnly: false,
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "lax",
 			path: "/",
 			maxAge: 600, // 10 minutes
 		});
-
 		// Carry the user's long-lived token to the select step so the page
 		// connection can later refresh its page token via /me/accounts (Meta
 		// rejects fb_exchange_token on page tokens — the old cron path).
