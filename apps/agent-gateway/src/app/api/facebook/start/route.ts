@@ -58,6 +58,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			{ status: 401 },
 		);
 	}
+
+	if (!FB_APP_ID || !FB_OAUTH_REDIRECT_URI) {
+		return NextResponse.json(
+			{ error: "Facebook app not configured" },
+			{ status: 500 },
+		);
+	}
 	// State carries orgId + productType (from the verified token) plus a nonce.
 	// Sign it so the callback can verify without relying on a cookie (which
 	// fails for cross-site POST from http://192.168... to https://agent...).
