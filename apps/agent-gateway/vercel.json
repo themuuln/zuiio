@@ -1,6 +1,7 @@
 {
-	"installCommand": "cd ../.. && pnpm install",
+	"installCommand": "cd ../.. && pnpm install --frozen-lockfile --filter=agent-gateway...",
 	"buildCommand": "cd ../.. && pnpm exec turbo run build --filter=agent-gateway",
+	"ignoreCommand": "if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; cd ../.. && pnpm exec turbo query affected --base=\"$VERCEL_GIT_PREVIOUS_SHA\" --packages agent-gateway --exit-code",
 	"outputDirectory": ".next",
 	"regions": ["sin1"],
 	"crons": [

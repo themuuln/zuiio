@@ -6,6 +6,17 @@
 
 # --- Heavy / generated (also gitignored, kept here for the tgz archive path) ---
 **/node_modules
+**/Pods
+**/DerivedData
+**/.symlinks
+**/build
+**/.dart_tool
+**/.expo
+**/.vercel
+**/.turbo
+**/.autohand
+**/.commandcode
+**/.env.local.bak*
 **/.next
 **/coverage
 **/test-results
