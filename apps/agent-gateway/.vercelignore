@@ -8,7 +8,6 @@ tests/
 # Development configs
 vitest.config.ts
 vitest.setup.ts
-tsconfig.json
 biome.json
 
 # Agent skills
