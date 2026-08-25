@@ -17,3 +17,7 @@
 **/.env
 **/.env.*
 apps/archive/
+**/.pi
+**/.claude
+**/.cursor
+**/.agents
