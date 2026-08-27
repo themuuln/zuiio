@@ -161,10 +161,10 @@ Full per-app mapping with confirmed project refs: `docs/agent-reference.md#per-a
 Use production logs to debug issues before diving into code. Two sources available:
 
 ### Quick start
-- **Vercel**: `v logs --project <app> --level error --since 2h` (use the correct profile alias — `v` / `v-tolom` / `v-themuuln6`; `v whoami` to confirm)
+- **Vercel**: `v logs --project <app> --level error --since 2h` (use the correct profile alias — `v` / `v-tolom` / `v-themuuln6`; `v whoami` to confirm) — for JSON with `traceId`: `vercel logs --since 1h --expand --json | jq`
 - **Supabase**: Supabase MCP `get_logs` — `service: auth|postgres|api|storage|edge-function|realtime`
+- **Gateway traces (DX, 2026-08-27):** `GET /api/dashboard/traces?orgId=…&limit=20` or `GET /dashboard/traces` — `gateway_traces` (30d, `traceId` from `x-vercel-id` or UUID, request/response/tool_calls) — Vercel logs are 768-char/1h ephemeral, DB keeps full
 - Full command catalog, service table, and the 5-step debugging workflow: `docs/agent-reference.md#log-based-debugging`
-
 ## Code Review Rules
 - **FastGate**: never claim a change complete without `npm run verify` (typecheck → lint → tests with coverage) — the author never grades the author; non-zero exit codes cannot be argued green.
 - **Tenant isolation**: every query RLS-scoped by `organization_id`; never bypass RLS, never expose service-role to client code, never drop `org` scoping.

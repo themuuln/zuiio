@@ -12,33 +12,32 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Multi-tenant AI agent gateway for Telegram, Facebook Messenger, and Instagram. Connects messaging bots to Zer/Tolom business data via LLM-powered tools with org isolation, rate limiting, and budget controls.
 
-## Multi-Channel Status (2026-08-25)
+## Multi-Channel Status (2026-08-27)
 
 | Channel | Status | Notes |
 |---------|--------|-------|
 | Telegram | ✅ Live | Mode A (shared bot) + Mode B (custom bot) |
-| Facebook Messenger | ✅ Live | Deployed + Business Verification APPROVED. Advanced-access App Review for `pages_manage_engagement`/`pages_read_engagement`/`pages_read_user_content` pending |
+| Facebook Messenger | ✅ Live | Cards + QPay — product Generic Template (3 buttons: Detail/Add to Cart/Buy), `BUY:`→LLM buy flow, `confirm:` sends `qpay_qr_image` via `sendImage` |
 | FB comment auto-reply | ✅ Built | `src/gateway/comment-agent.ts` — `feed` webhook, public AI reply + Private Reply DM; config in `channel_connections.metadata.comment_reply` |
-| Instagram DMs | ⚠️ Partial | Shares the Messenger webhook; OAuth requests NO IG scopes (they break the dialog when the IG product is disabled). IG comment replies NOT built (separate `instagram` webhook object) |
+| Instagram DMs | ⚠️ Partial | Shares Messenger webhook; OAuth requests NO IG scopes. IG comment replies NOT built (separate `instagram` webhook object) |
 | Web chat widget | ✅ Built | `/api/webchat/widget.js` + `webchat_widgets` |
 | WhatsApp | 📋 Planned | Skeleton adapter + webhook routes exist; needs Cloud API creds |
 
-**Current blockers:** Meta App Review for the comment scopes (BV done);
-App-level webhook config must also check `feed` for the Page object.
-See [docs/FACEBOOK_INSTAGRAM_PLAN.md](docs/FACEBOOK_INSTAGRAM_PLAN.md) and
-[docs/MANYCHAT_COMPETITIVE_PLAN.md](docs/MANYCHAT_COMPETITIVE_PLAN.md) §6.
+**Current blockers:** Meta App Review for `pages_manage_engagement`/`pages_read_engagement`/`pages_read_user_content` pending (BV done); App `feed` check required.
+See [docs/FACEBOOK_INSTAGRAM_PLAN.md](docs/FACEBOOK_INSTAGRAM_PLAN.md) and [docs/MANYCHAT_COMPETITIVE_PLAN.md](docs/MANYCHAT_COMPETITIVE_PLAN.md) §6.
 
+**Observability (2026-08-27):** `gateway_traces` (30d, RLS forced) + `src/lib/trace.ts` structured JSON (`traceId` from `x-vercel-id` or UUID, `after()` persist) + `GET /api/dashboard/traces` + `GET /dashboard/traces` — Vercel logs are 768-char/1h ephemeral; DB keeps full request/response/tool_calls. Tail: `vercel logs --since 1h --expand --json | jq` or `curl /api/dashboard/traces?orgId=…` .
 ## Core Rules
 
 - **Org isolation:** `orgId` resolved from DB (`channel_connections` table), never from LLM output
 - **Channel adapter pattern:** `Channel` interface abstracts Telegram/Messenger/Instagram/WhatsApp
 - **Tool pattern:** Every tool receives `ToolContext { orgId, userId, supabase }` and MUST filter by `orgId`
 - **Provider pattern:** Each provider owns the multi-turn tool-calling loop; `AiGateway` handles fallback
-- **State:** Session (Supabase, 24h TTL), rate limit (in-memory, 60s window), budget (Supabase, daily)
-- **Write tools:** Go through confirmation gate (inline keyboards for Telegram, Quick Replies for Messenger/Instagram)
+- **State:** Session (Supabase, 24h TTL), rate limit (in-memory, 60s window), budget (Supabase, daily), traces (`gateway_traces`, 30d, `after()` persist)
+- **Write tools:** Go through confirmation gate (inline keyboards for Telegram, Quick Replies for Messenger/Instagram); QPay orders via `placeOrderWithQpay`/`checkoutCartWithQpay` return `payment_link` + `qpay_qr_image` → `confirm:` sends text + `sendImage`
 - **Mongolian-first:** All user-facing text is in Mongolian
-- **Meta webhook:** Single endpoint handles Messenger, Instagram, AND Page `feed` (comment) events — routed by `page_id` / IG business-account id
-
+- **Meta webhook:** Single endpoint handles Messenger, Instagram, AND Page `feed` (comment) events — routed by `page_id` / IG business-account id; every request gets `traceId` (`x-vercel-id` or UUID) → JSON logs + `gateway_traces`
+- **Product cards:** Messenger `sendProductCards` Generic Template (10 cards, `imageUrl` from `products.image_url`, 3 buttons `Дэлгэрэнгүй`/`Сагсанд нэмэх`/`Худалдаж авах` → `PRODUCT:`/`CART_ADD:`/`BUY:` postbacks; `BUY:` delegates to LLM buy flow)
 ## Code Style
 
 - Biome formatter (tabs, double quotes)
@@ -59,8 +58,10 @@ pnpm test:integration           # Integration tests
 pnpm test:e2e                   # E2E tests (60s timeout)
 pnpm lint                       # Biome lint
 pnpm format                     # Biome format
+# Traces (DX)
+curl "/api/dashboard/traces?orgId=<id>&limit=20"  # DB traces (30d, full request/response/tool_calls)
+vercel logs --since 1h --expand --json | jq '.logs[] | select(.traceId)'  # Vercel JSON logs with traceId
 ```
-
 ## Permission Boundaries
 
 ### ✅ Always
@@ -103,10 +104,10 @@ pnpm format                     # Biome format
 
 ### Common tasks
 - **Fix Telegram bot issue** → `src/channels/telegram.ts` + `src/gateway/`
-- **Fix Facebook/Instagram issue** → `src/channels/facebook.ts` + `src/gateway/webhook-helpers.ts`
+- **Fix Facebook/Instagram issue** → `src/channels/facebook.ts` (cards: `sendProductCards` 3 buttons + `sendImage` QR, `BUY:`→LLM) + `src/gateway/webhook-helpers.ts` + `src/app/api/facebook/webhook/route.ts` (trace: `createTraceLogger`)
 - **Fix comment auto-reply** → `src/gateway/comment-agent.ts` (+ `tests/unit/comment-agent.test.ts`)
-- **Debug production issue** → Check Sentry via `@zuiio/capture`
-
+- **Debug production issue** → `GET /dashboard/traces` or `GET /api/dashboard/traces?traceId=…` + `vercel logs --since 1h --expand --json` + `gateway_traces` table; legacy: Sentry via `@zuiio/capture`
+- **Product cards / Buy / QPay** → `customer-product-tool.ts` (`imageUrl`), `customer-order-tool.ts` (`qpay_qr_image`), `facebook.ts` (`BUY:`→buy flow, `confirm:`→`sendImage`)
 ---
 
 **Package APIs change across versions. Always use current docs, never training data.**
