@@ -177,8 +177,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				},
 			);
 		}
+		// Set default persistent menu with Cart button — non-blocking, best-effort
+		try {
+			const menuChannel = new FacebookChannel({
+				pageId,
+				pageAccessToken: selectedPage.access_token,
+			});
+			await menuChannel.setPersistentMenu(
+				[
+					{ type: "postback", title: "🛒 Сагс", payload: "CART_VIEW" },
+					{ type: "postback", title: "📦 Бараа", payload: "catalog" },
+					{ type: "postback", title: "💬 Тусламж", payload: "help" },
+				],
+				{ composerInputDisabled: false },
+			);
+			await menuChannel.setGetStarted("GET_STARTED");
+			await menuChannel.setGreeting(
+				"Сайн уу! Bujin-д тавтай морил. Танд юугаар туслах вэ?",
+			);
+		} catch (menuErr) {
+			capture(menuErr, {
+				context: "agent-gateway: set default persistent menu",
+			});
+		}
 
-		// Clear pages + user-token cookies
 		// Server-controlled return destination (env per product) — never from
 		// client input, so no open-redirect surface.
 		const returnUrls: Record<string, string> = {

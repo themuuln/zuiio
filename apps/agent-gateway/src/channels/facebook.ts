@@ -195,6 +195,11 @@ export class FacebookChannel implements Channel {
 									title: "Сагсанд нэмэх",
 									payload: `CART_ADD:${product.id}`,
 								},
+								{
+									type: "postback",
+									title: "Худалдаж авах",
+									payload: `BUY:${product.id}`,
+								},
 							]
 						: []),
 				],
@@ -235,6 +240,49 @@ export class FacebookChannel implements Channel {
 			return true;
 		} catch (err) {
 			capture(err, { context: "facebook-channel: sendProductCards" });
+			return false;
+		}
+	}
+
+	async sendImage(chatId: number | string, imageUrl: string): Promise<boolean> {
+		const pageId = this.pageId;
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageId || !pageAccessToken || !imageUrl) return false;
+		const trimmed = imageUrl.trim();
+		if (!trimmed) return false;
+		// Normalize: allow https URL, data: URL, or raw base64
+		const url =
+			trimmed.startsWith("http") || trimmed.startsWith("data:")
+				? trimmed
+				: `data:image/png;base64,${trimmed}`;
+		try {
+			const res = await fetch(
+				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						recipient: { id: String(chatId) },
+						messaging_type: "RESPONSE",
+						message: {
+							attachment: {
+								type: "image",
+								payload: { url, is_reusable: true },
+							},
+						},
+					}),
+				},
+			);
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(new Error(`Facebook sendImage failed: ${res.status} ${err}`), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: sendImage" });
 			return false;
 		}
 	}
@@ -465,5 +513,154 @@ export class FacebookChannel implements Channel {
 		} catch {
 			return false;
 		}
+	}
+
+	// ── Messenger Profile (persistent menu / get_started / greeting / ice breakers) ──
+	// Docs: https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api
+	// Single endpoint controls the right-corner menu, Get Started, and greeting.
+	// Requires page_access_token; pageId is inferred from token via `me`.
+
+	async getMessengerProfile(
+		fields: string[] = [
+			"persistent_menu",
+			"get_started",
+			"greeting",
+			"ice_breakers",
+		],
+	): Promise<Record<string, unknown> | null> {
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageAccessToken) return null;
+		try {
+			const url = `${GRAPH_API_BASE}/me/messenger_profile?fields=${fields.join(",")}&access_token=${pageAccessToken}`;
+			const res = await fetch(url);
+			if (!res.ok) return null;
+			return (await res.json()) as Record<string, unknown>;
+		} catch {
+			return null;
+		}
+	}
+
+	async setMessengerProfile(
+		payload: Record<string, unknown>,
+	): Promise<boolean> {
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageAccessToken) return false;
+		try {
+			const url = `${GRAPH_API_BASE}/me/messenger_profile?access_token=${pageAccessToken}`;
+			const res = await fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			});
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(new Error(`setMessengerProfile failed: ${res.status} ${err}`), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: setMessengerProfile" });
+			return false;
+		}
+	}
+
+	async deleteMessengerProfile(fields: string[]): Promise<boolean> {
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageAccessToken) return false;
+		try {
+			const url = `${GRAPH_API_BASE}/me/messenger_profile?access_token=${pageAccessToken}`;
+			const res = await fetch(url, {
+				method: "DELETE",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ fields }),
+			});
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(
+					new Error(`deleteMessengerProfile failed: ${res.status} ${err}`),
+					{
+						context: "facebook-channel",
+					},
+				);
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: deleteMessengerProfile" });
+			return false;
+		}
+	}
+
+	/**
+	 * Set the persistent menu — the right-corner ☰ menu (mobile: hamburger).
+	 * Up to 3 top-level items, each up to 5 nested. Payloads arrive as postbacks.
+	 */
+	async setPersistentMenu(
+		items: Array<
+			| { type: "postback"; title: string; payload: string }
+			| { type: "web_url"; title: string; url: string }
+			| {
+					type: "nested";
+					title: string;
+					call_to_actions: Array<
+						| { type: "postback"; title: string; payload: string }
+						| { type: "web_url"; title: string; url: string }
+					>;
+			  }
+		>,
+		options?: { composerInputDisabled?: boolean; locale?: string },
+	): Promise<boolean> {
+		const locale = options?.locale ?? "default";
+		const composer_input_disabled = options?.composerInputDisabled ?? false;
+		// Validate limits early to avoid silent Meta truncation
+		const topLevel = items.slice(0, 3);
+		const normalized = topLevel.map((item) => {
+			if (item.type === "nested") {
+				return { ...item, call_to_actions: item.call_to_actions.slice(0, 5) };
+			}
+			return item;
+		});
+		return this.setMessengerProfile({
+			persistent_menu: [
+				{
+					locale,
+					composer_input_disabled,
+					call_to_actions: normalized,
+				},
+			],
+		});
+	}
+
+	async deletePersistentMenu(): Promise<boolean> {
+		return this.deleteMessengerProfile(["persistent_menu"]);
+	}
+
+	async setGetStarted(payload = "GET_STARTED"): Promise<boolean> {
+		return this.setMessengerProfile({ get_started: { payload } });
+	}
+
+	async setGreeting(text: string, locale = "default"): Promise<boolean> {
+		return this.setMessengerProfile({
+			greeting: [{ locale, text: text.slice(0, 160) }],
+		});
+	}
+
+	async setIceBreakers(
+		prompts: Array<{ question: string; payload: string }>,
+		locale = "default",
+	): Promise<boolean> {
+		return this.setMessengerProfile({
+			ice_breakers: [
+				{
+					locale,
+					call_to_actions: prompts.slice(0, 4).map((p) => ({
+						question: p.question.slice(0, 80),
+						payload: p.payload.slice(0, 1000),
+					})),
+				},
+			],
+		});
 	}
 }

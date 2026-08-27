@@ -11,6 +11,7 @@ import { handleAgentMessage } from "@/gateway/agent-handler";
 import { handleFeedChange } from "@/gateway/comment-agent";
 import {
 	createCustomerCartTools,
+	loadCustomerCart,
 	replayCustomerCheckoutAction,
 } from "@/gateway/customer-cart-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
@@ -257,6 +258,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				connectionId: messengerConn.id,
 			};
 			for (const change of entry.changes) {
+				// Meta can redeliver feed changes independently of messaging
+				// events. Deduplicate before invoking the AI/reply path.
+				const value = change.value;
+				const feedKey =
+					value.comment_id ??
+					`${value.item}:${value.verb}:${value.post_id ?? ""}:${value.created_time ?? ""}`;
+				if (await isDuplicateEvent(`feed:${entryId}:${feedKey}`)) continue;
 				await handleFeedChange(supabase, feedCtx, change);
 			}
 		}
@@ -587,6 +595,20 @@ async function handlePostback(
 				result = { success: true, message: "Амжилттай." };
 			}
 			await channel.sendMessage(ctx.senderId, formatWriteResult(result));
+			// If the order returned a QPay QR image, send it as an image attachment
+			if (
+				result !== null &&
+				typeof result === "object" &&
+				"payment_method" in result &&
+				(result as Record<string, unknown>).payment_method === "qpay"
+			) {
+				const qrImage = (result as { qpay_qr_image?: unknown }).qpay_qr_image;
+				if (typeof qrImage === "string" && qrImage.trim()) {
+					try {
+						await channel.sendImage?.(ctx.senderId, qrImage);
+					} catch {}
+				}
+			}
 		} catch (err) {
 			capture(err, { context: "agent-gateway: confirm staged action (meta)" });
 			await channel.sendMessage(
@@ -743,19 +765,144 @@ async function handlePostback(
 		return;
 	}
 
+	if (ctx.payload.startsWith("BUY:")) {
+		const productId = ctx.payload.slice("BUY:".length).trim();
+		if (productId) {
+			try {
+				const dataClient =
+					ctx.productType === "tolom"
+						? getSupabaseForProduct("tolom")
+						: supabase;
+				const { data: product } = await dataClient
+					.from("products")
+					.select("id, name")
+					.eq("id", productId)
+					.eq("organization_id", ctx.orgId)
+					.maybeSingle();
+				const productName = (product?.name as string | null) ?? "барааг";
+				await handleMessage(supabase, {
+					...ctx,
+					text: `${productName} худалдаж авах хүсэлтэй байна. 1 ширхэг. Захиалга үүсгэхэд туслаач.`,
+				});
+			} catch (err) {
+				capture(err, { context: "agent-gateway: buy postback" });
+				await handleMessage(supabase, {
+					...ctx,
+					text: `BUY:${productId} худалдаж авах`,
+				});
+			}
+		}
+		return;
+	}
 	if (ctx.payload === "catalog") {
 		await handleMessage(supabase, { ...ctx, text: "жагсаалт" });
 		return;
 	}
-	if (ctx.payload === "cart_view" || ctx.payload === "view_cart") {
-		await handleMessage(supabase, { ...ctx, text: "сагс үзэх" });
+	// Cart view — deterministic enriched render (no LLM round-trip)
+	// Persistent-menu "Сагс" uses payload CART_VIEW; quick-replies use cart_view/view_cart
+	const cartPayload = ctx.payload.trim().toLowerCase();
+	if (
+		cartPayload === "cart_view" ||
+		cartPayload === "view_cart" ||
+		cartPayload === "cart" ||
+		cartPayload === "сагс" ||
+		cartPayload === "сагс үзэх"
+	) {
+		try {
+			const dataClient =
+				ctx.productType === "tolom" ? getSupabaseForProduct("tolom") : supabase;
+			const toolCtx = {
+				supabase: dataClient,
+				orgId: ctx.orgId,
+				userId: ctx.senderId,
+				productType: ctx.productType,
+				audience: "customer" as const,
+				channel: ctx.channel,
+				channelChatId: ctx.pageId,
+				channelUserId: ctx.senderId,
+				pageId: ctx.pageId,
+				pageAccessToken: ctx.pageAccessToken,
+			};
+			const cart = await loadCustomerCart(toolCtx);
+			if (cart.items.length === 0) {
+				await channel.sendMessage(
+					ctx.senderId,
+					'🛒 Сагс хоосон байна.\n\nБараа нэмэхийг хүсвэл "жагсаалт" гэж бичнэ үү.',
+					{
+						quickReplies: [
+							{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+						],
+					},
+				);
+				return;
+			}
+			// Enrich with product names/prices
+			const productIds = cart.items.map((item) => item.product_id);
+			const { data: products } = await dataClient
+				.from("products")
+				.select("id, name, sale_price")
+				.eq("organization_id", ctx.orgId)
+				.in("id", productIds);
+			const productMap = new Map(
+				(products ?? []).map((product) => [
+					product.id as string,
+					product as { id: string; name: string; sale_price: number | null },
+				]),
+			);
+			let total = 0;
+			const lines = cart.items.map((item, index) => {
+				const product = productMap.get(item.product_id);
+				const name = product?.name ?? item.product_id.slice(0, 8);
+				const price = product?.sale_price ?? 0;
+				const subtotal = price * item.quantity;
+				total += subtotal;
+				return `${index + 1}. ${name} — ${item.quantity}ш × ₮${price.toLocaleString("mn-MN")} = ₮${subtotal.toLocaleString("mn-MN")}`;
+			});
+			const message = `🛒 Таны сагс (${cart.items.length} төрөл):\n\n${lines.join("\n")}\n\nНийт: ₮${total.toLocaleString("mn-MN")}`;
+			await channel.sendMessage(ctx.senderId, message, {
+				quickReplies: [
+					{ text: "Захиалах", callbackData: "checkout" },
+					{ text: "Сагс цэвэрлэх", callbackData: "clear_cart" },
+					{ text: "Үргэлжлүүлэн үзэх", callbackData: "catalog" },
+				],
+			});
+		} catch (err) {
+			capture(err, { context: "agent-gateway: cart view postback" });
+			// Fallback to LLM path
+			await handleMessage(supabase, { ...ctx, text: "сагс үзэх" });
+		}
+		return;
+	}
+	if (cartPayload === "clear_cart") {
+		try {
+			const dataClient =
+				ctx.productType === "tolom" ? getSupabaseForProduct("tolom") : supabase;
+			const toolCtx = {
+				supabase: dataClient,
+				orgId: ctx.orgId,
+				userId: ctx.senderId,
+				productType: ctx.productType,
+				audience: "customer" as const,
+				channel: ctx.channel,
+				channelChatId: ctx.pageId,
+				channelUserId: ctx.senderId,
+				pageId: ctx.pageId,
+				pageAccessToken: ctx.pageAccessToken,
+			};
+			const cartTools = createCustomerCartTools(toolCtx);
+			const clearCart = cartTools.find((tool) => tool.name === "clearCart");
+			if (clearCart) await clearCart.execute({}, toolCtx);
+			await channel.sendMessage(ctx.senderId, "🗑️ Сагс цэвэрлэгдлээ.");
+		} catch (err) {
+			capture(err, { context: "agent-gateway: clear cart postback" });
+			await channel.sendMessage(ctx.senderId, "Сагс цэвэрлэхэд алдаа гарлаа.");
+		}
 		return;
 	}
 	if (ctx.payload === "checkout") {
 		await handleMessage(supabase, { ...ctx, text: "захиалах" });
 		return;
 	}
-
 	await handleMessage(supabase, { ...ctx, text: ctx.payload });
 }
 

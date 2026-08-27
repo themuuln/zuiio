@@ -60,9 +60,15 @@ export interface Channel {
 			imageUrl?: string | null;
 		}>,
 	): Promise<boolean>;
+	/** Send an image (Messenger/Telegram). Optional. For Messenger, imageUrl can be https URL or data:image/png;base64. */
+	sendImage?(
+		chatId: number | string,
+		imageUrl: string,
+		caption?: string,
+	): Promise<boolean>;
 }
+
 export interface IncomingMessage {
-	/** Channel-specific ID: number for Telegram, string for FB/IG */
 	chatId: number | string;
 	/** Channel-specific user ID: number for Telegram, string for FB/IG */
 	userId: number | string;

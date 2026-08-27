@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 
 import { capture } from "@zuiio/capture";
 import { z } from "zod";
+import { resolveZerBaseUrl } from "@/lib/zer-resolver";
 import type { GatewayTool, ToolContext } from "@/providers/types";
-const ZER_API_URL = "ZER_APP_URL";
-const API_SECRET = "AGENT_GATEWAY_API_SECRET";
 
+const API_SECRET = "AGENT_GATEWAY_API_SECRET";
 const PlaceOrderSchema = z.object({
 	items: z
 		.array(
@@ -69,13 +69,15 @@ function normalizeInstructions(
 		return {
 			paymentLink: null,
 			qrText: null,
-			paymentUrls: [],
+			qrImage: null as string | null,
+			paymentUrls: [] as Array<{ name: string; link: string }>,
 		};
 	}
 	const paymentUrls = instructions.payment_urls ?? instructions.qpay_urls ?? [];
 	return {
 		paymentLink: instructions.qpay_short_url ?? paymentUrls[0]?.link ?? null,
 		qrText: instructions.qpay_qr_text ?? null,
+		qrImage: instructions.qpay_qr_image ?? null,
 		paymentUrls,
 	};
 }
@@ -150,9 +152,17 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 				};
 			}
 
-			const baseUrl = process.env[ZER_API_URL]?.trim().replace(/\/+$/, "");
 			const secret = process.env[API_SECRET]?.trim();
-			if (!baseUrl || !secret) {
+			if (!secret) {
+				return {
+					error: "QPay захиалгын холболт одоогоор тохируулагдаагүй байна.",
+				};
+			}
+			const baseUrl = await resolveZerBaseUrl(
+				_context.orgId,
+				_context.supabase,
+			);
+			if (!baseUrl) {
 				return {
 					error: "QPay захиалгын холболт одоогоор тохируулагдаагүй байна.",
 				};
@@ -203,6 +213,7 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 					payment_method: "qpay",
 					payment_link: payment.paymentLink,
 					qpay_qr_text: payment.qrText,
+					qpay_qr_image: payment.qrImage,
 					payment_urls: payment.paymentUrls,
 					message: payment.paymentLink
 						? "Захиалга үүслээ. QPay холбоосоор төлбөрөө хийнэ үү. Төлбөр баталгаажсаны дараа захиалга боловсруулагдана."
