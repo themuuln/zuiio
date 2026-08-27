@@ -301,18 +301,49 @@ function validateSignature(rawBody: string, signature: string | null): boolean {
 function quickRepliesForCustomerMessage(
 	text: string,
 	channel: "messenger" | "instagram",
+	opts?: { hasProducts?: boolean; isCart?: boolean; isCheckout?: boolean },
 ): Array<{ text: string; callbackData: string }> | undefined {
-	if (
-		channel !== "messenger" ||
-		!/^(сайн|hello|hi|hey|сайн уу)/i.test(text.trim())
-	) {
-		return undefined;
+	if (channel !== "messenger" && channel !== "instagram") return undefined;
+	if (opts?.hasProducts) {
+		return [
+			{ text: "Сагс үзэх", callbackData: "cart_view" },
+			{ text: "Захиалах", callbackData: "checkout" },
+			{ text: "Үргэлжлүүлэн үзэх", callbackData: "catalog" },
+		];
 	}
-
+	if (opts?.isCart || opts?.isCheckout) {
+		return [
+			{ text: "Захиалах", callbackData: "checkout" },
+			{ text: "Сагс цэвэрлэх", callbackData: "clear_cart" },
+			{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+		];
+	}
+	const t = text.trim().toLowerCase();
+	if (/сагс|cart/.test(t)) {
+		return [
+			{ text: "Захиалах", callbackData: "checkout" },
+			{ text: "Сагс цэвэрлэх", callbackData: "clear_cart" },
+			{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+		];
+	}
+	if (/захиалга|order/.test(t)) {
+		return [
+			{ text: "Захиалга шалгах", callbackData: "order_status" },
+			{ text: "Хүргэлт асуух", callbackData: "delivery" },
+			{ text: "Дэмжлэг", callbackData: "support" },
+		];
+	}
+	if (/^(сайн|hello|hi|hey|сайн уу)/i.test(text.trim())) {
+		return [
+			{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+			{ text: "Захиалга шалгах", callbackData: "order_status" },
+			{ text: "Хүргэлт асуух", callbackData: "delivery" },
+		];
+	}
 	return [
 		{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+		{ text: "Сагс харах", callbackData: "cart_view" },
 		{ text: "Захиалга шалгах", callbackData: "order_status" },
-		{ text: "Хүргэлт асуух", callbackData: "delivery" },
 	];
 }
 
@@ -436,7 +467,19 @@ async function handleMessage(
 			if (products.length > 0) {
 				await channel.sendSenderAction(ctx.senderId, "typing_off");
 				await channel.sendMessage(ctx.senderId, "Таны асуусан бараанууд:");
-				await channel.sendProductCards(ctx.senderId, products);
+				const cardsSent = await channel.sendProductCards(ctx.senderId, products);
+				if (cardsSent) {
+					const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel, {
+						hasProducts: true,
+					});
+					if (qr && qr.length > 0) {
+						await channel.sendMessage(
+							ctx.senderId,
+							"Танд өөр ямар тусламж хэрэгтэй вэ?",
+							{ quickReplies: qr },
+						);
+					}
+				}
 				return;
 			}
 		}
@@ -495,7 +538,9 @@ async function handleMessage(
 				}>,
 			);
 			if (cardsSent) {
-				const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel);
+				const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel, {
+					hasProducts: true,
+				});
 				if (qr && qr.length > 0) {
 					await channel.sendMessage(
 						ctx.senderId,
@@ -594,19 +639,37 @@ async function handlePostback(
 			} else {
 				result = { success: true, message: "Амжилттай." };
 			}
-			await channel.sendMessage(ctx.senderId, formatWriteResult(result));
+			const isOrderCheckout =
+				staged.toolName === "placeOrderWithQpay" ||
+				staged.toolName === "checkoutCartWithQpay";
+			const followUps = isOrderCheckout
+				? [
+						{ text: "Захиалга шалгах", callbackData: "order_status" },
+						{ text: "Сагс харах", callbackData: "cart_view" },
+						{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+					]
+				: [
+						{ text: "Сагс харах", callbackData: "cart_view" },
+						{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+					];
+			await channel.sendMessage(ctx.senderId, formatWriteResult(result), {
+				quickReplies: followUps,
+			});
 			// If the order returned a QPay QR image, send it as an image attachment
 			if (
 				result !== null &&
 				typeof result === "object" &&
 				"payment_method" in result &&
-				(result as Record<string, unknown>).payment_method === "qpay"
+				"qpay_qr_image" in result
 			) {
-				const qrImage = (result as { qpay_qr_image?: unknown }).qpay_qr_image;
-				if (typeof qrImage === "string" && qrImage.trim()) {
-					try {
-						await channel.sendImage?.(ctx.senderId, qrImage);
-					} catch {}
+				const record = result as Record<string, unknown>;
+				if (record.payment_method === "qpay") {
+					const qrImage = record.qpay_qr_image;
+					if (typeof qrImage === "string" && qrImage.trim()) {
+						try {
+							await channel.sendImage?.(ctx.senderId, qrImage);
+						} catch {}
+					}
 				}
 			}
 		} catch (err) {

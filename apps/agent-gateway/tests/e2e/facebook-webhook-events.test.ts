@@ -210,10 +210,11 @@ describe("facebook webhook — event paths", () => {
 			"psid-1",
 		);
 		expect(execute).toHaveBeenCalledWith({ amount: 1000 });
-		// The formatted write result is sent back to the sender.
+		// The formatted write result is sent back to the sender (now with quickReplies for order checkout).
 		expect(mockSendMessage).toHaveBeenCalledWith(
 			"psid-1",
 			expect.stringContaining("sale-1"),
+			expect.anything(),
 		);
 	});
 
