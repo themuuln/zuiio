@@ -187,7 +187,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				[
 					{ type: "postback", title: "🛒 Сагс", payload: "CART_VIEW" },
 					{ type: "postback", title: "📦 Бараа", payload: "catalog" },
-					{ type: "postback", title: "💬 Тусламж", payload: "help" },
+					{ type: "postback", title: "📋 Захиалга", payload: "order_status" },
 				],
 				{ composerInputDisabled: false },
 			);
@@ -195,6 +195,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			await menuChannel.setGreeting(
 				"Сайн уу! Bujin-д тавтай морил. Танд юугаар туслах вэ?",
 			);
+			await menuChannel.setIceBreakers([
+				{ question: "Бүтээгдэхүүн үзэх", payload: "catalog" },
+				{ question: "Сагс харах", payload: "cart_view" },
+				{ question: "Захиалга шалгах", payload: "order_status" },
+				{ question: "Хүргэлт асуух", payload: "delivery" },
+			]);
 		} catch (menuErr) {
 			capture(menuErr, {
 				context: "agent-gateway: set default persistent menu",

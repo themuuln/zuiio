@@ -3,6 +3,7 @@ import { capture } from "@zuiio/capture";
 import "server-only";
 
 import { createCustomerCartTools } from "@/gateway/customer-cart-tool";
+import { createCustomerOrderStatusTool } from "@/gateway/customer-order-status-tool";
 import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
@@ -98,6 +99,7 @@ Organization ID: ${orgId}${groupWarning}${USER_INPUT_SECURITY_BLOCK}`;
 6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
 Жишээ: "идэвхтэй захиалга" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "утсаар харилцагч" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "өнөөдрийн цаг" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
 САНУУЛАГ: Хэрэглэгчийг (ID эсвэл утасаар readData "customers"-ээр) таньсны дараа recallCustomerMemory дуудж, тэдний хадгалагдсан дуртай зүйл/түүхийг аваад хариултаа хувиаршуул. Хэрэглэгч өөрийнхөө тухай бат бөх мэдээлэл (дуртай нэр, холбоо барих таалагдал, тээврийн хэрэгсэл, тэмдэглэл) хэлсэн үед rememberCustomerFact дуудж хадгал.
+QUICK_REPLIES: Хариулт бүрийн төгсгөлд <qr>[{"text":"...","payload":"..."}]</qr> заавал өгнө (payload: catalog/cart_view/checkout/clear_cart/order_status/delivery/support). Хоосон бол <qr>[]</qr>.
 ОЛОН ШАТЫН ТУСЛАМЖ:
 - Захиалга: харилцагчийн нэр → улсын дугаар → тайлбар
 - Цаг захиалга: харилцагч → огноо/цаг → тайлбар
@@ -115,6 +117,7 @@ RULES:
 5. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: products, categories, contacts, expenses, purchase_orders. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
 MEMORY: When you identify a customer/contact (by id or phone via readData on "contacts"), call recallCustomerMemory to retrieve their saved preferences/history and personalize. When the user states a durable fact about themselves, call rememberCustomerFact to save it.
 6. General questions → respond without tools
+7. QUICK_REPLIES: End EVERY answer with <qr>[{"text":"...","payload":"..."}]</qr> — 2-3 follow-ups, payload only from: catalog, cart_view, checkout, clear_cart, order_status, delivery, support. If none, <qr>[]</qr>. Tag is stripped before display.
 Organization ID: ${orgId}${groupWarning}${USER_INPUT_SECURITY_BLOCK}`;
 	}
 	return `Та "${safeOrgName || "This store"}" — найрсаг, мэргэжлийн бизнес агент.
@@ -124,6 +127,9 @@ Organization ID: ${orgId}${groupWarning}${USER_INPUT_SECURITY_BLOCK}`;
 Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: products, categories, contacts, expenses, purchase_orders. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 САНУУЛАГ: Хэрэглэгч/харилцагчийг (ID эсвэл утасаар readData "contacts"-ээр) таньсны дараа recallCustomerMemory дуудж тэдний хадгалагдсан дуртай зүйл/түүхийг аваад хариултаа хувиаршуул. Хэрэглэгч өөрийнхөө тухай бат бөх мэдээлэл хэлсэн үед rememberCustomerFact дуудж хадгал.
 - Ангиллаар: getSalesByCategory
+- Бараа хайх (харилцагч): searchProducts({ query, limit })
+- Сагс: addToCart, viewCart, clearCart, checkoutCartWithQpay (QPay)
+- Захиалга шалгах (харилцагч): getMyOrders({ phone?, limit? }) — Messenger/Instagram хэрэглэгчийн өөрийн захиалгын төлөв
 - Бусад бүх асуулт: readData ашиглах
 Ерөнхий асуулт — хэрэгсэлгүйгээр хариул.
 Organization ID: ${orgId}${groupWarning}${USER_INPUT_SECURITY_BLOCK}`;
@@ -1074,7 +1080,10 @@ export function getProductTools(
 	// business data remains unavailable on every public channel.
 	if (context.audience === "customer") {
 		if (productType !== "zer") return [];
-		const tools: GatewayTool[] = [createCustomerProductTool(context)];
+		const tools: GatewayTool[] = [
+			createCustomerProductTool(context),
+			createCustomerOrderStatusTool(context),
+		];
 		if (context.channel === "messenger" || context.channel === "instagram") {
 			tools.push(
 				...createCustomerCartTools(context).map((tool) =>

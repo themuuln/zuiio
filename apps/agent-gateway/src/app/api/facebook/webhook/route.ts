@@ -397,6 +397,36 @@ function quickRepliesForCustomerMessage(
 	];
 }
 
+/** Extract <qr>[{text,payload}]</qr> from AI response. Returns {cleanText, aiReplies}. */
+function extractAiQuickReplies(raw: string): { cleanText: string; aiReplies: Array<{ text: string; callbackData: string }> } {
+	const m = raw.match(/<qr>([\s\S]*?)<\/qr>/i);
+	if (!m) return { cleanText: raw.trim(), aiReplies: [] };
+	const cleanText = raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim();
+	try {
+		const parsed = JSON.parse(m[1].trim());
+		if (!Array.isArray(parsed)) return { cleanText, aiReplies: [] };
+		const aiReplies = parsed
+			.slice(0, 3)
+			.map((x: unknown) => {
+				if (!x || typeof x !== "object") return null;
+				const r = x as Record<string, unknown>;
+				const text = typeof r.text === "string" ? r.text.trim().slice(0, 20) : "";
+				const payload = typeof r.payload === "string" ? r.payload.trim().slice(0, 1000) : "";
+				if (!text || !payload) return null;
+				return { text, callbackData: payload };
+			})
+			.filter((x): x is { text: string; callbackData: string } => x !== null);
+		return { cleanText, aiReplies };
+	} catch {
+		return { cleanText: raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim(), aiReplies: [] };
+	}
+}
+
+function resolveQuickReplies(aiReplies: Array<{ text: string; callbackData: string }>, fallback: Array<{ text: string; callbackData: string }> | undefined): Array<{ text: string; callbackData: string }> | undefined {
+	if (aiReplies.length > 0) return aiReplies.slice(0, 3);
+	return fallback;
+}
+
 interface MessageContext {
 	pageId: string;
 	senderId: string;
@@ -590,6 +620,10 @@ async function handleMessage(
 		// Hide typing indicator
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
 
+		// AI-generated quick replies with deterministic fallback
+		const { cleanText: aiCleanText, aiReplies } = extractAiQuickReplies(response);
+		const responseText = aiCleanText || response.trim();
+
 		// If the LLM called searchProducts on Messenger, render the result as
 		// horizontally scrollable Generic Template cards instead of a plain text list.
 		if (
@@ -597,7 +631,7 @@ async function handleMessage(
 			capturedProducts.length > 0 &&
 			ctx.channel === "messenger"
 		) {
-			let intro = response.trim();
+			let intro = responseText.trim();
 			// The Messenger prompt tells the model to give only a brief intro,
 			// but guard against older prompts / long enumerated lists.
 			const hasEnumeratedList =
@@ -1058,6 +1092,23 @@ async function handlePostback(
 	}
 	if (ctx.payload === "checkout") {
 		await handleMessage(supabase, { ...ctx, text: "захиалах" }, trace);
+		return;
+	}
+	if (
+		cartPayload === "order_status" ||
+		cartPayload === "order-status" ||
+		cartPayload === "delivery" ||
+		cartPayload === "help" ||
+		cartPayload === "support" ||
+		cartPayload === "тусламж"
+	) {
+		const mapped =
+			cartPayload === "delivery"
+				? "хүргэлт асуух"
+				: cartPayload === "order_status" || cartPayload === "order-status"
+					? "захиалга шалгах"
+					: "тусламж";
+		await handleMessage(supabase, { ...ctx, text: mapped }, trace);
 		return;
 	}
 	await handleMessage(supabase, { ...ctx, text: ctx.payload }, trace);
