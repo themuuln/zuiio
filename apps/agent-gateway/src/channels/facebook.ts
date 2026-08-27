@@ -157,15 +157,15 @@ export class FacebookChannel implements Channel {
 			description?: string | null;
 			salePrice?: number | null;
 			currentStock?: number | null;
+			imageUrl?: string | null;
 		}>,
 	): Promise<boolean> {
 		if (!this.pageId || !this.pageAccessToken || products.length === 0) {
 			return false;
 		}
 
-		const elements = products.slice(0, 10).map((product) => ({
-			title: product.name.slice(0, 80),
-			subtitle: [
+		const elements = products.slice(0, 10).map((product) => {
+			const subtitle = [
 				product.salePrice != null
 					? `Үнэ: ₮${product.salePrice.toLocaleString("mn-MN")}`
 					: null,
@@ -177,16 +177,37 @@ export class FacebookChannel implements Channel {
 			]
 				.filter(Boolean)
 				.join(" · ")
-				.slice(0, 80),
-			buttons: [
-				{
-					type: "postback",
-					title: "Дэлгэрэнгүй",
-					payload: `PRODUCT:${product.id}`,
-				},
-			],
-		}));
+				.slice(0, 80);
 
+			const element: Record<string, unknown> = {
+				title: product.name.slice(0, 80),
+				subtitle,
+				buttons: [
+					{
+						type: "postback",
+						title: "Дэлгэрэнгүй",
+						payload: `PRODUCT:${product.id}`,
+					},
+					...(product.currentStock == null || product.currentStock > 0
+						? [
+								{
+									type: "postback",
+									title: "Сагсанд нэмэх",
+									payload: `CART_ADD:${product.id}`,
+								},
+							]
+						: []),
+				],
+			};
+			if (product.imageUrl) {
+				element.image_url = product.imageUrl;
+			}
+			// Description fallback for subtitle when price/stock missing
+			if (!subtitle && product.description) {
+				element.subtitle = product.description.slice(0, 80);
+			}
+			return element;
+		});
 		try {
 			const res = await fetch(
 				`${GRAPH_API_BASE}/${this.pageId}/messages?access_token=${this.pageAccessToken}`,
@@ -436,7 +457,8 @@ export class FacebookChannel implements Channel {
 					data?: Array<{ from?: { id?: string } }>;
 					paging?: { next?: string };
 				};
-				if (data.data?.some((reply) => reply.from?.id === this.pageId)) return true;
+				if (data.data?.some((reply) => reply.from?.id === this.pageId))
+					return true;
 				url = data.paging?.next ?? null;
 			}
 			return false;

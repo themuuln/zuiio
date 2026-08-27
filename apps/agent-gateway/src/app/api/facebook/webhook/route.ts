@@ -9,7 +9,10 @@ import type { MetaWebhookPayload } from "@/channels/types";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { handleFeedChange } from "@/gateway/comment-agent";
-import { replayCustomerCheckoutAction } from "@/gateway/customer-cart-tool";
+import {
+	createCustomerCartTools,
+	replayCustomerCheckoutAction,
+} from "@/gateway/customer-cart-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
@@ -24,6 +27,7 @@ import {
 	confirmStoredAction,
 	rejectStoredAction,
 } from "@/runtime/confirmation";
+
 const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "";
 const APP_SECRET = process.env.FB_APP_SECRET || "";
 
@@ -393,7 +397,9 @@ async function handleMessage(
 		if (
 			ctx.productType === "zer" &&
 			ctx.channel === "messenger" &&
-			/(бараа|бүтээгдэхүүн|үнэ|зарах|байгаа юу)/i.test(ctx.text)
+			/(бараа|бүтээгдэхүүн|үнэ|зарах|байгаа юу|жагсаалт|каталог)/i.test(
+				ctx.text,
+			)
 		) {
 			const wantsCatalogList =
 				/жагсаалт|каталог|юу байгаа|байгаа юу|бүгд/i.test(ctx.text);
@@ -410,7 +416,14 @@ async function handleMessage(
 				productResult !== null &&
 				"products" in productResult &&
 				Array.isArray(productResult.products)
-					? productResult.products
+					? (productResult.products as Array<{
+							id: string;
+							name: string;
+							description?: string | null;
+							salePrice?: number | null;
+							currentStock?: number | null;
+							imageUrl?: string | null;
+						}>)
 					: [];
 			if (products.length > 0) {
 				await channel.sendSenderAction(ctx.senderId, "typing_off");
@@ -421,13 +434,77 @@ async function handleMessage(
 		}
 
 		// No flow matched — fall through to AI agent handler
+		// Capture searchProducts results so we can render them as horizontal cards on Messenger
+		let capturedProducts: unknown = null;
 		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
 			getSystemPrompt: systemPromptFor,
 			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
 			dataClient,
+			onToolResult: (toolName, result) => {
+				if (
+					toolName === "searchProducts" &&
+					result !== null &&
+					typeof result === "object" &&
+					"products" in result
+				) {
+					const prods = (result as { products: unknown }).products;
+					if (Array.isArray(prods) && prods.length > 0) {
+						capturedProducts = prods;
+					}
+				}
+			},
 		});
-		// Hide typing indicator and send response
+		// Hide typing indicator
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
+
+		// If the LLM called searchProducts on Messenger, render the result as
+		// horizontally scrollable Generic Template cards instead of a plain text list.
+		if (
+			Array.isArray(capturedProducts) &&
+			capturedProducts.length > 0 &&
+			ctx.channel === "messenger"
+		) {
+			let intro = response.trim();
+			// The Messenger prompt tells the model to give only a brief intro,
+			// but guard against older prompts / long enumerated lists.
+			const hasEnumeratedList =
+				/\n\s*\d+\./.test(intro) || /\n\s*[-•]/.test(intro);
+			if (hasEnumeratedList) {
+				const firstLine = intro.split("\n")[0]?.trim() ?? "";
+				intro = firstLine.length >= 10 ? firstLine : "Таны хайсан бараанууд:";
+			}
+			if (!intro) intro = "Таны хайсан бараанууд:";
+			await channel.sendMessage(ctx.senderId, intro);
+			const cardsSent = await channel.sendProductCards(
+				ctx.senderId,
+				capturedProducts as Array<{
+					id: string;
+					name: string;
+					description?: string | null;
+					salePrice?: number | null;
+					currentStock?: number | null;
+					imageUrl?: string | null;
+				}>,
+			);
+			if (cardsSent) {
+				const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel);
+				if (qr && qr.length > 0) {
+					await channel.sendMessage(
+						ctx.senderId,
+						"Танд өөр ямар тусламж хэрэгтэй вэ?",
+						{ quickReplies: qr },
+					);
+				}
+				return;
+			}
+			// Cards failed (e.g. Instagram, missing token, API error) — fall back to plain text
+			await channel.sendMessage(ctx.senderId, response, {
+				quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
+			});
+			return;
+		}
+
+		// No products — normal text reply
 		await channel.sendMessage(ctx.senderId, response, {
 			quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
 		});
@@ -523,6 +600,159 @@ async function handlePostback(
 	if (ctx.payload.startsWith("reject:")) {
 		await rejectStoredAction(ctx.payload.replace("reject:", ""));
 		await channel.sendMessage(ctx.senderId, "❌ Цуцаллаа.");
+		return;
+	}
+
+	if (ctx.payload.startsWith("PRODUCT:")) {
+		const productId = ctx.payload.slice("PRODUCT:".length).trim();
+		if (productId) {
+			try {
+				const dataClient =
+					ctx.productType === "tolom"
+						? getSupabaseForProduct("tolom")
+						: supabase;
+				const { data: product } = await dataClient
+					.from("products")
+					.select(
+						"id, name, description, sale_price, current_stock, image_url, image_urls",
+					)
+					.eq("id", productId)
+					.eq("organization_id", ctx.orgId)
+					.maybeSingle();
+				if (product) {
+					const rawImageUrl = product.image_url as string | null;
+					const rawImageUrls = product.image_urls as unknown;
+					let resolvedImageUrl: string | null = rawImageUrl;
+					if (
+						!resolvedImageUrl &&
+						typeof rawImageUrls === "string" &&
+						rawImageUrls
+					) {
+						try {
+							const parsed = JSON.parse(rawImageUrls) as unknown;
+							if (Array.isArray(parsed) && parsed.length > 0)
+								resolvedImageUrl = String(parsed[0]);
+						} catch {
+							const first = rawImageUrls.split(",")[0]?.trim();
+							if (first) resolvedImageUrl = first;
+						}
+					} else if (
+						!resolvedImageUrl &&
+						Array.isArray(rawImageUrls) &&
+						rawImageUrls.length > 0
+					) {
+						resolvedImageUrl = String(rawImageUrls[0]);
+					}
+					await channel.sendMessage(
+						ctx.senderId,
+						`📦 <b>${product.name}</b>${product.description ? `\n\n${product.description.slice(0, 500)}` : ""}\n\nҮнэ: <b>₮${(product.sale_price as number | null)?.toLocaleString("mn-MN") ?? "—"}</b>\nҮлдэгдэл: ${product.current_stock != null ? ((product.current_stock as number) > 0 ? `${product.current_stock} ширхэг` : "Дууссан") : "—"}`,
+					);
+					await channel.sendProductCards(ctx.senderId, [
+						{
+							id: product.id as string,
+							name: product.name as string,
+							description: product.description as string | null,
+							salePrice: product.sale_price as number | null,
+							currentStock: product.current_stock as number | null,
+							imageUrl: resolvedImageUrl,
+						},
+					]);
+					await channel.sendMessage(ctx.senderId, "Сагсанд нэмэх үү?", {
+						quickReplies: [
+							{
+								text: "Сагсанд нэмэх",
+								callbackData: `CART_ADD:${product.id}`,
+							},
+							{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+						],
+					});
+				} else {
+					await channel.sendMessage(ctx.senderId, "Бараа олдсонгүй.");
+				}
+			} catch (err) {
+				capture(err, { context: "agent-gateway: product detail postback" });
+				await channel.sendMessage(
+					ctx.senderId,
+					"Барааны мэдээлэл авахад алдаа гарлаа.",
+				);
+			}
+		}
+		return;
+	}
+
+	if (ctx.payload.startsWith("CART_ADD:")) {
+		const productId = ctx.payload.slice("CART_ADD:".length).trim();
+		if (productId) {
+			try {
+				const dataClient =
+					ctx.productType === "tolom"
+						? getSupabaseForProduct("tolom")
+						: supabase;
+				const toolCtx = {
+					supabase: dataClient,
+					orgId: ctx.orgId,
+					userId: ctx.senderId,
+					productType: ctx.productType,
+					audience: "customer" as const,
+					channel: ctx.channel,
+					channelChatId: ctx.pageId,
+					channelUserId: ctx.senderId,
+					pageId: ctx.pageId,
+					pageAccessToken: ctx.pageAccessToken,
+				};
+				const cartTools = createCustomerCartTools(toolCtx);
+				const addToCart = cartTools[0];
+				if (!addToCart) {
+					await channel.sendMessage(ctx.senderId, "Сагс үйлчилгээ боломжгүй.");
+					return;
+				}
+				const result = await addToCart.execute(
+					{ product_id: productId, quantity: 1 },
+					toolCtx,
+				);
+				if (
+					result !== null &&
+					typeof result === "object" &&
+					"error" in result
+				) {
+					await channel.sendMessage(
+						ctx.senderId,
+						String((result as { error: string }).error),
+					);
+				} else {
+					await channel.sendMessage(
+						ctx.senderId,
+						"✅ Сагсанд нэмлээ! Үргэлжлүүлэн дэлгүүр хэсэх үү?",
+						{
+							quickReplies: [
+								{ text: "Сагс үзэх", callbackData: "cart_view" },
+								{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+								{ text: "Захиалах", callbackData: "checkout" },
+							],
+						},
+					);
+				}
+			} catch (err) {
+				capture(err, { context: "agent-gateway: cart add postback" });
+				await channel.sendMessage(
+					ctx.senderId,
+					"Сагсанд нэмэхэд алдаа гарлаа.",
+				);
+			}
+		}
+		return;
+	}
+
+	if (ctx.payload === "catalog") {
+		await handleMessage(supabase, { ...ctx, text: "жагсаалт" });
+		return;
+	}
+	if (ctx.payload === "cart_view" || ctx.payload === "view_cart") {
+		await handleMessage(supabase, { ...ctx, text: "сагс үзэх" });
+		return;
+	}
+	if (ctx.payload === "checkout") {
+		await handleMessage(supabase, { ...ctx, text: "захиалах" });
 		return;
 	}
 

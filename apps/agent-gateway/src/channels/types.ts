@@ -48,9 +48,19 @@ export interface Channel {
 		filename: string,
 		caption?: string,
 	): Promise<void>;
+	/** Send horizontally scrollable product cards (Facebook Generic Template). Optional — Messenger only. */
+	sendProductCards?(
+		chatId: string,
+		products: Array<{
+			id: string;
+			name: string;
+			description?: string | null;
+			salePrice?: number | null;
+			currentStock?: number | null;
+			imageUrl?: string | null;
+		}>,
+	): Promise<boolean>;
 }
-
-/** Incoming message from any channel. */
 export interface IncomingMessage {
 	/** Channel-specific ID: number for Telegram, string for FB/IG */
 	chatId: number | string;

@@ -138,6 +138,8 @@ export interface AgentHandlerOptions {
 	dataClient?: ServiceClient;
 	/** Called with each token chunk when streaming is enabled. */
 	onToken?: (token: string) => void;
+	/** Called after each tool execution — used to capture product results for rich card rendering. */
+	onToolResult?: (toolName: string, result: unknown) => void;
 }
 
 /**
@@ -260,6 +262,9 @@ export async function handleAgentMessage(
 				const result = await audited.execute(args, execCtx);
 				lastToolName = t.name;
 				lastToolResult = result;
+				try {
+					opts.onToolResult?.(t.name, result);
+				} catch {}
 				return result;
 			},
 		};
@@ -316,6 +321,10 @@ export async function handleAgentMessage(
 	if (wizardState) {
 		const wizardData = JSON.stringify(wizardState.data).replace(/[<>]/g, "");
 		systemPrompt += `\n\n## ACTIVE WIZARD\nYou are in the middle of a "${wizardState.type}" wizard (step ${wizardState.step}).\nThe user's next message is a response to your wizard question. Process it as step ${wizardState.step + 1} of the wizard.\nCollected data so far: <wizard_data>${wizardData}</wizard_data>\n\nWhen the wizard is complete (all steps done), respond with the result and include this marker at the end: [WIZARD_COMPLETE:${wizardState.type}]\nWhen the user wants to cancel the wizard, respond naturally and include: [WIZARD_CANCEL]`;
+	}
+	if (ctx.channel === "messenger" && ctx.audience === "customer") {
+		systemPrompt +=
+			"\n\nFACEBOOK MESSENGER RULE: When you call searchProducts and find products, give ONLY a brief intro (one short sentence like 'Таны хайсан бараанууд:') — do NOT enumerate products as a numbered or bulleted text list, because they will be displayed as horizontally scrollable cards with image, price and buttons. Keep response under 2 sentences when products are shown.";
 	}
 	timings.contextLoad = Math.round(performance.now() - t);
 

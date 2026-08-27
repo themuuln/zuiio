@@ -52,7 +52,7 @@ export function createCustomerProductTool(context: ToolContext): GatewayTool {
 				let builder = supabase
 					.from("products")
 					.select(
-						"id, name, sku, barcode, description, sale_price, current_stock",
+						"id, name, sku, barcode, description, sale_price, current_stock, image_url, image_urls",
 					)
 					.eq("organization_id", orgId);
 
@@ -78,15 +78,37 @@ export function createCustomerProductTool(context: ToolContext): GatewayTool {
 				}
 
 				return {
-					products: (data ?? []).map((row) => ({
-						id: row.id,
-						name: row.name ?? null,
-						sku: row.sku ?? null,
-						barcode: row.barcode ?? null,
-						description: row.description ?? null,
-						salePrice: row.sale_price ?? null,
-						currentStock: row.current_stock ?? null,
-					})),
+					products: (data ?? []).map((row) => {
+						const imageUrl =
+							(row.image_url as string | null) ??
+							(() => {
+								const urls = row.image_urls as unknown;
+								if (typeof urls === "string" && urls.length > 0) {
+									try {
+										const parsed = JSON.parse(urls) as unknown;
+										if (Array.isArray(parsed) && parsed.length > 0)
+											return String(parsed[0]);
+									} catch {
+										// image_urls may be comma-separated or single URL
+										const first = urls.split(",")[0]?.trim();
+										if (first) return first;
+									}
+								}
+								if (Array.isArray(urls) && urls.length > 0)
+									return String(urls[0]);
+								return null;
+							})();
+						return {
+							id: row.id,
+							name: row.name ?? null,
+							sku: row.sku ?? null,
+							barcode: row.barcode ?? null,
+							description: row.description ?? null,
+							salePrice: row.sale_price ?? null,
+							currentStock: row.current_stock ?? null,
+							imageUrl,
+						};
+					}),
 				};
 			} catch (err) {
 				capture(err, { context: "agent-gateway: searchProducts" });

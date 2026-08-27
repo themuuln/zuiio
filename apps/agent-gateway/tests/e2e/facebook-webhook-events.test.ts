@@ -45,10 +45,12 @@ vi.mock("@/runtime/confirmation", () => ({
 // Channel adapter — capture outgoing messages instead of hitting the Graph API.
 const mockSendMessage = vi.fn(async () => {});
 const mockSendSenderAction = vi.fn(async () => {});
+const mockSendProductCards = vi.fn(async () => true);
 vi.mock("@/channels/facebook", () => ({
 	FacebookChannel: class {
 		sendMessage = mockSendMessage;
 		sendSenderAction = mockSendSenderAction;
+		sendProductCards = mockSendProductCards;
 	},
 }));
 

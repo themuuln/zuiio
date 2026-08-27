@@ -117,6 +117,7 @@ describe("searchProducts tool", () => {
 			description: "Акустик",
 			salePrice: 450000,
 			currentStock: 3,
+			imageUrl: null,
 		});
 		expect(serialized).not.toContain("cost_price");
 		expect(serialized).not.toContain("min_stock");
