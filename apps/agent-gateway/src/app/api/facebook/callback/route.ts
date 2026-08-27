@@ -1,10 +1,11 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
+import { getRedis } from "@/lib/redis";
 
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
@@ -13,6 +14,18 @@ const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 
 function tokenSecret(): string {
 	return process.env.TOKEN_SIGNING_SECRET || "dev-fallback";
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+	if (a.length !== b.length) return false;
+	const bufA = Buffer.from(a, "utf8");
+	const bufB = Buffer.from(b, "utf8");
+	if (bufA.length !== bufB.length) return false;
+	try {
+		return timingSafeEqual(bufA, bufB);
+	} catch {
+		return false;
+	}
 }
 
 function verifyStateSignature(
@@ -24,12 +37,15 @@ function verifyStateSignature(
 		productType: stateData.productType,
 		state: stateData.state,
 	});
+	// Support rollout: old sigs are 12 chars, new are 16.
+	const sliceLen = sig.length === 12 ? 12 : 16;
 	const expected = createHmac("sha256", tokenSecret())
 		.update(payload)
 		.digest("base64url")
-		.slice(0, 12);
-	return expected === sig;
+		.slice(0, sliceLen);
+	return timingSafeEqualStr(expected, sig);
 }
+
 
 const _facebookChannel = new FacebookChannel();
 
@@ -59,9 +75,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	} | null = null;
 	try {
 		if (!state) throw new Error("missing state");
-		// Try signed format first: "<payloadB64>.<sig12>"
+		// Try signed format first: "<payloadB64>.<sig16>" (new) with 12-char fallback for rollout.
 		const dot = state.lastIndexOf(".");
-		if (dot > 0 && state.length - dot - 1 === 12) {
+		const sigLen = state.length - dot - 1;
+		if (dot > 0 && (sigLen === 16 || sigLen === 12)) {
 			const payloadB64 = state.slice(0, dot);
 			const sig = state.slice(dot + 1);
 			const parsed = JSON.parse(
@@ -106,11 +123,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		stateData = null;
 	}
 
-	if (
-		!stateData?.state ||
-		!stateData.orgId ||
-		!stateData.productType
-	) {
+	if (!stateData?.state || !stateData.orgId || !stateData.productType) {
 		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
 	}
 	try {
@@ -129,7 +142,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		}
 	} catch {
 		if (stateData.sig == null)
-			return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
+			return NextResponse.json(
+				{ error: "Invalid OAuth state" },
+				{ status: 400 },
+			);
 	}
 	if (!code) {
 		return NextResponse.json(
@@ -212,21 +228,50 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 				{ status: 400 },
 			);
 		}
+		// Store pages in Redis (primary) and cookie (fallback) for selection
+		// Redis avoids 4KB cookie limit and third-party cookie blocking.
+		try {
+			const redis = getRedis();
+			if (redis && stateData.state) {
+				await redis.set(
+					`fb:select:${stateData.state}`,
+					JSON.stringify({
+						pages: pagesData.data,
+						userToken: userAccessToken,
+						orgId: stateData.orgId,
+						productType: stateData.productType,
+					}),
+					{ ex: 600 },
+				);
+			}
+		} catch {}
 
-		// Store pages in cookie for selection
 		const response = NextResponse.redirect(
 			new URL(
-				`/link/select?orgId=${stateData.orgId}&productType=${stateData.productType}`,
+				`/link/select?orgId=${stateData.orgId}&productType=${stateData.productType}&sid=${stateData.state}`,
 				request.url,
 			),
 		);
-
-		response.cookies.set("fb_pages", JSON.stringify(pagesData.data), {
+		// Cookie fallback must NOT contain access_token — JS-readable, XSS risk.
+		// Store only {id, name} for the client; full tokens stay in Redis.
+		const cookiePages = pagesData.data.map(({ id, name }) => ({ id, name }));
+		response.cookies.set(
+			"fb_pages",
+			encodeURIComponent(JSON.stringify(cookiePages)),
+			{
+				httpOnly: false,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "lax",
+				path: "/",
+				maxAge: 600, // 10 minutes
+			},
+		);
+		response.cookies.set("fb_select_sid", stateData.state, {
 			httpOnly: false,
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "lax",
 			path: "/",
-			maxAge: 600, // 10 minutes
+			maxAge: 600,
 		});
 		// Carry the user's long-lived token to the select step so the page
 		// connection can later refresh its page token via /me/accounts (Meta
@@ -236,7 +281,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "lax",
 			path: "/",
-			maxAge: 600, // 10 minutes
+			maxAge: 600,
 		});
 
 		// Clear state cookie

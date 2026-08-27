@@ -6,7 +6,6 @@ import { productDisplayName, productPageTitle } from "@/lib/product-branding";
 interface FbPage {
 	id: string;
 	name: string;
-	access_token: string;
 }
 
 type Status = "loading" | "ready" | "connecting" | "connected" | "error";
@@ -22,31 +21,69 @@ export default function SelectPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [orgId, setOrgId] = useState<string | null>(null);
 	const [productType, setProductType] = useState<string>("zer");
-
+	const [sid, setSid] = useState<string | null>(null);
 	const productName = productDisplayName(productType);
 
 	useEffect(() => {
-		const params = new URLSearchParams(window.location.search);
-		setOrgId(params.get("orgId"));
-		setProductType(params.get("productType") ?? "zer");
-		document.title = productPageTitle(params.get("productType"));
+		const loadPages = async () => {
+			const params = new URLSearchParams(window.location.search);
+			const nextOrgId = params.get("orgId");
+			const nextProductType = params.get("productType") ?? "zer";
+			const cookieSid = document.cookie
+				.split("; ")
+				.find((cookie) => cookie.startsWith("fb_select_sid="))
+				?.split("=")[1];
+			const nextSid = params.get("sid") ?? cookieSid ?? null;
+			setOrgId(nextOrgId);
+			setProductType(nextProductType);
+			setSid(nextSid);
+			document.title = productPageTitle(nextProductType);
 
-		const raw = document.cookie
-			.split("; ")
-			.find((c) => c.startsWith("fb_pages="))
-			?.split("=")[1];
-		if (!raw) {
-			setStatus("error");
-			setError("OAuth session дууссан байна. Дахин холбохыг оролдоно уу.");
-			return;
-		}
-		try {
-			setPages(JSON.parse(decodeURIComponent(raw)) as FbPage[]);
-			setStatus("ready");
-		} catch {
-			setStatus("error");
-			setError("Хуудасны жагсаалт унших боломжгүй байна.");
-		}
+			if (nextSid) {
+				try {
+					const response = await fetch(
+						`/api/facebook/pages?sid=${encodeURIComponent(nextSid)}`,
+						{ cache: "no-store" },
+					);
+					const data = (await response.json()) as {
+						pages?: FbPage[];
+						error?: string;
+					};
+					if (!response.ok || !data.pages?.length) {
+						throw new Error(data.error ?? "OAuth session expired");
+					}
+					setPages(data.pages);
+					setStatus("ready");
+					return;
+				} catch (err) {
+					setStatus("error");
+					setError(
+						err instanceof Error
+							? err.message
+							: "OAuth session дууссан байна. Дахин холбохыг оролдоно уу.",
+					);
+					return;
+				}
+			}
+
+			const raw = document.cookie
+				.split("; ")
+				.find((cookie) => cookie.startsWith("fb_pages="))
+				?.split("=")[1];
+			if (!raw) {
+				setStatus("error");
+				setError("OAuth session дууссан байна. Дахин холбохыг оролдоно уу.");
+				return;
+			}
+			try {
+				setPages(JSON.parse(decodeURIComponent(raw)) as FbPage[]);
+				setStatus("ready");
+			} catch {
+				setStatus("error");
+				setError("Хуудасны жагсаалт унших боломжгүй байна.");
+			}
+		};
+		void loadPages();
 	}, []);
 
 	const connect = async (page: FbPage) => {
@@ -65,6 +102,7 @@ export default function SelectPage() {
 					pageName: page.name,
 					orgId,
 					productType,
+					sid,
 				}),
 			});
 			const data = (await res.json()) as {

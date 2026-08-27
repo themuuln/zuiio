@@ -1,8 +1,8 @@
 # Agent Gateway — Production Checklist
 
-## Deployment Status (2026-08-02)
+## Deployment Status (2026-08-25)
 
-- ✅ Deployed to Vercel production: `https://agent-gateway-delta.vercel.app`
+- ✅ Live at `https://agent.zuiiotech.com` (Vercel project `agent-gateway`; health, FB webhook verify, and token-verified `/api/facebook/start` all probed OK 2026-08-25)
 - ✅ Region: Singapore (`sin1`)
 - ✅ Environment variables set on Vercel (see [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for the full list)
 - ✅ Telegram webhook registered with `@zuiio_bot`
@@ -20,7 +20,7 @@
   - Dashboard (`/dashboard/*`, `/api/dashboard/*`) gated by `DASHBOARD_SECRET` via middleware + `/api/dashboard/login`/`logout`
   - Link page (`/link`) verifies `?token=` via HMAC `verifyCompactToken`
 - ✅ `/api/test/stream-draft` is dev-only (returns 404 outside `NODE_ENV=development`)
-- ⚠️ Zer migration not applied (pooler connection blocked — see MIGRATION.md)
+- ✅ All gateway migrations applied to the shared Supabase project (`channel_connections`, `agent_knowledge_sources`, `agent_sessions` verified live 2026-08-07 — the old "not applied" note was stale; see GAPS.md)
 - ⚠️ OpenAI fallback disabled (no key) — DeepSeek OpenCodeGo primary
 
 ## Prerequisites
@@ -30,7 +30,10 @@
 - [x] Deployed to Vercel with `--archive=tgz` from monorepo root
 - [ ] OpenAI API key (optional — fallback provider disabled when absent)
 - [ ] Groq API key (optional — voice STT disabled when absent)
-- [ ] Run Zer migration SQL via Supabase Dashboard SQL Editor (see MIGRATION.md)
+- [x] Zer/gateway migrations applied (see above)
+
+```bash
+# .env.local
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 TELEGRAM_BOT_TOKEN=1234567890:ABCdef...

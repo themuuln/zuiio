@@ -78,7 +78,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		.createHmac("sha256", process.env.TOKEN_SIGNING_SECRET || "dev-fallback")
 		.update(payload)
 		.digest("base64url")
-		.slice(0, 12);
+		.slice(0, 16);
 	const state = `${Buffer.from(payload).toString("base64url")}.${sig}`;
 	const dialogUrl =
 		`https://www.facebook.com/${FB_GRAPH_API_VERSION}/dialog/oauth?` +

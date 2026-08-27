@@ -1,19 +1,21 @@
 /**
- * Convert AI-generated markdown for Messenger / WhatsApp / Instagram.
+ * Convert AI-generated markdown/HTML for Messenger, WhatsApp, and Instagram.
  *
- * These channels support limited formatting:
- * - Bold: `*text*` (single asterisk, not double)
- * - Tables: convert to plain-text list (no HTML, no pipe syntax)
- * - Strip other markdown (headers, links) to plain text
+ * Meta text messages do not render HTML. Messenger supports limited
+ * single-asterisk emphasis, so convert safe bold tags to that syntax and
+ * remove all other markup.
  */
 export function markdownToMessengerFormat(text: string): string {
 	let result = convertTablesToPlainList(text);
-	// **bold** → *bold* (Messenger/WhatsApp single-asterisk syntax)
+	result = result.replace(/<\/?strong>/gi, "*");
+	result = result.replace(/<\/?b>/gi, "*");
+	result = result.replace(/<\/?(?:i|em)>/gi, "");
+	result = result.replace(/<[^>]*>/g, "");
+	// **bold** → *bold* (Messenger single-asterisk syntax)
 	result = result.replace(/\*\*(.+?)\*\*/g, "*$1*");
-	// Strip remaining markdown artifacts: headers, links, stray asterisks
 	result = result.replace(/^#{1,6}\s+/gm, "");
 	result = result.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
-	return result;
+	return result.trim();
 }
 
 /**

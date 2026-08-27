@@ -3,7 +3,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
+import { DEFAULT_COMMENT_REPLY_CONFIG } from "@/gateway/comment-agent";
 import { encryptSecret } from "@/lib/crypto";
+import { getRedis } from "@/lib/redis";
 import { createServiceClient } from "@/lib/supabase";
 
 const facebookChannel = new FacebookChannel();
@@ -30,9 +32,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			pageName?: string;
 			orgId?: string;
 			productType?: string;
+			sid?: string;
 		};
 
-		const { pageId, pageName, orgId, productType } = body;
+		const { pageId, pageName, orgId, productType, sid } = body;
 
 		if (!pageId || !pageName || !orgId) {
 			return NextResponse.json(
@@ -41,22 +44,50 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// Get pages from cookie
-		const pagesCookie = request.cookies.get("fb_pages")?.value;
-		if (!pagesCookie) {
-			return NextResponse.json(
-				{ error: "OAuth session expired. Please try again." },
-				{ status: 400 },
-			);
+		let effectiveOrgId = orgId;
+		let effectiveProductType = productType || "zer";
+		let pages: Array<{ id: string; name: string; access_token: string }>;
+		let userToken = request.cookies.get("fb_user_token")?.value;
+		const redis = getRedis();
+
+		if (sid) {
+			if (!/^[0-9a-f-]{36}$/i.test(sid) || !redis) {
+				return NextResponse.json(
+					{ error: "OAuth session expired. Please try again." },
+					{ status: 400 },
+				);
+			}
+			const session = await redis.get<{
+				pages: Array<{ id: string; name: string; access_token: string }>;
+				userToken: string;
+				orgId: string;
+				productType: string;
+			}>(`fb:select:${sid}`);
+			if (!session) {
+				return NextResponse.json(
+					{ error: "OAuth session expired. Please try again." },
+					{ status: 400 },
+				);
+			}
+			effectiveOrgId = session.orgId;
+			effectiveProductType = session.productType || "zer";
+			pages = session.pages;
+			userToken = session.userToken;
+		} else {
+			const pagesCookie = request.cookies.get("fb_pages")?.value;
+			if (!pagesCookie) {
+				return NextResponse.json(
+					{ error: "OAuth session expired. Please try again." },
+					{ status: 400 },
+				);
+			}
+			pages = JSON.parse(pagesCookie) as Array<{
+				id: string;
+				name: string;
+				access_token: string;
+			}>;
 		}
 
-		const pages = JSON.parse(pagesCookie) as Array<{
-			id: string;
-			name: string;
-			access_token: string;
-		}>;
-
-		// Find the selected page
 		const selectedPage = pages.find((p) => p.id === pageId);
 		if (!selectedPage) {
 			return NextResponse.json(
@@ -64,24 +95,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				{ status: 400 },
 			);
 		}
-
 		const supabase = createServiceClient();
 
 		// The callback carries the user's long-lived token here; it is stored
 		// encrypted in metadata so the refresh cron can re-fetch page tokens
 		// via /me/accounts when they near expiry (Meta rejects
 		// fb_exchange_token on page tokens directly).
-		const userToken = request.cookies.get("fb_user_token")?.value;
-		const metadata = userToken
-			? { user_access_token: encryptSecret(userToken) }
-			: {};
+		const metadata = {
+			// Default comment-agent config — orgs tune it via metadata.comment_reply.
+			comment_reply: DEFAULT_COMMENT_REPLY_CONFIG,
+			...(userToken ? { user_access_token: encryptSecret(userToken) } : {}),
+		};
 
 		// Store connection in channel_connections
 		const { error: insertError } = await supabase
 			.from("channel_connections")
 			.upsert(
 				{
-					organization_id: orgId,
+					organization_id: effectiveOrgId,
 					channel: "messenger",
 					channel_user_id: pageId, // Page ID as user ID for page-level connections
 					channel_chat_id: pageId,
@@ -92,7 +123,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					token_expires_at: new Date(
 						Date.now() + 60 * 24 * 60 * 60 * 1000,
 					).toISOString(), // 60 days
-					product_type: productType || "zer",
+					product_type: effectiveProductType,
 					is_active: true,
 					metadata,
 				},
@@ -126,7 +157,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 			await supabase.from("channel_connections").upsert(
 				{
-					organization_id: orgId,
+					organization_id: effectiveOrgId,
 					channel: "instagram",
 					channel_user_id: igId,
 					channel_chat_id: pageId, // IG messages come through the same page
@@ -137,7 +168,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					token_expires_at: new Date(
 						Date.now() + 60 * 24 * 60 * 60 * 1000,
 					).toISOString(),
-					product_type: productType || "zer",
+					product_type: effectiveProductType,
 					is_active: true,
 					metadata,
 				},
@@ -159,7 +190,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			message: "Facebook Page connected successfully",
 			webhookSubscribed: subscribed,
 			instagramLinked: !!pageInfo?.instagramBusinessAccount,
-			returnUrl: returnUrls[productType || "zer"] || null,
+			returnUrl: returnUrls[effectiveProductType] || null,
 		});
 
 		response.cookies.set("fb_pages", "", {
@@ -177,7 +208,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			path: "/",
 			maxAge: 0,
 		});
+		response.cookies.set("fb_select_sid", "", {
+			httpOnly: false,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+			path: "/",
+			maxAge: 0,
+		});
 
+		if (sid && redis) {
+			await redis.del(`fb:select:${sid}`);
+		}
 		return response;
 	} catch (err) {
 		capture(err, { context: "agent-gateway: facebook page select" });

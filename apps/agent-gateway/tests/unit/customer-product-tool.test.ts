@@ -6,8 +6,8 @@ import type { ToolContext } from "@/providers/types";
 import { TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 /**
- * Customer tool surface — fail-closed for customer audience with the single
- * read-only product catalog exception for Zer.
+ * Customer tool surface — public catalog and customer checkout are available
+ * only for Zer Messenger/Instagram, while internal business data stays closed.
  */
 describe("getProductTools — customer audience", () => {
 	const context: ToolContext = {
@@ -17,8 +17,21 @@ describe("getProductTools — customer audience", () => {
 		audience: "customer",
 	};
 
-	it("returns ONLY searchProducts for zer customers (fail-closed otherwise)", () => {
-		const tools = getProductTools("zer", context);
+	it("adds durable cart and gated QPay checkout for Messenger and Instagram", () => {
+		for (const channel of ["messenger", "instagram"] as const) {
+			const tools = getProductTools("zer", { ...context, channel });
+			expect(tools.map((t) => t.name)).toEqual([
+				"searchProducts",
+				"addToCart",
+				"viewCart",
+				"clearCart",
+				"checkoutCartWithQpay",
+			]);
+		}
+	});
+
+	it("keeps webchat customer tools read-only until its checkout is wired", () => {
+		const tools = getProductTools("zer", { ...context, channel: "webchat" });
 		expect(tools.map((t) => t.name)).toEqual(["searchProducts"]);
 	});
 
@@ -68,7 +81,7 @@ describe("searchProducts tool", () => {
 		expect(client.from).toHaveBeenCalledWith("products");
 		expect(chain.eq).toHaveBeenCalledWith("organization_id", ORG);
 		expect(chain.or).toHaveBeenCalledWith(
-			"name.ilike.%гитар%,sku.ilike.%гитар%,barcode.ilike.%гитар%",
+			'name.ilike."%гитар%",sku.ilike."%гитар%",barcode.ilike."%гитар%"',
 		);
 	});
 
@@ -97,6 +110,7 @@ describe("searchProducts tool", () => {
 		};
 		const serialized = JSON.stringify(result);
 		expect(result.products[0]).toEqual({
+			id: "p1",
 			name: "Гитар",
 			sku: "GTR-1",
 			barcode: "123456",
@@ -144,13 +158,12 @@ describe("searchProducts tool", () => {
 
 		await tool.execute({ query: "50%" });
 		const orArg = chain.or.mock.calls[0]?.[0] as string;
-		expect(orArg).toContain("name.ilike.%50\\%%");
-		expect(orArg).toContain("sku.ilike.%50\\%%");
-		expect(orArg).toContain("barcode.ilike.%50\\%%");
+		expect(orArg).toContain('name.ilike."%50\\%%"');
+		expect(orArg).toContain('sku.ilike."%50\\%%"');
+		expect(orArg).toContain('barcode.ilike."%50\\%%"');
 	});
 
 	it("returns a Mongolian error on query failure", async () => {
-		const { client } = buildSupabase([]);
 		// Make the chain resolve with an error
 		const errorChain: Record<string, unknown> = {};
 		errorChain.select = vi.fn(() => errorChain);

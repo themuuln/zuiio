@@ -529,7 +529,10 @@ describe("GET /api/facebook/callback", () => {
 
 		const pagesCookie = res.cookies.get("fb_pages");
 		expect(pagesCookie).toBeDefined();
-		expect(JSON.parse(pagesCookie?.value)).toHaveLength(2);
+		expect(
+			JSON.parse(decodeURIComponent(pagesCookie?.value ?? "")),
+		).toHaveLength(2);
+		expect(res.cookies.get("fb_select_sid")?.value).toBe(NONCE);
 		// State cookie cleared
 		expect(res.cookies.get("fb_oauth_state")?.maxAge).toBe(0);
 

@@ -1,23 +1,28 @@
 /**
  * Scopes requested from the Facebook OAuth dialog.
  *
- * This flow connects Facebook Pages for Messenger. Instagram messaging uses
- * a separate Meta product and login flow; requesting Instagram permissions
- * here makes the entire Facebook dialog fail when that product is not
- * enabled for the app.
+ * This flow connects Facebook Pages for Messenger AND the Page comment
+ * auto-reply agent. Instagram messaging uses a separate Meta product and
+ * login flow; requesting Instagram permissions here makes the entire
+ * Facebook dialog fail when that product is not enabled for the app.
+ *
+ * Permission → capability:
+ * - pages_messaging        — DMs, private replies to comments
+ * - pages_show_list        — list the user's Pages at page-select
+ * - pages_manage_metadata  — subscribe the Page to webhook fields
+ * - pages_manage_engagement— publish comment replies as the Page
+ * - pages_read_engagement  — read Page content/comments metadata
+ * - pages_read_user_content— read commenter content on Page posts
  */
 const FACEBOOK_SCOPES = [
 	"pages_messaging",
 	"pages_show_list",
 	"pages_manage_metadata",
+	"pages_manage_engagement",
+	"pages_read_engagement",
+	"pages_read_user_content",
 ];
 
-const INSTAGRAM_SCOPES = ["instagram_basic", "instagram_manage_messages"];
-
 export function getFacebookOAuthScopes(): string {
-	const scopes = [...FACEBOOK_SCOPES];
-	if (process.env.FB_ENABLE_INSTAGRAM === "1") {
-		scopes.push(...INSTAGRAM_SCOPES);
-	}
-	return scopes.join(",");
+	return FACEBOOK_SCOPES.join(",");
 }

@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { middleware } from "@/middleware";
+import { createSessionValue, proxy } from "@/proxy";
 
 const AUTH_COOKIE = "ag_dash_auth";
 
-async function sessionValue(secret: string): Promise<string> {
-	const { createSessionValue } = await import("@/middleware");
+function sessionValue(secret: string): Promise<string> {
 	return createSessionValue(secret);
 }
 
@@ -22,34 +21,34 @@ function makeRequest(path: string, cookie?: string): NextRequest {
 describe("dashboard middleware", () => {
 	it("passes through login/logout routes", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
-		const res = await middleware(makeRequest("/api/dashboard/login"));
+		const res = await proxy(makeRequest("/api/dashboard/login"));
 		expect(res.status).toBe(200);
 	});
 
 	it("503s when DASHBOARD_SECRET is unset", async () => {
-		const res = await middleware(makeRequest("/dashboard"));
+		const res = await proxy(makeRequest("/dashboard"));
 		expect(res.status).toBe(503);
-		const apiRes = await middleware(makeRequest("/api/dashboard/usage"));
+		const apiRes = await proxy(makeRequest("/api/dashboard/usage"));
 		expect(apiRes.status).toBe(503);
 	});
 
 	it("redirects unauthenticated page requests to the login page", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
-		const res = await middleware(makeRequest("/dashboard"));
+		const res = await proxy(makeRequest("/dashboard"));
 		expect(res.status).toBe(307);
 		expect(res.headers.get("location")).toContain("/dashboard/login");
 	});
 
 	it("401s unauthenticated API requests", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
-		const res = await middleware(makeRequest("/api/dashboard/usage"));
+		const res = await proxy(makeRequest("/api/dashboard/usage"));
 		expect(res.status).toBe(401);
 	});
 
 	it("lets requests with a valid cookie through", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
 		const value = await sessionValue("secret");
-		const res = await middleware(
+		const res = await proxy(
 			makeRequest("/dashboard", `${AUTH_COOKIE}=${value}`),
 		);
 		expect(res.status).toBe(200);
@@ -57,7 +56,7 @@ describe("dashboard middleware", () => {
 
 	it("rejects a forged cookie", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
-		const res = await middleware(
+		const res = await proxy(
 			makeRequest("/dashboard", `${AUTH_COOKIE}=forged`),
 		);
 		expect(res.status).toBe(307);

@@ -36,15 +36,22 @@ blocker.
 
 ### 3. Meta platform (per `apps/agent-gateway/docs/FACEBOOK_INSTAGRAM_PLAN.md`)
 
-- Page webhook subscribed (`messages` + `messaging_postbacks` fields) via
-  `POST /{page_id}/subscribed_apps` — the connect flow does this automatically
-  at page select; verify after first connect.
-- Advanced access for `pages_messaging`, `pages_show_list` (and
-  `pages_manage_metadata`, `instagram_basic`, `instagram_manage_messages` for
-  IG).
-- **Blocked on Meta**: Business Verification (~14 business days) then App
-  Review (~3–7 days). Until approved, only test users/pages work. This was
-  pending as of 2026-08-06.
+- Business Verification: **APPROVED** (2026-08-25, per owner). Advanced
+  access for the permissions below must still be requested in the Meta app
+  (App Review) before public pages work — until then only test users/pages.
+- Required advanced access now includes, beyond `pages_messaging` /
+  `pages_show_list` / `pages_manage_metadata`:
+  `pages_manage_engagement`, `pages_read_engagement`,
+  `pages_read_user_content` (comment auto-reply agent).
+- Page webhook subscribed (`messages` + `messaging_postbacks` + `feed`)
+  — the connect flow requests all three via `subscribed_apps`; **the
+  App-level webhook config in the Meta developer dashboard must also have
+  the `feed` field checked for the Page object** (manual, one-time).
+- Existing connected pages get `feed` re-asserted by
+  `cron/refresh-meta-tokens` at their next token refresh (≤60 days); to
+  enable comment replies sooner, reconnect the page once.
+- Instagram comment replies are NOT implemented — IG comments arrive on the
+  `instagram` webhook object (separate subscription), not the Page `feed`.
 
 ### 4. Product info / knowledge content
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSessionValue } from "@/middleware";
+import { createSessionValue } from "@/proxy";
 
 export const dynamic = "force-dynamic";
 

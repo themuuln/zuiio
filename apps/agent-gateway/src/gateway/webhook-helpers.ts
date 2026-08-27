@@ -2,6 +2,7 @@ import { capture } from "@zuiio/capture";
 
 import "server-only";
 
+import { createCustomerCartTools } from "@/gateway/customer-cart-tool";
 import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
@@ -1066,14 +1067,24 @@ export function getProductTools(
 	context: ToolContext,
 	options?: { readOnly?: boolean },
 ): GatewayTool[] {
-	// Zatly has no tools yet — return empty set
-	if (productType === "zatly") return [];
-	// Customer audience gets NO internal business tools — fail closed. The one
-	// exception is a read-only product catalog search for Zer (the gateway
-	// shares Zer's project), so Messenger/Instagram customers can ask about
-	// products without any access to sales, invoices, or internal data.
+	const gate = (t: GatewayTool | null): GatewayTool | null =>
+		t ? gateWriteTool(t, context) : null;
+
+	// Customer audience gets only public catalog and checkout tools. Internal
+	// business data remains unavailable on every public channel.
 	if (context.audience === "customer") {
-		return productType === "zer" ? [createCustomerProductTool(context)] : [];
+		if (productType !== "zer") return [];
+		const tools: GatewayTool[] = [createCustomerProductTool(context)];
+		if (context.channel === "messenger" || context.channel === "instagram") {
+			tools.push(
+				...createCustomerCartTools(context).map((tool) =>
+					tool.name === "checkoutCartWithQpay"
+						? gateWriteTool(tool, context)
+						: tool,
+				),
+			);
+		}
+		return tools;
 	}
 	const audienceKey = context.audience ?? "internal";
 	const cacheKey = `${productType}:${context.orgId}:${audienceKey}:${options?.readOnly ?? false}`;
@@ -1102,8 +1113,7 @@ export function getProductTools(
 	// catalog exists; legacy inline write tools are kept alongside.
 	// ALL write tools pass through the confirmation gate: the action is staged
 	// and re-executed only after the user confirms (never via LLM re-prompt).
-	const gate = (t: GatewayTool | null): GatewayTool | null =>
-		t ? gateWriteTool(t, context) : null;
+
 	const writeTools =
 		productType === "tolom"
 			? [gate(createWriteDataTool("tolom", context))].filter(

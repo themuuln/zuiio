@@ -8,13 +8,19 @@ export const config = {
 
 const AUTH_COOKIE = "ag_dash_auth";
 
+function timingSafeEqualStr(a: string, b: string): boolean {
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	return diff === 0;
+}
 /**
  * Session-less dashboard gate: the login route sets an HttpOnly cookie whose
  * value is an HMAC-SHA256 of DASHBOARD_SECRET. The cookie cannot be forged
  * without the secret, and clearing it logs out. Fine for an internal ops
  * dashboard; the SSO upgrade path is documented in docs/PRODUCTION.md.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	// Login/logout must be reachable.
 	if (
 		request.nextUrl.pathname === "/api/dashboard/login" ||
@@ -37,7 +43,7 @@ export async function middleware(request: NextRequest) {
 
 	const cookie = request.cookies.get(AUTH_COOKIE)?.value;
 	const expected = await createSessionValue(secret);
-	if (cookie !== expected) {
+	if (!cookie || !timingSafeEqualStr(cookie, expected)) {
 		if (request.nextUrl.pathname.startsWith("/api/")) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}

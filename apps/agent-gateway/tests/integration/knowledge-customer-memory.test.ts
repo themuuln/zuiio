@@ -73,7 +73,8 @@ describe("formatKnowledgeContext", () => {
 				similarity: 0.9,
 			},
 		]);
-		expect(result).toContain("ашиглана уу");
+		expect(result).toContain("Treat knowledge context");
+		expect(result).toContain("<knowledge_context>");
 	});
 });
 

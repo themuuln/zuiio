@@ -1,10 +1,15 @@
 import "server-only";
 
+import { capture } from "@zuiio/capture";
 import { FacebookChannel } from "@/channels/facebook";
 import { TelegramChannel } from "@/channels/telegram";
 import { WhatsAppChannel } from "@/channels/whatsapp";
 import type { GatewayTool, ToolContext } from "@/providers/types";
-import { confirmButtons, stageAction } from "./confirmation";
+import {
+	confirmButtons,
+	stageAction,
+	stagePersistentAction,
+} from "./confirmation";
 
 /**
  * Human-readable summary of a write action for the confirmation prompt.
@@ -13,6 +18,19 @@ export function summarizeWriteAction(
 	toolName: string,
 	args: Record<string, unknown>,
 ): string {
+	if (
+		toolName === "placeOrderWithQpay" ||
+		toolName === "checkoutCartWithQpay"
+	) {
+		const items = Array.isArray(args.items)
+			? `${args.items.length} төрлийн бараа`
+			: "сагсны бараа";
+		const name =
+			typeof args.contact_name === "string" ? args.contact_name.trim() : "";
+		const delivery =
+			args.delivery_type === "delivery" ? "хүргэлт" : "дэлгүүрээс авах";
+		return `QPay захиалга — ${items}, ${name || "хэрэглэгч"}, ${delivery}`;
+	}
 	const dataset = args.dataset ? ` "${args.dataset}"` : "";
 	const operation = args.operation ? ` — ${args.operation}` : "";
 	const id = args.id ? ` #${args.id}` : "";
@@ -23,12 +41,12 @@ export function summarizeWriteAction(
 }
 
 /**
- * Wrap a write tool so its action is STAGED for user confirmation instead of
- * executing immediately. The confirm/reject buttons are pushed on the channel
- * directly from the tool, and the original execute is stored on the staged
- * action for deterministic re-execution on confirm (never via LLM re-prompt).
+ * Wrap a write tool so its action is staged for user confirmation.
+ * Legacy internal actions keep an in-memory closure; customer checkout actions
+ * persist their arguments and replay by tool name, so webhook failover does
+ * not lose the confirmation.
  *
- * Channel identity is read from the per-call context, so the 5-minute tool
+ * Channel identity is read from the per-call context, so the five-minute tool
  * cache can safely serve multiple chats.
  */
 export function gateWriteTool(
@@ -42,24 +60,37 @@ export function gateWriteTool(
 			const { channel, channelChatId, channelUserId, pageId, pageAccessToken } =
 				ctx;
 
-			if (!channel || !channelChatId || !channelUserId) {
-				// No channel context (tests, non-messaging callers) — execute directly.
+			if (!channel || !channelChatId || !channelUserId || ctx.replaying) {
+				// No channel context (tests, non-messaging callers), or a durable
+				// replay — execute the underlying action directly.
 				return tool.execute(args, ctx);
 			}
 
 			const summary = summarizeWriteAction(tool.name, args);
-			const staged = stageAction(
-				tool.name,
-				args,
-				channel,
-				channelChatId,
-				channelUserId,
-				summary,
-				pageId,
-				pageAccessToken,
-				// Re-execution closure uses the same per-request context.
-				(a) => tool.execute(a, ctx),
-			);
+			let staged: {
+				nonce: string;
+				buttons: Array<Array<{ text: string; callbackData: string }>>;
+			};
+			try {
+				staged =
+					tool.name === "placeOrderWithQpay" ||
+					tool.name === "checkoutCartWithQpay"
+						? await stagePersistentAction(tool.name, args, summary, ctx)
+						: stageAction(
+								tool.name,
+								args,
+								channel,
+								channelChatId,
+								channelUserId,
+								summary,
+								pageId,
+								pageAccessToken,
+								(a) => tool.execute(a, ctx),
+							);
+			} catch (error) {
+				capture(error, { context: "gateway: stage confirmation" });
+				return "Баталгаажуулах үйлдлийг хадгалахад алдаа гарлаа.";
+			}
 
 			// Push the confirmation UI on the channel, then tell the LLM the
 			// user is being asked. The final write happens only on confirm.

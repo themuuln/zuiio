@@ -84,6 +84,18 @@ describe("summarizeWriteAction", () => {
 		expect(summary).toContain("wo-1");
 	});
 
+	it("summarizes a customer QPay order", () => {
+		const summary = summarizeWriteAction("placeOrderWithQpay", {
+			items: [{ product_id: "p-1", quantity: 1 }],
+			contact_name: "Бат",
+			delivery_type: "delivery",
+		});
+
+		expect(summary).toContain("QPay");
+		expect(summary).toContain("Бат");
+		expect(summary).toContain("хүргэлт");
+	});
+
 	it("counts data fields", () => {
 		const summary = summarizeWriteAction("writeData", {
 			dataset: "customers",

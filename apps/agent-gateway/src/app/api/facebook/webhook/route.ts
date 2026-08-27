@@ -8,18 +8,65 @@ import { FacebookChannel } from "@/channels/facebook";
 import type { MetaWebhookPayload } from "@/channels/types";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
+import { handleFeedChange } from "@/gateway/comment-agent";
+import { replayCustomerCheckoutAction } from "@/gateway/customer-cart-tool";
+import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
 import { formatWriteResult } from "@/lib/format-result";
+import { getRedis } from "@/lib/redis";
 import {
 	createServiceClient,
 	getSupabaseForProduct,
 	type ServiceClient,
 } from "@/lib/supabase";
-import { confirmAction, rejectAction } from "@/runtime/confirmation";
-
+import {
+	confirmStoredAction,
+	rejectStoredAction,
+} from "@/runtime/confirmation";
 const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "";
 const APP_SECRET = process.env.FB_APP_SECRET || "";
+
+/**
+ * Meta redelivers webhook deliveries when the handler does not ACK within
+ * ~20s. AI agent runs regularly exceed that window, so the same event arrives
+ * repeatedly and each copy used to trigger its own agent run + reply (the
+ * "5x Уучлаарай" storm). Track seen event keys for a TTL window and drop
+ * redeliveries before any processing (at-most-once).
+ *
+ * Durable path: Redis SETNX (survives serverless instance recycling).
+ * In-memory Map is fallback when Redis is unavailable (dev) or fails.
+ */
+const SEEN_EVENT_TTL_MS = 10 * 60 * 1000;
+const seenEvents = new Map<string, number>();
+
+async function isDuplicateEvent(key: string): Promise<boolean> {
+	// Durable dedupe via Redis when configured
+	try {
+		const redis = getRedis();
+		if (redis) {
+			// Upstash: SET key 1 NX EX 600 -> "OK" if set, null if exists
+			const res = await redis.set(`fb:event:${key}`, "1", {
+				nx: true,
+				ex: Math.ceil(SEEN_EVENT_TTL_MS / 1000),
+			});
+			if (res === null) return true;
+			if (res === "OK") return false;
+		}
+	} catch {
+		// fall through to in-memory
+	}
+	const now = Date.now();
+	if (seenEvents.size > 1000) {
+		for (const [k, ts] of seenEvents) {
+			if (now - ts > SEEN_EVENT_TTL_MS) seenEvents.delete(k);
+		}
+	}
+	const seenAt = seenEvents.get(key);
+	if (seenAt !== undefined && now - seenAt < SEEN_EVENT_TTL_MS) return true;
+	seenEvents.set(key, now);
+	return false;
+}
 
 /**
  * GET: Webhook verification endpoint.
@@ -83,6 +130,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 	for (const entry of payload.entry) {
 		const entryId = entry.id;
+		// Defense in depth: reject ids containing PostgREST filter syntax
+		// (`,` `(` `)` `"` `'`) — Meta numeric ids pass, test mocks like "page-123" pass.
+		if (
+			typeof entryId !== "string" ||
+			entryId.length === 0 ||
+			/[,()"']/.test(entryId)
+		) {
+			continue;
+		}
 
 		// Look up org from page_id (Messenger) or IG business account id (Instagram).
 		// A page can have TWO active rows (messenger + instagram) sharing page_id,
@@ -94,7 +150,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			.or(
 				`page_id.eq.${entryId},and(channel.eq.instagram,channel_user_id.eq.${entryId})`,
 			);
-
 		if (!connections || connections.length === 0) {
 			// Unknown page — skip silently
 			continue;
@@ -107,7 +162,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			if (event.message?.is_echo) continue;
 
 			const senderId = event.sender.id;
-
+			const dedupeKey =
+				event.message?.mid ??
+				`${senderId}:${event.timestamp}:${event.postback?.payload ?? ""}`;
+			if (await isDuplicateEvent(dedupeKey)) continue;
 			// Instagram entries carry the IG business account id; Messenger entries
 			// carry the page id. Prefer the instagram row when entry.id matches the
 			// stored IG account id, otherwise use the messenger row.
@@ -180,6 +238,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				.update({ last_user_message_at: new Date().toISOString() })
 				.eq("id", connection.id);
 		}
+		// Process Page feed changes (comments on posts). Feed events carry the
+		// page id in entry.id, so they route to the messenger connection.
+		const messengerConn = connections.find(
+			(c) => c.channel === "messenger" && c.page_id === entryId,
+		);
+		if (messengerConn && entry.changes && entry.changes.length > 0) {
+			const feedCtx = {
+				pageId: entryId,
+				pageAccessToken: decryptSecret(messengerConn.page_access_token ?? ""),
+				orgId: messengerConn.organization_id,
+				userId: messengerConn.user_id ?? entryId,
+				productType: messengerConn.product_type as "tolom" | "zer" | "zatly",
+				connectionId: messengerConn.id,
+			};
+			for (const change of entry.changes) {
+				await handleFeedChange(supabase, feedCtx, change);
+			}
+		}
 	}
 
 	return NextResponse.json({ ok: true });
@@ -208,6 +284,24 @@ function validateSignature(rawBody: string, signature: string | null): boolean {
 	} catch {
 		return false;
 	}
+}
+
+function quickRepliesForCustomerMessage(
+	text: string,
+	channel: "messenger" | "instagram",
+): Array<{ text: string; callbackData: string }> | undefined {
+	if (
+		channel !== "messenger" ||
+		!/^(сайн|hello|hi|hey|сайн уу)/i.test(text.trim())
+	) {
+		return undefined;
+	}
+
+	return [
+		{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
+		{ text: "Захиалга шалгах", callbackData: "order_status" },
+		{ text: "Хүргэлт асуух", callbackData: "delivery" },
+	];
 }
 
 interface MessageContext {
@@ -267,6 +361,7 @@ async function handleMessage(
 		await channel.sendSenderAction(ctx.senderId, "typing_on");
 		// Build gateway context for flow routing and agent handler
 		const gatewayCtx = {
+			supabase: dataClient,
 			orgId: ctx.orgId,
 			userId: ctx.userId,
 			productType: ctx.productType,
@@ -295,16 +390,47 @@ async function handleMessage(
 			return;
 		}
 
+		if (
+			ctx.productType === "zer" &&
+			ctx.channel === "messenger" &&
+			/(бараа|бүтээгдэхүүн|үнэ|зарах|байгаа юу)/i.test(ctx.text)
+		) {
+			const wantsCatalogList =
+				/жагсаалт|каталог|юу байгаа|байгаа юу|бүгд/i.test(ctx.text);
+			const productResult = await createCustomerProductTool({
+				supabase: dataClient,
+				orgId: ctx.orgId,
+				userId: ctx.senderId,
+			}).execute(
+				{ query: wantsCatalogList ? "" : ctx.text, limit: 10 },
+				gatewayCtx,
+			);
+			const products =
+				typeof productResult === "object" &&
+				productResult !== null &&
+				"products" in productResult &&
+				Array.isArray(productResult.products)
+					? productResult.products
+					: [];
+			if (products.length > 0) {
+				await channel.sendSenderAction(ctx.senderId, "typing_off");
+				await channel.sendMessage(ctx.senderId, "Таны асуусан бараанууд:");
+				await channel.sendProductCards(ctx.senderId, products);
+				return;
+			}
+		}
+
 		// No flow matched — fall through to AI agent handler
 		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
 			getSystemPrompt: systemPromptFor,
 			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
 			dataClient,
 		});
-
 		// Hide typing indicator and send response
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
-		await channel.sendMessage(ctx.senderId, response);
+		await channel.sendMessage(ctx.senderId, response, {
+			quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
+		});
 	} catch (err) {
 		capture(err, { context: "agent-gateway: facebook handleMessage" });
 		await channel.sendMessage(
@@ -337,11 +463,14 @@ async function handlePostback(
 		pageAccessToken: ctx.pageAccessToken,
 	});
 
-	// Handle confirmation postbacks via the shared confirmation store
 	if (ctx.payload.startsWith("confirm:")) {
 		const confirmId = ctx.payload.replace("confirm:", "");
-		// Staged actions key on (channelChatId=pageId, channelUserId=sender).
-		const staged = confirmAction(confirmId, ctx.pageId, ctx.senderId);
+		const staged = await confirmStoredAction(
+			confirmId,
+			ctx.orgId,
+			ctx.pageId,
+			ctx.senderId,
+		);
 		if (!staged) {
 			await channel.sendMessage(
 				ctx.senderId,
@@ -349,38 +478,55 @@ async function handlePostback(
 			);
 			return;
 		}
-		// Re-execute the staged action deterministically — never via LLM re-prompt.
-		if (staged.execute) {
-			try {
-				const result = await staged.execute(staged.args);
-				await channel.sendMessage(ctx.senderId, formatWriteResult(result));
-			} catch (err) {
-				capture(err, {
-					context: "agent-gateway: confirm staged action (meta)",
-				});
-				await channel.sendMessage(
-					ctx.senderId,
-					"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+
+		try {
+			let result: unknown;
+			if (
+				staged.persistent &&
+				(staged.toolName === "placeOrderWithQpay" ||
+					staged.toolName === "checkoutCartWithQpay")
+			) {
+				const actionContext = {
+					orgId: ctx.orgId,
+					userId: ctx.senderId,
+					supabase,
+					productType: ctx.productType,
+					audience: "customer" as const,
+					channel: ctx.channel,
+					channelChatId: ctx.pageId,
+					channelUserId: ctx.senderId,
+					pageId: ctx.pageId,
+					pageAccessToken: ctx.pageAccessToken,
+					replaying: true,
+				};
+				result = await replayCustomerCheckoutAction(
+					staged.toolName,
+					staged.args,
+					actionContext,
 				);
+			} else if (staged.execute) {
+				result = await staged.execute(staged.args);
+			} else {
+				result = { success: true, message: "Амжилттай." };
 			}
-		} else {
-			await channel.sendMessage(ctx.senderId, "✅ Амжилттай.");
+			await channel.sendMessage(ctx.senderId, formatWriteResult(result));
+		} catch (err) {
+			capture(err, { context: "agent-gateway: confirm staged action (meta)" });
+			await channel.sendMessage(
+				ctx.senderId,
+				"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+			);
 		}
 		return;
 	}
 
 	if (ctx.payload.startsWith("reject:")) {
-		const rejectId = ctx.payload.replace("reject:", "");
-		rejectAction(rejectId);
+		await rejectStoredAction(ctx.payload.replace("reject:", ""));
 		await channel.sendMessage(ctx.senderId, "❌ Цуцаллаа.");
 		return;
 	}
 
-	// Default: treat as text message
-	await handleMessage(supabase, {
-		...ctx,
-		text: ctx.payload,
-	});
+	await handleMessage(supabase, { ...ctx, text: ctx.payload });
 }
 
 interface QuickReplyContext {

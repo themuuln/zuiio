@@ -29,6 +29,17 @@ describe("formatWriteResult", () => {
 	it("handles error-shaped objects", () => {
 		expect(formatWriteResult({ error: "бүтсэнгүй" })).toBe("❌ бүтсэнгүй");
 	});
+	it("formats QPay order results with a clickable payment link", () => {
+		expect(
+			formatWriteResult({
+				payment_method: "qpay",
+				message: "Захиалга үүслээ.",
+				payment_link: "https://qpay.example/pay/1",
+			}),
+		).toBe(
+			"✅ Захиалга үүслээ.\nQPay төлбөрийн холбоос: https://qpay.example/pay/1",
+		);
+	});
 
 	it("truncates long JSON", () => {
 		const big = { rows: Array.from({ length: 1000 }, (_, i) => ({ i })) };

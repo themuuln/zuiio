@@ -106,11 +106,35 @@ export interface TelegramUpdate {
 	};
 }
 
-/** Raw Meta webhook entry (Messenger + Instagram). */
+/** A Page feed change value from the "feed" webhook field (comments, posts, reactions). */
+export interface MetaFeedChangeValue {
+	item: string; // "comment" | "post" | "reaction" | "share" | "video" | ...
+	verb: string; // "add" | "edited" | "remove" | ...
+	created_time?: number;
+	comment_id?: string;
+	post_id?: string;
+	/** Set when the comment is a reply to another comment. */
+	parent_id?: string;
+	from?: { id: string; name?: string };
+	message?: string;
+	permalink_url?: string;
+	reaction_type?: string;
+	photo_id?: string;
+	video_id?: string;
+}
+
+/** A single feed change entry from the Page webhook. */
+export interface MetaFeedChange {
+	field: string;
+	value: MetaFeedChangeValue;
+}
+
+/** Raw Meta webhook entry (Messenger + Instagram + Page feed). */
 export interface MetaWebhookEntry {
 	id: string; // page_id
 	time: number;
 	messaging?: MetaMessagingEvent[];
+	changes?: MetaFeedChange[];
 }
 
 /** A single messaging event from Meta webhook. */

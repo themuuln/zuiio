@@ -23,6 +23,15 @@ export function formatWriteResult(result: unknown): string {
 		if (typeof obj.error === "string") {
 			return `❌ ${obj.error}`;
 		}
+		if (obj.payment_method === "qpay") {
+			const message =
+				typeof obj.message === "string" ? obj.message : "Захиалга үүслээ.";
+			const paymentLink =
+				typeof obj.payment_link === "string" ? obj.payment_link : "";
+			return paymentLink
+				? `✅ ${message}\nQPay төлбөрийн холбоос: ${paymentLink}`
+				: `✅ ${message}`;
+		}
 		const json = JSON.stringify(obj);
 		return json.length <= 4000 ? json : `${json.slice(0, 4000)}…`;
 	}

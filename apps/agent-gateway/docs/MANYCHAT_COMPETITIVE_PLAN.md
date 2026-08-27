@@ -163,3 +163,46 @@ ManyChat wins on **growth tools + builder UX**; Respond.io wins on **AI service 
 - **Org model**: `channel_connections.product_type` supports `zer`/`tolom`; a `zatly` product type or org-level page ownership must be decided before P1 (multi-product pages).
 - **Meta constraints**: 24h window; IG rate limit 200 DMs/h; message tags deprecated Feb 2026 (use One-Time Notifications); Instagram DM Lists paused by Meta — these shape what growth tools are legal to build.
 - **App Review video**: record once the dev-mode E2E works (webhook live + flow + confirmation gate demo, ≤1440px, cursor visible, trigger phrase in notes).
+
+---
+
+## 6. Status Refresh — 2026-08-25
+
+Post-Business-Verification pass. Sources: code audit (this date), Meta docs
+(Graph v25/v26), ManyChat community release notes (Q1–Q2 2026).
+
+### Shipped since 2026-08-06
+| Feature | Where |
+|---|---|
+| Production deploy live (health, FB webhook, token-verified start all verified) | Vercel `agent-gateway` |
+| **FB comment auto-reply agent** (public AI reply + Private Reply DM, loop-safe, keyword filter, per-org config in `channel_connections.metadata.comment_reply`) | `src/gateway/comment-agent.ts` |
+| `feed` webhook field + comment scopes (`pages_manage_engagement`, `pages_read_engagement`, `pages_read_user_content`) | `channels/facebook.ts`, `lib/facebook-scopes.ts` |
+| Prompt-injection hardening, output redaction, tool validation | commit `ae6f4312e` |
+| Connect-flow CORS/OAuth fixes for product-app embedding (Bujin/zer) | commits `da53b93df`–`9981f67b1` |
+
+### Remaining gaps vs ManyChat (re-prioritized)
+| # | Gap | ManyChat parity | Status / build note |
+|---|---|---|---|
+| 1 | **Live Chat Inbox** (conversation list, human take-over via `pass_thread_control`, labels/notes) | ✅ core | Backend exists (`agent_handoff_*`, dashboard `handoffs/[id]/resolve`); no inbox UI. Highest-value gap — service use case |
+| 2 | **Broadcasts** composer (audience filter → send → delivery stats) | ✅ core | Infra exists (`async_jobs`, `FacebookChannel`); no UI. Constraint: Meta killed Messenger recurring notifications (2026-02) — send within 24h window or HUMAN_AGENT/UTILITY tags only |
+| 3 | **KB management UI** (FAQ/PDF upload, retrieval preview w/ source attribution) | ✅ (Knowledge + AI Playground) | `agent_knowledge_sources` + search exist; management is curl-only (`POST /api/dashboard/kb`) |
+| 4 | **AI Behavior analog** (persona/tone/guardrails editor) | ✅ (AI Behavior, 2026-04) | `agent_context_profiles` + `loadAgentProfile` exist; profile API route exists — needs a real editor UI |
+| 5 | **Sequences** (per-contact nurture state, pause/resume) | ✅ | delay node + `async_jobs` exist; no per-contact sequence state |
+| 6 | **Analytics/funnel UI** (triggered→engaged→converted) | ✅ | `flow-executor/analytics.ts` + usage/quota APIs exist; no charts |
+| 7 | **Growth tools**: IG Story mentions, Messenger Ref URL (`m.me/ref`), QR generator, JSON ads | ✅ | Comment-to-DM ✅ (FB only); rest unbuilt |
+| 8 | **IG comment + DM parity** | ✅ (ManyChat is IG-first) | IG comments arrive on `instagram` webhook object — separate subscription/flow; unbuilt |
+| 9 | **Persistent menu / Get Started / greeting** (`/me/messenger_profile`) | ✅ | Cheap win, high polish |
+| 10 | **Contact CRM** (custom fields, tags, segments) | ✅ | Wedge: use zer/tolom business DB as the CRM instead of a parallel contact store — nobody else can do this |
+| 11 | **WhatsApp activation** | ✅ | Adapter + webhook skeleton only; WhatsApp Marketing Messages now GA at ManyChat (2026-04) — rising priority |
+| 12 | **PDF/document send in DMs** | ✅ (2026 Q1) | `Channel.sendDocument?` optional; FB adapter lacks it |
+| 13 | **Flow test simulator** (fake-PSID playground) | ✅ (AI Playground) | UX rec §4; builds trust before Meta round-trip |
+
+### Recommended build order (post-App-Review)
+1. Inbox (take-over) → 2. Broadcasts (24h-window) → 3. KB UI + profile editor →
+4. messenger_profile polish → 5. Analytics → 6. Sequences → 7. IG parity → 8. WhatsApp.
+
+### Meta constraints shaping the roadmap (2026)
+- Messenger recurring notifications (Marketing Messages) **deprecated 2026-02-10** — broadcasts must respect the 24h window or use remaining valid tags.
+- Deprecated tags `CONFIRMED_EVENT_UPDATE` / `ACCOUNT_UPDATE` / `POST_PURCHASE_UPDATE` error from 2026-04-27.
+- Graph v25.0 supported until 2028-07-29 (v26.0 current since 2026-07-29) — no forced upgrade yet.
+- IG DM Lists still paused by Meta — do not build (unchanged from §2).

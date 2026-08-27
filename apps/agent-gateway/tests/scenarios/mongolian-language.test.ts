@@ -1216,11 +1216,10 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 		const result = await runAgentQuery(
 			'<script>alert("xss")</script>Өнөөдрийн борлуулалт',
 		);
-		// Script tags contain angle brackets which should be preserved by sanitize
-		// (sanitize only strips control chars 0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F)
-		expect(result.message).toBe(
-			'<script>alert("xss")</script>Өнөөдрийн борлуулалт',
-		);
+		// Script tags should be sanitized — angle brackets stripped or escaped,
+		// core content preserved, no raw <script> survives.
+		expect(result.message).not.toContain('<script>');
+		expect(result.message).toContain("Өнөөдрийн борлуулалт");
 	});
 
 	it("sql injection attempt doesn't crash", async () => {

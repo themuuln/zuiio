@@ -35,6 +35,11 @@ const mockRejectAction = vi.fn();
 vi.mock("@/runtime/confirmation", () => ({
 	confirmAction: (...a: unknown[]) => mockConfirmAction(...a),
 	rejectAction: (...a: unknown[]) => mockRejectAction(...a),
+	confirmStoredAction: (...a: unknown[]) => mockConfirmAction(...a),
+	rejectStoredAction: (...a: unknown[]) => mockRejectAction(...a),
+	stageAction: vi.fn(),
+	stagePersistentAction: vi.fn(async () => ({ nonce: "n", buttons: [] })),
+	confirmButtons: vi.fn(() => []),
 }));
 
 // Channel adapter — capture outgoing messages instead of hitting the Graph API.
@@ -102,6 +107,10 @@ function post(body: unknown): Request {
 }
 
 function messengerEvent(partial: Record<string, unknown>): unknown {
+	const partialMessage =
+		typeof partial.message === "object" && partial.message !== null
+			? partial.message
+			: {};
 	return {
 		object: "page",
 		entry: [
@@ -111,8 +120,12 @@ function messengerEvent(partial: Record<string, unknown>): unknown {
 					{
 						sender: { id: "psid-1" },
 						recipient: { id: PAGE_ID },
-						message: { is_echo: false },
 						...partial,
+						message: {
+							is_echo: false,
+							mid: crypto.randomUUID(),
+							...partialMessage,
+						},
 					},
 				],
 			},
@@ -190,6 +203,7 @@ describe("facebook webhook — event paths", () => {
 		expect(res.status).toBe(200);
 		expect(mockConfirmAction).toHaveBeenCalledWith(
 			"nonce-1",
+			"org-1",
 			PAGE_ID,
 			"psid-1",
 		);
@@ -259,7 +273,11 @@ describe("facebook webhook — event paths", () => {
 		expect(res.status).toBe(200);
 		expect(mockHandleAgentMessage).toHaveBeenCalledTimes(1);
 		// Agent reply is sent back to the sender.
-		expect(mockSendMessage).toHaveBeenCalledWith("psid-1", "Хариулт");
+		expect(mockSendMessage).toHaveBeenCalledWith(
+			"psid-1",
+			"Хариулт",
+			expect.objectContaining({ quickReplies: expect.any(Array) }),
+		);
 	});
 
 	it("stamps last_user_message_at on the connection row", async () => {

@@ -82,6 +82,17 @@ describe("markdownToMessengerFormat", () => {
 		expect(markdownToMessengerFormat("[text](url)")).toBe("text");
 	});
 
+	it("converts HTML bold to Messenger emphasis", () => {
+		expect(markdownToMessengerFormat("<b>Сайн байна уу!</b>")).toBe(
+			"*Сайн байна уу!*",
+		);
+	});
+
+	it("removes unsupported HTML tags", () => {
+		expect(markdownToMessengerFormat("<div>Hello</div><br>World")).toBe(
+			"HelloWorld",
+		);
+	});
 	it("handles empty input", () => {
 		expect(markdownToMessengerFormat("")).toBe("");
 	});

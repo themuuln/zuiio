@@ -11,6 +11,8 @@ export interface ToolContext {
 	orgId: string;
 	userId: string;
 	supabase: SupabaseClient;
+	/** Trusted product identity for durable tool replay. */
+	productType?: string;
 	/** Trusted audience — undefined means internal (backward compat). */
 	audience?: AgentAudience;
 	/** Channel identity for confirmation-gated writes (optional — legacy/test paths). */
@@ -19,6 +21,8 @@ export interface ToolContext {
 	channelUserId?: string;
 	pageId?: string;
 	pageAccessToken?: string;
+	/** Skip staging when a persisted action is being replayed. */
+	replaying?: boolean;
 }
 
 /**

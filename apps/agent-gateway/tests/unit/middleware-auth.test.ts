@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createSessionValue } from "@/middleware";
+import { createSessionValue } from "@/proxy";
 
 vi.mock("server-only", () => ({}));
 

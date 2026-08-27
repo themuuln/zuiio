@@ -114,9 +114,22 @@ describe("runOpenAiCompatibleLoop — streaming", () => {
 		);
 		expect(toolMsg).toBeDefined();
 		expect(JSON.parse(toolMsg.content)).toEqual({ rows: [{ id: 1 }] });
+		const assistantMsg = secondBody.messages.find(
+			(m: { role: string }) => m.role === "assistant",
+		);
+		expect(assistantMsg).toMatchObject({
+			role: "assistant",
+			tool_calls: [
+				{
+					id: "call_1",
+					type: "function",
+					function: { name: "readData", arguments: "{}" },
+				},
+			],
+		});
 	});
-});
 
+});
 describe("runOpenAiCompatibleLoop — resilience", () => {
 	it("retries on 429 then succeeds", async () => {
 		globalThis.fetch = makeFetchMock([

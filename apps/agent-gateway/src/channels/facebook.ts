@@ -149,6 +149,75 @@ export class FacebookChannel implements Channel {
 		}
 	}
 
+	async sendProductCards(
+		chatId: string,
+		products: Array<{
+			id: string;
+			name: string;
+			description?: string | null;
+			salePrice?: number | null;
+			currentStock?: number | null;
+		}>,
+	): Promise<boolean> {
+		if (!this.pageId || !this.pageAccessToken || products.length === 0) {
+			return false;
+		}
+
+		const elements = products.slice(0, 10).map((product) => ({
+			title: product.name.slice(0, 80),
+			subtitle: [
+				product.salePrice != null
+					? `Үнэ: ₮${product.salePrice.toLocaleString("mn-MN")}`
+					: null,
+				product.currentStock != null
+					? product.currentStock > 0
+						? `Үлдэгдэл: ${product.currentStock}`
+						: "Дууссан"
+					: null,
+			]
+				.filter(Boolean)
+				.join(" · ")
+				.slice(0, 80),
+			buttons: [
+				{
+					type: "postback",
+					title: "Дэлгэрэнгүй",
+					payload: `PRODUCT:${product.id}`,
+				},
+			],
+		}));
+
+		try {
+			const res = await fetch(
+				`${GRAPH_API_BASE}/${this.pageId}/messages?access_token=${this.pageAccessToken}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						recipient: { id: chatId },
+						messaging_type: "RESPONSE",
+						message: {
+							attachment: {
+								type: "template",
+								payload: { template_type: "generic", elements },
+							},
+						},
+					}),
+				},
+			);
+			if (!res.ok) {
+				capture(new Error(`Facebook product cards failed: ${res.status}`), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: sendProductCards" });
+			return false;
+		}
+	}
+
 	async answerCallbackQuery(
 		_callbackQueryId: string,
 		_text?: string,
@@ -175,7 +244,7 @@ export class FacebookChannel implements Channel {
 	async subscribeToWebhook(
 		pageId: string,
 		pageAccessToken: string,
-		subscribedFields = "messages,messaging_postbacks",
+		subscribedFields = "messages,messaging_postbacks,feed",
 	): Promise<boolean> {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;
@@ -200,6 +269,30 @@ export class FacebookChannel implements Channel {
 			return true;
 		} catch (err) {
 			capture(err, { context: "facebook-channel: subscribeToWebhook" });
+			return false;
+		}
+	}
+	/**
+	 * Remove this page's subscription from the Meta webhook.
+	 */
+	async unsubscribeFromWebhook(
+		pageId: string,
+		pageAccessToken: string,
+	): Promise<boolean> {
+		try {
+			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;
+			const res = await fetch(url, { method: "DELETE" });
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(
+					new Error(`Webhook unsubscription failed: ${res.status} ${err}`),
+					{ context: "facebook-channel" },
+				);
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: unsubscribeFromWebhook" });
 			return false;
 		}
 	}
@@ -256,6 +349,99 @@ export class FacebookChannel implements Channel {
 			});
 		} catch {
 			// Sender action failures are non-critical
+		}
+	}
+
+	/**
+	 * Reply to a Page comment publicly, as the Page.
+	 * POST /{comment-id}/comments — requires pages_manage_engagement.
+	 */
+	async replyToComment(commentId: string, message: string): Promise<boolean> {
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageAccessToken) return false;
+		try {
+			const res = await fetch(
+				`${GRAPH_API_BASE}/${commentId}/comments?access_token=${pageAccessToken}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ message }),
+				},
+			);
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(new Error(`Comment reply failed: ${res.status} ${err}`), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: replyToComment" });
+			return false;
+		}
+	}
+
+	/**
+	 * Send the one allowed Private Reply DM for a comment.
+	 * POST /{page-id}/messages with recipient.comment_id — requires pages_messaging.
+	 * Meta enforces a single private reply per comment within 7 days.
+	 */
+	async sendPrivateReply(commentId: string, text: string): Promise<boolean> {
+		const pageId = this.pageId;
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageId || !pageAccessToken) return false;
+		try {
+			const res = await fetch(
+				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						recipient: { comment_id: commentId },
+						messaging_type: "RESPONSE",
+						message: { text },
+					}),
+				},
+			);
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(new Error(`Private reply failed: ${res.status} ${err}`), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+			return true;
+		} catch (err) {
+			capture(err, { context: "facebook-channel: sendPrivateReply" });
+			return false;
+		}
+	}
+
+	/**
+	 * True when the Page itself already replied under this comment.
+	 * Deterministic dedupe against Meta webhook redelivery — no storage needed.
+	 * Fetches up to 100 replies and follows one page of paging if needed.
+	 */
+	async hasPageReplied(commentId: string): Promise<boolean> {
+		const pageAccessToken = this.pageAccessToken;
+		if (!pageAccessToken || !this.pageId) return false;
+		try {
+			let url: string | null =
+				`${GRAPH_API_BASE}/${commentId}/comments?fields=from{id}&limit=100&access_token=${pageAccessToken}`;
+			for (let page = 0; page < 2 && url; page++) {
+				const res = await fetch(url);
+				if (!res.ok) return false;
+				const data = (await res.json()) as {
+					data?: Array<{ from?: { id?: string } }>;
+					paging?: { next?: string };
+				};
+				if (data.data?.some((reply) => reply.from?.id === this.pageId)) return true;
+				url = data.paging?.next ?? null;
+			}
+			return false;
+		} catch {
+			return false;
 		}
 	}
 }

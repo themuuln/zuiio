@@ -57,8 +57,12 @@ export function createCustomerProductTool(context: ToolContext): GatewayTool {
 					.eq("organization_id", orgId);
 
 				if (query) {
+					const pattern = `%${escapeLike(query)}%`;
+					// Quote the pattern so commas inside the query don't split the `or` filter.
+					// PostgREST splits on unquoted commas; quoted values keep them.
+					const quoted = `"${pattern.replace(/"/g, '\\"')}"`;
 					builder = builder.or(
-						`name.ilike.%${escapeLike(query)}%,sku.ilike.%${escapeLike(query)}%,barcode.ilike.%${escapeLike(query)}%`,
+						`name.ilike.${quoted},sku.ilike.${quoted},barcode.ilike.${quoted}`,
 					);
 				}
 
@@ -75,6 +79,7 @@ export function createCustomerProductTool(context: ToolContext): GatewayTool {
 
 				return {
 					products: (data ?? []).map((row) => ({
+						id: row.id,
 						name: row.name ?? null,
 						sku: row.sku ?? null,
 						barcode: row.barcode ?? null,

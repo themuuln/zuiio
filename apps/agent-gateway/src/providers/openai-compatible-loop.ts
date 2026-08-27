@@ -312,8 +312,9 @@ export async function runOpenAiCompatibleLoop(
 			);
 		}
 
-		// Push assistant message with tool_calls
-		messages.push(message);
+		// OpenAI-compatible APIs require the assistant role when replaying
+		// tool calls in the next request.
+		messages.push({ role: "assistant", ...message });
 
 		// Execute each tool call
 		for (const tc of message.tool_calls) {

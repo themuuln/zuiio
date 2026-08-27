@@ -2,6 +2,8 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
+
+import { FacebookChannel } from "@/channels/facebook";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase";
 
@@ -38,10 +40,17 @@ interface ExpiringConnection {
 export async function GET(request: Request): Promise<NextResponse> {
 	const authHeader = request.headers.get("authorization");
 	const cronSecret = process.env.CRON_SECRET;
-	if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+	if (cronSecret) {
+		if (authHeader !== `Bearer ${cronSecret}`) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+	} else if (process.env.VERCEL_ENV === "production") {
+		// Misconfigured production — fail closed rather than allow unauthenticated refresh.
+		capture(new Error("CRON_SECRET not configured in production"), {
+			context: "agent-gateway: cron refresh-meta-tokens",
+		});
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
-
 	if (!FB_APP_ID || !FB_APP_SECRET) {
 		capture(
 			new Error("FB_APP_ID/FB_APP_SECRET not configured — skipping refresh"),
@@ -178,6 +187,15 @@ export async function GET(request: Request): Promise<NextResponse> {
 					.eq("id", conn.id);
 
 				refreshed++;
+
+				// 5. Re-assert webhook subscriptions with the fresh token — self-heals
+				// pages connected before the "feed" field (comment agent) was added.
+				// Non-fatal: subscription failures don't mark the row as failed.
+				try {
+					await new FacebookChannel().subscribeToWebhook(conn.page_id, pageToken);
+				} catch (e) {
+					capture(e, { context: "agent-gateway: cron refresh-meta-tokens webhook" });
+				}
 			} catch (err) {
 				failed++;
 				capture(err, {

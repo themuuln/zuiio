@@ -162,6 +162,7 @@ export async function handleAgentMessage(
 		orgId: ctx.orgId,
 		userId: ctx.userId,
 		supabase: opts.dataClient ?? sb,
+		productType: ctx.productType,
 		audience: ctx.audience ?? "internal",
 		channel: ctx.channel,
 		channelChatId: ctx.channelChatId,
@@ -186,7 +187,6 @@ export async function handleAgentMessage(
 			textLength: text.length,
 		});
 	}
-
 
 	// Check budget
 	let t = performance.now();

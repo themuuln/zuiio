@@ -36,6 +36,7 @@ These do not block startup; each gates its own surface and fails closed when uns
 | Variable | Description | Example |
 |---|---|---|
 | `AGENT_GATEWAY_API_SECRET` | Shared server-to-server secret. Sent as `x-api-key` by Zer/Tolom to `/api/link/generate` and `/api/link/code`. Must match the value configured in Zer/Tolom. Fail-closed: both routes return 401 when unset. | `<random-32-byte-string>` |
+| `ZER_APP_URL` | Zer public server URL for the authenticated customer checkout boundary (`/api/internal/v1/checkout/orders`) | _(none — QPay chat orders disabled)_ |
 | `DASHBOARD_SECRET` | Gate for the ops dashboard: `/dashboard/login` sets an HMAC cookie, middleware protects `/dashboard/*` and `/api/dashboard/*`. Fail-closed: dashboard returns 503 when unset. | `<random-32-byte-string>` |
 | `CRON_SECRET` | Optional but recommended. All `/api/cron/*` endpoints (and `/api/flow/publish`) require `Authorization: Bearer <CRON_SECRET>` when set; skipped when unset. | `<random-32-byte-string>` |
 
@@ -118,9 +119,8 @@ These do not block startup; each gates its own surface and fails closed when uns
 - `TOKEN_SIGNING_SECRET` — In production, must be ≥16 characters and not a known default. The `securityAudit()` function checks for weak values at startup.
 - `TELEGRAM_WEBHOOK_SECRET` — Must match the `secret_token` sent in `setWebhook` calls. Prevents unauthorized webhook calls.
 - `SUPABASE_SERVICE_ROLE_KEY` — Bypasses Row Level Security. Never expose to client-side code.
-- `AGENT_GATEWAY_API_SECRET` — Server-to-server only. Never expose to client-side code; the `x-api-key` header is checked via `isGatewayApiKeyValid()` in `src/lib/api-auth.ts` (fail-closed).
-- `DASHBOARD_SECRET` — Gates `/dashboard` and `/api/dashboard/*` via middleware (HMAC-signed cookie from `/api/dashboard/login`). Fail-closed when unset.
-- `CRON_SECRET` — Required if you want Vercel cron endpoints to reject unauthenticated calls; verified as `Authorization: Bearer <secret>`.
+- `ZER_APP_URL` and `AGENT_GATEWAY_API_SECRET` are required for customer QPay checkout. The gateway sends the shared secret only in server-to-server requests; it never reaches Messenger or Instagram.
+- `QPAY_*` credentials stay in Zer. Agent Gateway must never receive or log them.
 - All API keys should be stored in Vercel/Cloudflare environment variables, never committed to git.
 
 ## Validation

@@ -12,17 +12,21 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Multi-tenant AI agent gateway for Telegram, Facebook Messenger, and Instagram. Connects messaging bots to Zer/Tolom business data via LLM-powered tools with org isolation, rate limiting, and budget controls.
 
-## Multi-Channel Roadmap
+## Multi-Channel Status (2026-08-25)
 
 | Channel | Status | Notes |
 |---------|--------|-------|
 | Telegram | ✅ Live | Mode A (shared bot) + Mode B (custom bot) |
-| Facebook Messenger | 🔨 In progress | Webhook + OAuth in dev. App Review deferred. |
-| Instagram DMs | 🔨 In progress | Same webhook as Messenger. App Review deferred. |
-| WhatsApp | 📋 Planned | Skeleton adapter exists. |
+| Facebook Messenger | ✅ Live | Deployed + Business Verification APPROVED. Advanced-access App Review for `pages_manage_engagement`/`pages_read_engagement`/`pages_read_user_content` pending |
+| FB comment auto-reply | ✅ Built | `src/gateway/comment-agent.ts` — `feed` webhook, public AI reply + Private Reply DM; config in `channel_connections.metadata.comment_reply` |
+| Instagram DMs | ⚠️ Partial | Shares the Messenger webhook; OAuth requests NO IG scopes (they break the dialog when the IG product is disabled). IG comment replies NOT built (separate `instagram` webhook object) |
+| Web chat widget | ✅ Built | `/api/webchat/widget.js` + `webchat_widgets` |
+| WhatsApp | 📋 Planned | Skeleton adapter + webhook routes exist; needs Cloud API creds |
 
-**Current blocker:** Meta Business Verification — waiting for English company certificate.
-See [docs/FACEBOOK_INSTAGRAM_PLAN.md](docs/FACEBOOK_INSTAGRAM_PLAN.md) for full plan.
+**Current blockers:** Meta App Review for the comment scopes (BV done);
+App-level webhook config must also check `feed` for the Page object.
+See [docs/FACEBOOK_INSTAGRAM_PLAN.md](docs/FACEBOOK_INSTAGRAM_PLAN.md) and
+[docs/MANYCHAT_COMPETITIVE_PLAN.md](docs/MANYCHAT_COMPETITIVE_PLAN.md) §6.
 
 ## Core Rules
 
@@ -33,7 +37,7 @@ See [docs/FACEBOOK_INSTAGRAM_PLAN.md](docs/FACEBOOK_INSTAGRAM_PLAN.md) for full 
 - **State:** Session (Supabase, 24h TTL), rate limit (in-memory, 60s window), budget (Supabase, daily)
 - **Write tools:** Go through confirmation gate (inline keyboards for Telegram, Quick Replies for Messenger/Instagram)
 - **Mongolian-first:** All user-facing text is in Mongolian
-- **Meta webhook:** Single endpoint handles both Messenger and Instagram (routed by `page_id`)
+- **Meta webhook:** Single endpoint handles Messenger, Instagram, AND Page `feed` (comment) events — routed by `page_id` / IG business-account id
 
 ## Code Style
 
@@ -100,6 +104,7 @@ pnpm format                     # Biome format
 ### Common tasks
 - **Fix Telegram bot issue** → `src/channels/telegram.ts` + `src/gateway/`
 - **Fix Facebook/Instagram issue** → `src/channels/facebook.ts` + `src/gateway/webhook-helpers.ts`
+- **Fix comment auto-reply** → `src/gateway/comment-agent.ts` (+ `tests/unit/comment-agent.test.ts`)
 - **Debug production issue** → Check Sentry via `@zuiio/capture`
 
 ---
