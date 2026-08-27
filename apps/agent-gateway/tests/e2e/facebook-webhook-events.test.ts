@@ -64,6 +64,7 @@ vi.mock("@/lib/supabase", () => ({
 		chain.eq = vi.fn(() => chain);
 		chain.or = vi.fn(() => chain);
 		chain.update = vi.fn(() => chain);
+		chain.insert = vi.fn(() => Promise.resolve({ data: null, error: null }));
 		chain.maybeSingle = vi.fn(() =>
 			Promise.resolve({ data: mockSessionRow, error: null }),
 		);
@@ -286,15 +287,13 @@ describe("facebook webhook — event paths", () => {
 	it("stamps last_user_message_at on the connection row", async () => {
 		const { POST } = await import("@/app/api/facebook/webhook/route");
 		await POST(post(messengerEvent({ message: { text: "hi" } })));
-
-		// The route's createServiceClient returns one object with .from() plus
-		// the shared query chain (spread into the client) — grab the last one.
-		const service = (createServiceClient as Mock).mock.results.at(-1)!
-			.value as { from: Mock; update: Mock };
-		const fromCalls = (service.from as Mock).mock.calls as unknown[][];
-		expect(fromCalls.some((c) => c[0] === "channel_connections")).toBe(true);
-		expect(service.update).toHaveBeenCalledWith(
-			expect.objectContaining({ last_user_message_at: expect.any(String) }),
-		);
+		// @ts-ignore
+		const allServices = createServiceClient.mock.results.map((r) => r.value);
+		// @ts-ignore
+		const hasFrom = allServices.some((s) => s.from.mock.calls.some((c) => c[0] === "channel_connections"));
+		expect(hasFrom).toBe(true);
+		// @ts-ignore
+		const hasUpdate = allServices.some((s) => s.update.mock.calls.some((c) => c[0] && c[0].last_user_message_at));
+		expect(hasUpdate).toBe(true);
 	});
 });

@@ -25,6 +25,11 @@ import {
 	type ServiceClient,
 } from "@/lib/supabase";
 import {
+	createTraceLogger,
+	generateTraceId,
+	type TraceLogger,
+} from "@/lib/trace";
+import {
 	confirmStoredAction,
 	rejectStoredAction,
 } from "@/runtime/confirmation";
@@ -132,6 +137,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 	// Process each entry (can be batched)
 	const supabase = createServiceClient();
+	const rootTraceId =
+		request.headers.get("x-vercel-id")?.split(":")[0] ??
+		request.headers.get("x-request-id") ??
+		generateTraceId();
+	const deploymentId =
+		process.env.VERCEL_DEPLOYMENT_ID ??
+		process.env.VERCEL_GIT_COMMIT_SHA ??
+		null;
+	const rootTrace = createTraceLogger({
+		traceId: rootTraceId,
+		channel: "messenger",
+		requestText: `webhook entries=${payload.entry.length}`,
+		requestId: rootTraceId,
+		deploymentId,
+	});
+	rootTrace.log("info", "facebook webhook POST", {
+		entries: payload.entry.length,
+		object: payload.object,
+	});
 
 	for (const entry of payload.entry) {
 		const entryId = entry.id;
@@ -193,6 +217,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			// It also serves as the stable session-chat key per channel.
 			const pageId = entryId;
 
+			const traceId = `${rootTraceId}-${senderId}-${event.timestamp}`;
+			const requestText =
+				event.postback?.payload ??
+				event.message?.quick_reply?.payload ??
+				event.message?.text ??
+				"";
+			const trace = createTraceLogger({
+				traceId,
+				organizationId: connection.organization_id,
+				channel,
+				channelChatId: pageId,
+				channelUserId: senderId,
+				requestText,
+				requestId: rootTraceId,
+				deploymentId,
+			});
+			trace.log("info", "facebook event dispatch", {
+				type: event.postback
+					? "postback"
+					: event.message?.quick_reply
+						? "quick_reply"
+						: "text",
+				requestText: requestText.slice(0, 200),
+			});
+
 			// Dispatch the event. A Meta messaging event carries exactly one of:
 			// postback (button click), quick_reply payload, or plain text — but a
 			// quick reply ALSO carries message.text (the displayed label), so
@@ -237,6 +286,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				});
 			}
 
+			trace.flush();
 			// Update last_user_message_at for 24h window tracking
 			await supabase
 				.from("channel_connections")
@@ -364,10 +414,17 @@ interface MessageContext {
 async function handleMessage(
 	supabase: ServiceClient,
 	ctx: MessageContext,
+	trace?: TraceLogger,
 ): Promise<void> {
 	const channel = new FacebookChannel({
 		pageId: ctx.pageId,
 		pageAccessToken: ctx.pageAccessToken,
+	});
+	trace?.log("info", "handleMessage start", {
+		channel: ctx.channel,
+		textLen: ctx.text.length,
+		productType: ctx.productType,
+		text: ctx.text.slice(0, 200),
 	});
 
 	try {
@@ -389,6 +446,10 @@ async function handleMessage(
 				(1000 * 60 * 60);
 
 			if (hoursSinceLastMessage > 24) {
+				trace?.set({ status: "filtered" });
+				trace?.log("info", "24h window blocked", {
+					hoursSinceLastMessage: Math.round(hoursSinceLastMessage),
+				});
 				await channel.sendMessage(
 					ctx.senderId,
 					"Бидэнтэй харилцахаар ахиад мессеж бичнэ үү. 😊",
@@ -429,6 +490,8 @@ async function handleMessage(
 
 		if (flowResult) {
 			// Flow handled the message — hide typing and return
+			trace?.log("info", "flow handled", { flow: true });
+			trace?.set({ responseText: "[flow]", status: "ok" });
 			await channel.sendSenderAction(ctx.senderId, "typing_off");
 			return;
 		}
@@ -487,11 +550,20 @@ async function handleMessage(
 		// No flow matched — fall through to AI agent handler
 		// Capture searchProducts results so we can render them as horizontal cards on Messenger
 		let capturedProducts: unknown = null;
+		const toolCalls: Array<Record<string, unknown>> = [];
 		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
 			getSystemPrompt: systemPromptFor,
 			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
 			dataClient,
 			onToolResult: (toolName, result) => {
+				const hasProducts =
+					result !== null &&
+					typeof result === "object" &&
+					"products" in result &&
+					Array.isArray((result as { products: unknown }).products) &&
+					(result as { products: unknown[] }).products.length > 0;
+				toolCalls.push({ name: toolName, hasProducts, result: hasProducts ? result : undefined });
+				trace?.log("info", "tool result", { toolName, hasProducts });
 				if (
 					toolName === "searchProducts" &&
 					result !== null &&
@@ -504,6 +576,16 @@ async function handleMessage(
 					}
 				}
 			},
+		});
+		trace?.log("info", "LLM complete", {
+			responseLen: response.length,
+			preview: response.slice(0, 120),
+			toolCalls: toolCalls.length,
+			hasProducts: Array.isArray(capturedProducts) && (capturedProducts as unknown[]).length > 0,
+		});
+		trace?.set({
+			responseText: response,
+			toolCalls,
 		});
 		// Hide typing indicator
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
@@ -525,6 +607,10 @@ async function handleMessage(
 				intro = firstLine.length >= 10 ? firstLine : "Таны хайсан бараанууд:";
 			}
 			if (!intro) intro = "Таны хайсан бараанууд:";
+			trace?.log("info", "sending intro + cards", {
+				intro: intro.slice(0, 80),
+				count: (capturedProducts as unknown[]).length,
+			});
 			await channel.sendMessage(ctx.senderId, intro);
 			const cardsSent = await channel.sendProductCards(
 				ctx.senderId,
@@ -551,17 +637,23 @@ async function handleMessage(
 				return;
 			}
 			// Cards failed (e.g. Instagram, missing token, API error) — fall back to plain text
+			trace?.log("warn", "cards failed, fallback to text", { responseLen: response.length });
 			await channel.sendMessage(ctx.senderId, response, {
 				quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
 			});
+			trace?.set({ responseText: response, status: "ok" });
 			return;
 		}
 
 		// No products — normal text reply
+		trace?.log("info", "sending text reply", { responseLen: response.length, preview: response.slice(0, 80) });
+		trace?.set({ responseText: response, status: "ok" });
 		await channel.sendMessage(ctx.senderId, response, {
 			quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
 		});
 	} catch (err) {
+		trace?.error(err);
+		trace?.set({ status: "error", error: err instanceof Error ? err.message : String(err) });
 		capture(err, { context: "agent-gateway: facebook handleMessage" });
 		await channel.sendMessage(
 			ctx.senderId,
@@ -587,11 +679,13 @@ interface PostbackContext {
 async function handlePostback(
 	supabase: ServiceClient,
 	ctx: PostbackContext,
+	trace?: TraceLogger,
 ): Promise<void> {
 	const channel = new FacebookChannel({
 		pageId: ctx.pageId,
 		pageAccessToken: ctx.pageAccessToken,
 	});
+	trace?.log("info", "handlePostback", { payload: ctx.payload.slice(0, 100), channel: ctx.channel });
 
 	if (ctx.payload.startsWith("confirm:")) {
 		const confirmId = ctx.payload.replace("confirm:", "");
@@ -846,19 +940,19 @@ async function handlePostback(
 				await handleMessage(supabase, {
 					...ctx,
 					text: `${productName} худалдаж авах хүсэлтэй байна. 1 ширхэг. Захиалга үүсгэхэд туслаач.`,
-				});
+				}, trace);
 			} catch (err) {
 				capture(err, { context: "agent-gateway: buy postback" });
 				await handleMessage(supabase, {
 					...ctx,
 					text: `BUY:${productId} худалдаж авах`,
-				});
+				}, trace);
 			}
 		}
 		return;
 	}
 	if (ctx.payload === "catalog") {
-		await handleMessage(supabase, { ...ctx, text: "жагсаалт" });
+		await handleMessage(supabase, { ...ctx, text: "жагсаалт" }, trace);
 		return;
 	}
 	// Cart view — deterministic enriched render (no LLM round-trip)
@@ -932,7 +1026,7 @@ async function handlePostback(
 		} catch (err) {
 			capture(err, { context: "agent-gateway: cart view postback" });
 			// Fallback to LLM path
-			await handleMessage(supabase, { ...ctx, text: "сагс үзэх" });
+			await handleMessage(supabase, { ...ctx, text: "сагс үзэх" }, trace);
 		}
 		return;
 	}
@@ -963,10 +1057,10 @@ async function handlePostback(
 		return;
 	}
 	if (ctx.payload === "checkout") {
-		await handleMessage(supabase, { ...ctx, text: "захиалах" });
+		await handleMessage(supabase, { ...ctx, text: "захиалах" }, trace);
 		return;
 	}
-	await handleMessage(supabase, { ...ctx, text: ctx.payload });
+	await handleMessage(supabase, { ...ctx, text: ctx.payload }, trace);
 }
 
 interface QuickReplyContext {
@@ -986,6 +1080,7 @@ interface QuickReplyContext {
 async function handleQuickReply(
 	supabase: ServiceClient,
 	ctx: QuickReplyContext,
+	trace?: TraceLogger,
 ): Promise<void> {
 	// Delegate to postback handler (same logic)
 	await handlePostback(supabase, ctx);

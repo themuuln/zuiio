@@ -38,6 +38,7 @@ vi.mock("@/lib/supabase", () => ({
 		chain.eq = vi.fn(() => chain);
 		chain.or = vi.fn(() => chain);
 		chain.update = vi.fn(() => chain);
+		chain.insert = vi.fn(() => Promise.resolve({ data: null, error: null }));
 		chain.maybeSingle = vi.fn(() =>
 			Promise.resolve({ data: null, error: null }),
 		);

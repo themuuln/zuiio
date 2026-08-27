@@ -117,10 +117,8 @@ export function createTraceLogger(input: {
       deployment_id: data.deploymentId || null,
     };
 
-    // Persist after response — never block user reply
-    after(async () => {
+    const doInsert = async () => {
       try {
-        // Update timings.total if not set
         if (row.timings && typeof row.timings === "object" && !("total" in (row.timings as Record<string, unknown>))) {
           (row.timings as Record<string, unknown>).total = Date.now() - startMs;
         }
@@ -132,7 +130,14 @@ export function createTraceLogger(input: {
       } catch (e) {
         console.warn(safeJson({ level: "warn", traceId: data.traceId, msg: "trace after() failed", error: String(e) }));
       }
-    });
+    };
+
+    try {
+      after(doInsert);
+    } catch {
+      // Not in Next.js request scope (tests) — fire and forget
+      doInsert().catch(() => {});
+    }
 
     log("info", "trace flush", { status: data.status, toolCalls: data.toolCalls?.length ?? 0 });
   }
@@ -140,6 +145,7 @@ export function createTraceLogger(input: {
   log("info", "trace start", { requestText: data.requestText?.slice(0, 120) });
 
   return { traceId: data.traceId, startMs, log, set, error, flush };
+}
 export function generateTraceId(): string {
 	try {
 		const g = globalThis as unknown as { crypto?: { randomUUID?: () => string } };
