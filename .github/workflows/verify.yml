@@ -57,7 +57,6 @@ jobs:
         with:
           name: coverage-${{ github.sha }}
           path: |
-            apps/*/coverage/
             packages/*/coverage/
           retention-days: 7
           include-hidden-files: true

@@ -1,6 +1,6 @@
 # @zuiio — Project Instructions (for AI agents)
 
-**Private monorepo** for Zuiio, a Mongolian software company. Products: **Zer** (SMB ERP), **Tolom** (auto repair), **Tumurch** (gym platform), **Tamga** (horse management), **Zuiio ID** (central SSO), plus the company website and internal tools.
+**Private platform repository** for Zuiio, a Mongolian software company. Product applications live in independent sibling repositories. This repository owns shared `@zuiio/*` packages and platform tooling.
 
 ## Communication & Domain Language
 
@@ -32,7 +32,7 @@ Always read `docs/vision.md` first for significant tasks — it is the single so
 
 **Before declaring any change complete, you MUST run `npm run verify`.**
 
-**Implementation loop (before that):** affected-only tests — `pnpm test:changed` from the root (`turbo run test --filter='...[HEAD]'`), or `pnpm --filter <app> test:changed` where an app has it. Never a full `verify`/`test` mid-implementation. Heavy gates are lock-wrapped (`scripts/with-test-lock.sh`): one monorepo gate at a time.
+**Implementation loop:** run the affected product repository's own tests. In this repository, use package-scoped checks. Never run a product app through the platform workspace.
 
 This runs typecheck → lint → unit tests with coverage gating (FastGate).
 If any gate fails, diagnose → fix → re-run verify (max 3 attempts).
@@ -57,7 +57,7 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 ## Build & Performance
 
 - **pnpm ONLY** — never suggest Bun or npm
-- **Never run `pnpm build`** (builds all packages — slow). Always use filtered builds: `pnpm --filter <app> build` (or `pnpm turbo run build --filter=<app>`)
+- **Never run `pnpm build`** (builds all packages — slow). Use `pnpm --filter <package> build` for one package.
 - **turbo.json `env` list**: only `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`. Adding unrelated vars invalidates cache for ALL packages — the #1 cause of slow rebuilds
 - Server-only vars (POSTGRES_*, SMTP_*, SUPABASE_*) go in `passThroughEnv`, not `env`
 - `typecheck` and `lint` run in parallel — use `pnpm check`
@@ -66,9 +66,9 @@ For the full gate (CI), run `npm run audit` which adds E2E tests.
 - Barrel file imports (`export *`) force Next.js to analyze entire packages — use named imports
 
 ```bash
-pnpm --filter agent-gateway build        # Build one app
+pnpm --filter @zuiio/core build  # Build one package
 pnpm check                       # Typecheck + lint in parallel
-pnpm turbo run build --filter='./apps/*' --filter='./packages/*'  # CI full build
+pnpm turbo run build --filter='./packages/*'  # Build shared packages
 ```
 
 ## Conventions
@@ -94,7 +94,7 @@ Always fetch current docs — training data is stale. Use `npx ctx7@latest docs 
 
 ### ✅ Always
 - Read the nearest `AGENTS.md` and source/tests being changed
-- Use pnpm and app-scoped commands (`pnpm --filter <app> build`, not `pnpm build`)
+- Use pnpm and package-scoped commands (`pnpm --filter <package> build`, not `pnpm build`)
 - Preserve tenant isolation, RLS, and authorization boundaries
 - Run diagnostics on changed files, then targeted tests
 - Runtime-check every user-visible change
@@ -111,7 +111,7 @@ Always fetch current docs — training data is stale. Use `npx ctx7@latest docs 
 
 ### 🚫 Never
 - Commit secrets, credentials, `.env` files, keys, or tokens
-- Use npm or Bun in this monorepo
+- Use npm or Bun in this platform repository
 - Run unfiltered root-wide build for normal validation
 - Manually edit generated Supabase type files
 - Bypass RLS or omit `organization_id` scoping
@@ -123,37 +123,24 @@ Always fetch current docs — training data is stale. Use `npx ctx7@latest docs 
 
 ## On-Demand Documentation
 
-Deeper docs are in `docs/` — load only when relevant:
-- `docs/agent-reference.md` — local Supabase setup, CLI profile details, log command catalog
-- `docs/architecture/` — system architecture, design decisions
-- `docs/development/` — build performance, package authoring, debugging guides
-- `docs/org.yaml` — org catalog (source of truth for product info)
-- Each app: `apps/<name>/AGENTS.md` — app-specific rules (nearest-file-wins)
-- Each package: `packages/<name>/AGENTS.md` — package-specific rules
+The platform repository contains shared documentation and package instructions:
+- `docs/agent-reference.md` — CLI profiles and platform commands
+- `docs/architecture/` — package and platform design decisions
+- `docs/development/` — package authoring and debugging guides
+- `docs/org.yaml` — product catalog
+- Each package: `packages/<name>/AGENTS.md`
 
-- Full app/package AGENTS.md map: `docs/agent-reference.md#app--package-agentsmd-map`
+Product-specific instructions live in the corresponding sibling repository.
 **Package APIs change across versions. Always use current docs, never training data.**
 
 ## CLI Multi-Account Profiles
 
-This monorepo uses multiple Supabase and Vercel accounts. **Do NOT use plain `vercel` or `supabase`** — always use the profile aliases.
+This platform repository uses multiple Supabase and Vercel accounts for package and product operations. Do not use plain `vercel` or `supabase`; use the configured profile aliases.
 
-- **Vercel**: `v` / `v-tolom` / `v-themuuln6` aliases (tokens in pass `zuiio/vercel/*`, loaded by `.zshrc`).
-- **Supabase**: use **`supa`** (`~/.local/bin/supa`) — one profile per account. The official CLI's `--profile` silently falls back to one keychain token in headless contexts, so it lies about which account it used. `supa run <profile> <cmd>` injects the right token per command.
+- **Vercel:** `v` / `v-tolom` / `v-themuuln6`
+- **Supabase:** use **`supa`** (`~/.local/bin/supa`)
 
-### Quick reference
-
-| App / task | Vercel | Supabase (`supa run <profile>`) |
-|------------|--------|---------------------------------|
-| zer, agent-gateway | `v` (zerone) | `yesprice` |
-| onoo | `v` (zerone) | `zuiio` (org Onoo; project `iyhujghadlymroihxyiy`) |
-| tolom, tolom-mobile | `v-tolom` | `themuuln4` |
-| tamga, tamga-web | `v` (zerone) | `themuuln1` (project `xwgcdqpunsuuxbyqbqik`) |
-| zatly | self-hosted | `themuuln0` (project `ijeuxmgktfqtukpmnenh`) |
-
-Profiles: `yesprice`, `themuuln0`, `themuuln1`, `themuuln2`, `themuuln3`, `themuuln4`, `themuuln11`. Supabase account tokens live in pass `zuiio/supabase/<name>` (agent-pass readable — allowlist is `zuiio/*`); `supa` profiles are registered via `supa login <name>`.
-
-Full per-app mapping with confirmed project refs: `docs/agent-reference.md#per-app-mapping`
+Product repositories own their deployment and database commands. Their profile mapping is documented in each product repository.
 
 
 ## Log-Based Debugging

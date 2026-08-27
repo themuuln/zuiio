@@ -1,14 +1,14 @@
 # Zuiio — Ubiquitous Language / Domain Glossary
 
-Source of truth for shared terminology across the Zuiio monorepo.
-App-level CONTEXT.md files refine this glossary for their domain (e.g. `~/.workspace/tolom/CONTEXT.md`).
-When app and root definitions conflict, the app-level file wins for its own scope.
+Source of truth for shared terminology across the Zuiio platform repository and sibling product repositories.
+Product repositories refine this glossary with their own `CONTEXT.md` files.
+When app and root definitions conflict, the product-level file wins for its own scope.
 
 ## Core Concepts
 
 - **Organization** — The tenant that owns data. Every table has an `organization_id` column; every query is RLS-scoped to it. Never call it "company", "tenant", or "workspace" in code or docs.
 - **Product** — A shipped Zuiio application: Zer (mini ERP), Tolom (auto repair), Tumurch (gym platform), Tamga (horse management), Zuiio ID (single sign-on). Products share one brand and ship independently.
-- **App** — A product codebase under `apps/`. Never call an app a "project".
+- **App** — A product codebase in a sibling repository such as `../zer`, `../tolom`, or `../onoo-v2`. Never call an app a "project".
 - **Package** — A shared library under `packages/`, published as `@zuiio/*` (`core`, `ui`, `query`, `capture`, `hr`, `realtime`, `sdk`, `search`, …). Shared logic lives here, not in apps.
 - **Ledger** — An append-only record of inventory or financial changes. Never `UPDATE quantity` directly; write a ledger entry.
 - **FastGate** — The verification contract: `npm run verify` runs typecheck → lint → unit tests with coverage gating. A change is complete only when the gate is green.

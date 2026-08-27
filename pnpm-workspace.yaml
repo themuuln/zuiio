@@ -1,8 +1,5 @@
 packages:
   - "packages/*"
-  - "apps/*"
-  - "!apps/archive/*"
-  - "apps/*/packages/*"
 
 # pnpm 11 defaults the experimental "global virtual store" ON for project
 # installs: node_modules/* become symlinks into ~/Library/pnpm/store/v11/links

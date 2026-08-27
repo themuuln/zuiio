@@ -1,6 +1,0 @@
-{
-  "signature": "src/app/api/confirm-selection/route.ts|src/app/api/create-split/route.ts|src/app/api/delete-split/route.ts|src/app/api/force-unlock/route.ts|src/app/api/save-selection/route.ts::ℹ️ Advisory — no action required this turn:\nCode-quality warnings introduced/touched this turn: 1 across 1 file(s).\nTop rules: no-complex-conditionals×1\nDetails written to .pi-lens/cache/code-quality-warnings.json\nNo action required unless you are already refactoring these areas.",
-  "sessionId": "lens-mpnsz866-17c960b1",
-  "projectSeqStart": 159,
-  "projectSeqEnd": 164
-}

@@ -14,23 +14,21 @@ supabase stop                       # When done
 
 ---
 
-### Working on an app
-- **Zuiio ID** → `apps/archive/zuiio-id/AGENTS.md` (standalone repo `themuuln/zuiio-id`)
-- **Zer** → `apps/archive/zer/AGENTS.md` (standalone repo `themuuln/zer`)
-- **Tolom** → `apps/archive/tolom/AGENTS.md` (standalone repo `themuuln/tolom`)
-- **Agent Gateway** → `apps/agent-gateway/AGENTS.md`
-- **Website** → `apps/archive/website/AGENTS.md` (standalone repo `themuuln/website`)
-- **Onoo** → `apps/onoo/AGENTS.md`
-- **Tamga** → `apps/tamga/AGENTS.md`
-- **Tumurch** → `apps/tumurch/AGENTS.md`
-- **Khosuud** → `apps/khosuud/AGENTS.md`
-- **Zim** → `apps/zim/AGENTS.md`
-- **Zerbu** → `apps/zerbu/AGENTS.md`
-- **Zer App** → `apps/zer-app/AGENTS.md`
-- **Tolom Mobile** → `apps/tolom-mobile/AGENTS.md`
-- **Tamga Web** → `apps/tamga-web/AGENTS.md`
-- **Zraf Web** → `apps/zraf-web/AGENTS.md`
-- **Tumurch RN** → `apps/archive/tumurch-rn/AGENTS.md` (standalone repo `themuuln/tumurch-rn`)
+### Working on a product app
+- **Zuiio ID** → `~/.workspace/zuiio-id/AGENTS.md`
+- **Zer** → `~/.workspace/zer/AGENTS.md`
+- **Tolom** → `~/.workspace/tolom/AGENTS.md`
+- **Agent Gateway** → `~/.workspace/agent-gateway/AGENTS.md`
+- **Website** → `~/.workspace/website/AGENTS.md`
+- **Onoo web** → `~/.workspace/onoo-v2/AGENTS.md`
+- **Onoo mobile** → `~/.workspace/onoo-app/AGENTS.md`
+- **Tamga** → `~/.workspace/tamga/AGENTS.md`
+- **Tumurch** → `~/.workspace/tumurch/AGENTS.md`
+- **Khosuud** → `~/.workspace/khosuud/AGENTS.md`
+- **Zim** → `~/.workspace/zim/AGENTS.md`
+- **Zer mobile** → `~/.workspace/zer-mobile/AGENTS.md` or `~/.workspace/zer-app/AGENTS.md`
+- **Tolom mobile** → `~/.workspace/tolom-mobile/AGENTS.md`
+- **Zraf / Zunch / Side** → their respective `~/.workspace/<name>/AGENTS.md`
 
 ### Working on a package
 - **@zuiio/core** → `packages/core/AGENTS.md`

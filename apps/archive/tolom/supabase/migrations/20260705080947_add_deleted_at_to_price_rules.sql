@@ -1,1 +1,0 @@
-ALTER TABLE price_rules ADD COLUMN IF NOT EXISTS deleted_at timestamptz;

@@ -62,7 +62,7 @@ const result = await structuredCompletion<{ label: string; score: number }>({
 
 ## Agent Gateway usage
 
-`apps/agent-gateway` wraps this package via `DeepSeekProvider` (`src/providers/deepseek.ts`), closing over `ToolContext` (orgId, userId, supabase) so gateway tools can filter by tenant. The gateway converts `GatewayTool` (which receives context) into `@zuiio/ai-agent` `Tool` (which doesn't) at the provider boundary.
+The standalone Agent Gateway repository wraps this package via `DeepSeekProvider` (`src/providers/deepseek.ts`), closing over `ToolContext` (orgId, userId, supabase) so gateway tools can filter by tenant. The gateway converts `GatewayTool` (which receives context) into `@zuiio/ai-agent` `Tool` (which doesn't) at the provider boundary.
 
 ## Module map
 

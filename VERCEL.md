@@ -1,75 +1,29 @@
 # Vercel Deployment Guide
 
-## Architecture
+Product repositories deploy independently. This repository does not contain product applications or product Vercel projects.
 
-This monorepo uses git submodules. Each app has its own repo but shares `@zuiio/*` packages via the workspace.
+## Repository ownership
 
-### Deploy from Monorepo (Recommended)
+| Product | Repository | Deployment |
+|---|---|---|
+| Zer | `themuuln/zer` | Vercel from repository root |
+| Tolom | `themuuln/tolom` | Vercel from repository root |
+| Onoo web | `themuuln/onoo-web` | Vercel from repository root |
+| Zim | `~/.workspace/zim` | Configure its own Vercel project |
+| Agent Gateway | `~/.workspace/agent-gateway` | Vercel or Cloudflare from repository root |
+| Website | `themuuln/website` | Vercel from repository root |
+| Zuiio ID | `themuuln/zuiio-id` | Vercel from repository root |
 
-Each Vercel project points to `themuuln/zuiio.git` with a Root Directory:
+Set each Vercel project's Root Directory to `.`. Do not use `apps/<name>` paths.
 
-| App | Root Directory | Notes |
-|-----|---------------|-------|
-| agent-gateway | `apps/agent-gateway` | Telegram bot (has vercel.json) |
-| onoo | `apps/onoo` | Basketball stats (Supabase) |
+## Shared package release
 
-**Steps:**
-1. Vercel Dashboard → Project → Settings → General
-2. Git Repository → `themuuln/zuiio`
-3. Root Directory → `apps/<app-name>`
-4. Save → Redeploy
-
-### Standalone Repos (Submodules)
-
-Some apps deploy from their own repo:
-
-| App | Git Repository | Notes |
-|-----|---------------|-------|
-| zer | `themuuln/zer` | SMB ERP |
-| tolom | `themuuln/tolom` | Auto repair management |
-| tumurch | `themuuln/tumurch` | Gym platform |
-| website | `themuuln/website` | Company site (no env vars, fully static) |
-| sms-pay | `themuuln/sms-pay` | SMS payment |
-| tumurch-rn | `themuuln/tumurch-rn` | Gym platform RN app |
-| zuiio-id | `themuuln/zuiio-id` | Central SSO (Supabase) |
-
-### Not on Vercel
-
-| App | Stack | Why |
-|-----|-------|-----|
-| tamga | Flutter | Mobile app, distributed via APK/GitHub Release |
-| agent-gateway | Next.js + Telegram | Can be Vercel or standalone |
-
-## Turbo Scripts
-
-Use these from the monorepo root:
+The `zuiio` repository owns the `@zuiio/*` package versions. Product repositories consume released package versions and keep their own lockfiles.
 
 ```bash
-# Run a specific app
-pnpm dev:agent-gateway
-
-# Typecheck everything
-pnpm typecheck
-
-# Build everything
-pnpm build
-
-# Run tests
-pnpm test
+pnpm install
+pnpm check
+pnpm verify
 ```
 
-## pnpm Catalog
-
-Shared dependency versions are centralized in `pnpm-workspace.yaml`. Apps use `catalog:` protocol:
-
-```json
-{
-  "dependencies": {
-    "next": "catalog:",
-    "react": "catalog:",
-    "@supabase/supabase-js": "catalog:"
-  }
-}
-```
-
-This ensures all apps use the same versions without manual synchronization.
+Run product development, tests, builds, and deploys from the product repository, not from this repository.

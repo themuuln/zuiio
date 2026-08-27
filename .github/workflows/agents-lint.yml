@@ -34,17 +34,6 @@ jobs:
         run: npx agents-lint 2>&1 | tee /tmp/root-lint.txt
         continue-on-error: true
 
-      - name: Run agents-lint on apps
-        run: |
-          for app in apps/*/; do
-            if [ -f "$app/AGENTS.md" ]; then
-              echo "=== Checking $app ==="
-              cd "$app"
-              npx agents-lint 2>&1 | tee -a /tmp/apps-lint.txt
-              cd ../..
-            fi
-          done
-        continue-on-error: true
 
       - name: Run agents-lint on packages
         run: |
@@ -71,9 +60,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Root" >> $GITHUB_STEP_SUMMARY
           cat /tmp/root-lint.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Apps" >> $GITHUB_STEP_SUMMARY
-          cat /tmp/apps-lint.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Packages" >> $GITHUB_STEP_SUMMARY
           cat /tmp/packages-lint.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No results" >> $GITHUB_STEP_SUMMARY

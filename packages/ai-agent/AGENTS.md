@@ -1,6 +1,6 @@
 # @zuiio/ai-agent
 
-Thin OpenAI-compatible client for DeepSeek Flash (default) or any compatible API. Used by `apps/agent-gateway` as the DeepSeek provider backend. All functions accept `AiOptions` (`apiKey`, optional `model`/`baseUrl`).
+Thin OpenAI-compatible client for DeepSeek Flash (default) or any compatible API. Used by the standalone Agent Gateway repository. All functions accept `AiOptions` (`apiKey`, optional `model`/`baseUrl`).
 
 ## Exports
 
@@ -41,7 +41,7 @@ const answer = await runWithTools({
 });
 ```
 
-The gateway wraps this pattern via `DeepSeekProvider` (`apps/agent-gateway/src/providers/deepseek.ts`), closing over `ToolContext` (orgId, userId, supabase) so gateway tools can filter by tenant.
+The Agent Gateway repository wraps this pattern via `DeepSeekProvider` (`~/.workspace/agent-gateway/src/providers/deepseek.ts`), closing over `ToolContext` (orgId, userId, supabase) so gateway tools can filter by tenant.
 
 ## Module map
 

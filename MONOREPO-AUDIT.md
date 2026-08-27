@@ -1,6 +1,6 @@
-# Monorepo Health Audit — zuiio
+# Historical Monorepo Health Audit — Superseded
 
-**Date:** 2026-07-25
+This audit describes the repository before the standalone extraction. It is retained for history only. The current architecture is documented in `docs/ARCHITECTURE.md`.
 **Methodology:** Full structural audit + web research on 2026 best practices (Vercel Academy, Turborepo docs, pnpm docs, 10+ production monorepo articles)
 
 ---

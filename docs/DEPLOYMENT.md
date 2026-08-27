@@ -1,72 +1,44 @@
 # Deployment
 
-## App Targets
+Product deployments are owned by their standalone repositories. This repository only validates and releases shared `@zuiio/*` packages.
 
-| App | Platform | Trigger | Notes |
-|-----|----------|---------|-------|
-| **zer** | Vercel | Auto-deploy from `main` | Next.js 16, Sentry |
-| **tolom** | Vercel | Auto-deploy from `main` | Next.js 16, Sentry |
-| **agent-gateway** | Vercel *or* Cloudflare | Auto-deploy / `wrangler deploy` | Dual-target via OpenNext |
-| **website** | Vercel | Auto-deploy from `main` | Next.js 16, i18n, no backend |
+## Product deployment ownership
 
-All apps are in `apps/` within a pnpm workspace. Vercel detects the root via `vercel.json` (agent-gateway) or `.vercel/project.json`.
+| Product | Repository | Deployment owner |
+|---|---|---|
+| Zer | `~/.workspace/zer` | Zer repository CI / Vercel |
+| Tolom | `~/.workspace/tolom` | Tolom repository CI / Vercel |
+| Khosuud | `~/.workspace/khosuud` | Khosuud repository CI / EAS / Vercel |
+| Agent Gateway | `~/.workspace/agent-gateway` | Agent Gateway repository CI / Vercel or Cloudflare |
+| Onoo mobile | `~/.workspace/onoo-app` | Onoo mobile repository CI / EAS |
+| Tamga | `~/.workspace/tamga` | Tamga repository CI / Flutter distribution |
+| Tolom mobile | `~/.workspace/tolom-mobile` | Tolom mobile repository CI / EAS |
+| Zer mobile | `~/.workspace/zer-mobile` or `~/.workspace/zer-app` | Selected Zer mobile repository |
+| Zim | `~/.workspace/zim` | Zim repository CI / Vercel |
 
-## Environment Variables
+Each repository must define its own Vercel, EAS, Flutter, or Cloudflare settings. Never deploy an app from this repository.
 
-Copy `.env.example` to `.env.local` per app. Shared across zer & tolom:
+## Shared package release
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
-NEXT_PUBLIC_SENTRY_DSN=https://...@o.../...
-```
+1. Update the affected package version.
+2. Build the package and verify its `dist` files.
+3. Publish the package through the package release workflow.
+4. Update consuming app manifests and lockfiles.
+5. Run the consumer repository's verification gate.
 
-App-specific vars:
+Shared packages must publish compiled entrypoints. Standalone apps must use released versions, not `workspace:*` references to this repository.
 
-| App | Variables |
-|-----|-----------|
-| **zer** | `NEXT_PUBLIC_AGENT_GATEWAY_URL`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` |
-| **tolom** | `AGENT_GATEWAY_URL`, `SMTP_HOST`, `SMTP_PORT` |
-| **agent-gateway** | `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `TOKEN_SIGNING_SECRET`, `AGENT_GATEWAY_URL` |
-| **website** | _(none — static marketing site)_ |
+## Supabase ownership
 
-## Supabase Projects
+Every product repository owns its Supabase configuration, migrations, generated types, and environment variables. Remote migrations require explicit review and the product repository's documented Supabase profile.
 
-Two Supabase projects for data isolation:
+## Verification
 
-| Project | Used By | Migrations |
-|---------|---------|------------|
-| **Tolom** (`fhzuolncswccxkcqzclg`) | tolom, agent-gateway | `apps/tolom/supabase/migrations/`, `apps/agent-gateway/supabase/migrations/` |
-| **Zer** | zer | `apps/zer/supabase/migrations/` |
+From this repository:
 
-Agent-gateway connects to Tolom's project via `TOLOM_SUPABASE_URL` / `TOLOM_SUPABASE_SERVICE_ROLE_KEY`.
-
-Push migrations:
 ```bash
-cd apps/tolom && supabase db push && pnpm update-types   # Tolom
-cd apps/agent-gateway && supabase db push                 # Gateway
+pnpm check
+pnpm verify
 ```
 
-## CI/CD Pipeline
-
-Vercel handles all CI/CD — push to `main` triggers production deploys; PR branches get preview URLs. Builds run from monorepo root via pnpm workspace filtering.
-
-**Cloudflare** (agent-gateway only): `pnpm cf:deploy` in `apps/agent-gateway`. Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-
-**Local validation** before push:
-```bash
-pnpm --filter <app> validate   # typecheck + lint
-pnpm --filter <app> test       # unit/integration tests
-```
-
-## Monitoring (Sentry)
-
-zer, tolom, and agent-gateway use Sentry via `@zuiio/capture`:
-
-- **zer & tolom**: `@sentry/nextjs` + Supabase integration. 15% trace sampling in prod. Config in `sentry.server.config.ts`.
-- **agent-gateway**: `@zuiio/capture` → Sentry via `setCaptureHandler()`. Config in `src/state/security.ts`.
-
-All three route errors through `capture()` → `Sentry.captureException()`. Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel env vars. Source maps upload automatically via the `@sentry/nextjs` build plugin.
-
-**website**: No error tracking.
+From a product repository, run that repository's documented typecheck, lint, test, build, and deployment checks.

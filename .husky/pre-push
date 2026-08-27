@@ -16,26 +16,21 @@ done
 # On main-branch pushes, run validation
 if [ "$PUSHING_TO_MAIN" = "true" ]; then
   echo "🔍 Push to main detected — running scoped typecheck..."
-  CHANGED_APPS=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | cut -d/ -f2 | sort -u | tr '\n' ' ')
+  CHANGED_PACKAGES=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | cut -d/ -f2 | sort -u | tr '\n' ' ')
   FILTERS=""
-  for APP in $CHANGED_APPS; do
-    # Skip submodules — they are separate git repos with their own workspaces
-    # (turbo filters on them loop inside the submodule, e.g. apps/zoa).
-    [ -e "apps/$APP/.git" ] && continue
-    if [ -f "apps/$APP/package.json" ]; then
-      FILTERS="$FILTERS --filter=./apps/$APP..."
+  for PACKAGE in $CHANGED_PACKAGES; do
+    if [ -f "packages/$PACKAGE/package.json" ]; then
+      FILTERS="$FILTERS --filter=./packages/$PACKAGE..."
     fi
   done
   if [ -n "$FILTERS" ]; then
-    # Scoped to the changed apps + their workspace deps. A bare
-    # `turbo run typecheck` spans all 36 projects and takes 30s+,
-    # blowing past client-side hook timeouts (e.g. 20s).
-    echo "  Apps: $(echo "$CHANGED_APPS" | tr ' ' ',')"
+    # Scoped to the changed packages and their workspace dependencies.
+    echo "  Packages: $(echo "$CHANGED_PACKAGES" | tr ' ' ',')"
     # Advisory only — never block the push. Full gate runs in CI.
     pnpm turbo run typecheck $FILTERS --continue \
       || echo "  ⚠️  Typecheck reported errors — push continues (CI runs the full gate)"
   else
-    echo "  No app package changes — skipping typecheck."
+    echo "  No package changes — skipping typecheck."
   fi
   echo "✅ Pre-push validation complete."
 fi

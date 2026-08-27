@@ -81,16 +81,6 @@ Thumbs.db
 .windsurf/
 .zencoder/
 
-# Tamga (Flutter)
-/apps/tamga/.dart_tool/
-/apps/tamga/build/
-/apps/tamga/android/.gradle/
-/apps/tamga/android/app/build/
-/apps/tamga/android/local.properties
-/apps/tamga/ios/Pods/
-/apps/tamga/ios/.symlinks/
-/apps/tamga/.flutter-plugins
-/apps/tamga/.flutter-plugins-dependencies
 
 # AI skills lock files
 skills-lock.json

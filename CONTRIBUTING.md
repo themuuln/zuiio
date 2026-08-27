@@ -1,58 +1,58 @@
 # Contributing to @zuiio
 
-Welcome to the @zuiio monorepo. This guide covers development setup, workflows, and conventions.
+Welcome to the @zuiio platform repository. This guide covers shared packages and the standalone product repositories that consume them.
 
 ## Quick Start
 
 ```bash
-# Clone the monorepo
-git clone --recursive <repo-url> zuiio
+# Clone the platform repository
+git clone <repo-url> zuiio
 cd zuiio
 
-# Install dependencies
+# Install shared packages
 pnpm install
 
-# Start all apps in parallel
-pnpm dev
-
-# Type-check everything
-pnpm exec tsc --noEmit
+# Type-check shared packages
+pnpm check
 ```
 
 ## Prerequisites
 
 - **Node.js** 20+ (use `mise` or `fnm`)
 - **pnpm** 9+ (corepack enable)
-- **Git** with submodules support
+- **Git**
 
-## Monorepo Structure
+## Repository Structure
 
 ```
 zuiio/
-├── apps/              ← Individual products (Next.js, Expo)
 ├── packages/          ← Shared @zuiio/* packages
 ├── docs/              ← Design system, architecture, deployment
 ├── AGENTS.md          ← AI agent instructions
 └── CONTRIBUTING.md    ← This file
+
+../<product>/          ← Standalone product repository
 ```
 
 ## Development Workflow
 
-### 1. Working on an app
+### 1. Working on a product
 
 ```bash
-cd apps/<app-name>
-pnpm dev              # Start dev server
+cd ../<product>
+pnpm install
+pnpm dev              # Use the product repository's command
 ```
 
-Each app has its own `AGENTS.md` with specific rules. **Read it before coding.**
+Each product repository has its own `AGENTS.md` with specific rules. **Read it before coding.**
 
 ### 2. Working on a shared package
 
 ```bash
 cd packages/<package-name>
 # Edit src/*.ts
-# The package is consumed via workspace:* — changes are immediate
+# Shared package changes are visible to local consumers only after
+# publishing a new @zuiio/* version or using a temporary local link.
 ```
 
 Each package has `AGENTS.md` and `README.md`. Read both before modifying.
@@ -64,14 +64,14 @@ Each package has `AGENTS.md` and `README.md`. Read both before modifying.
 3. Create `tsconfig.json` extending `@zuiio/config/tsconfig`
 4. Create `README.md` with usage docs
 5. Create `AGENTS.md` with AI agent docs
-6. Add to consuming apps as `"@zuiio/<name>": "workspace:*"`
+6. Publish the package and update product manifests to the released version
 
-### 4. Adding a new app
+### 4. Adding a new product
 
-1. Create `apps/<name>/` with Next.js or Expo
-2. Add workspace dependency: `"@zuiio/core": "workspace:*"`
-3. Create `AGENTS.md` with app-specific rules
-4. Add to root `AGENTS.md` Apps table
+1. Create a sibling repository `../<name>/` with Next.js, Expo, or Flutter.
+2. Add released `@zuiio/*` dependencies to its manifest.
+3. Create `AGENTS.md` with product-specific rules.
+4. Add the repository to the platform documentation and release map.
 
 ## Conventions
 
@@ -166,13 +166,12 @@ After every edit that changes UI or behavior:
 
 ## AI Agents
 
-This monorepo is optimized for AI coding agents. Key files:
+This repository is optimized for AI coding agents. Key files:
 
 | File | Purpose |
 |------|---------|
 | `AGENTS.md` | Root instructions, package map, conventions |
-| `apps/*/AGENTS.md` | App-specific rules |
-| `packages/*/AGENTS.md` | Package-specific rules |
+| `packages/*/AGENTS.md` | Shared package-specific rules |
 | `packages/*/README.md` | Human-readable package docs |
 
 **Before coding:**
@@ -190,4 +189,4 @@ This monorepo is optimized for AI coding agents. Key files:
 - **Architecture questions**: Read `docs/ARCHITECTURE.md`
 - **Design tokens**: Read `docs/DESIGN-SYSTEM.md`
 - **Deployment**: Read `docs/DEPLOYMENT.md`
-- **App-specific help**: Read the app's `AGENTS.md`
+- **Product-specific help**: Read the sibling repository's `AGENTS.md`
