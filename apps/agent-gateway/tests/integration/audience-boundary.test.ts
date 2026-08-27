@@ -73,7 +73,7 @@ describe("Audience-based tool selection", () => {
 	it("gives Zer customers exactly the read-only product search tool", () => {
 		const tools = getProductTools("zer", customerCtx);
 		expect(Array.isArray(tools)).toBe(true);
-		expect(tools.map((t) => t.name)).toEqual(["searchProducts"]);
+		expect(tools.map((t) => t.name)).toEqual(["searchProducts", "getMyOrders"]);
 	});
 });
 

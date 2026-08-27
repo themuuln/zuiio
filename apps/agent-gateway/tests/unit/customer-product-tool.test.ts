@@ -22,6 +22,7 @@ describe("getProductTools — customer audience", () => {
 			const tools = getProductTools("zer", { ...context, channel });
 			expect(tools.map((t) => t.name)).toEqual([
 				"searchProducts",
+				"getMyOrders",
 				"addToCart",
 				"viewCart",
 				"clearCart",
@@ -32,7 +33,7 @@ describe("getProductTools — customer audience", () => {
 
 	it("keeps webchat customer tools read-only until its checkout is wired", () => {
 		const tools = getProductTools("zer", { ...context, channel: "webchat" });
-		expect(tools.map((t) => t.name)).toEqual(["searchProducts"]);
+		expect(tools.map((t) => t.name)).toEqual(["searchProducts", "getMyOrders"]);
 	});
 
 	it("returns no tools for tolom customers", () => {
