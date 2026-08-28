@@ -21,6 +21,7 @@
     "sso:doctor": "tsx scripts/sso/cli.ts doctor",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
     "design:check": "bash scripts/design-quality-check.sh",
+    "agent:docs:index": "node scripts/generate-agent-package-index.mjs"
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
