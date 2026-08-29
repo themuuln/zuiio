@@ -82,16 +82,16 @@ export default function InboxPage() {
 									{item.takeover ? "Ажилтан ажиллаж байна" : "Хүн хүлээж байна"}
 								</span>
 								{!item.takeover && (
-									<button onClick={() => act(item.handoff?.id, "takeover")}>
+									<button type="button" onClick={() => act(item.handoff!.id, "takeover")}>
 										Авах
 									</button>
 								)}
 								{item.takeover && (
-									<button onClick={() => act(item.handoff?.id, "return-to-ai")}>
+									<button type="button" onClick={() => act(item.handoff!.id, "return-to-ai")}>
 										AI-д буцаах
 									</button>
 								)}
-								<button onClick={() => act(item.handoff?.id, "resolve")}>
+								<button type="button" onClick={() => act(item.handoff!.id, "resolve")}>
 									Шийдвэрлэх
 								</button>
 							</div>

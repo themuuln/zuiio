@@ -41,7 +41,7 @@ export async function handleScheduledQpay(env: ScheduledEnv): Promise<void> {
 
 // Cloudflare Workers scheduled handler — triggers from wrangler `triggers.crons`
 export default {
-	async scheduled(_event: ScheduledEvent, env: ScheduledEnv) {
+	async scheduled(_event: { cron: string; scheduledTime: number }, env: ScheduledEnv) {
 		await handleScheduledQpay(env);
 	},
 	async fetch(request: Request, env: ScheduledEnv) {
