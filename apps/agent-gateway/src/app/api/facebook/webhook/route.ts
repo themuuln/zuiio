@@ -24,15 +24,51 @@ import {
 	getSupabaseForProduct,
 	type ServiceClient,
 } from "@/lib/supabase";
+import { verifyCompactToken } from "@/lib/tokens";
 import {
 	createTraceLogger,
 	generateTraceId,
 	type TraceLogger,
 } from "@/lib/trace";
+
+async function captureConsent(
+	supabase: ServiceClient,
+	organizationId: string,
+	channel: string,
+	channelUserId: string,
+	pageId: string,
+	granted: boolean,
+	source: "quick_reply" | "postback" | "ref",
+) {
+	const values = {
+		organization_id: organizationId,
+		channel,
+		channel_user_id: channelUserId,
+		page_id: pageId,
+		consent_type: "broadcast",
+		source,
+		revoked_at: granted ? null : new Date().toISOString(),
+	};
+	const { error } = await supabase.from("user_consents").upsert(values, {
+		onConflict: "organization_id,channel,channel_user_id,page_id,consent_type",
+	});
+	if (error) {
+		capture(error, { context: "agent-gateway: captureConsent upsert" });
+	}
+}
+
 import {
 	confirmStoredAction,
 	rejectStoredAction,
 } from "@/runtime/confirmation";
+
+function sanitizeReferralToken(value: unknown): string {
+	return (
+		String(value ?? "")
+			.replace(/[^\w-]/g, "")
+			.slice(0, 64) || "unknown"
+	);
+}
 
 const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "";
 const APP_SECRET = process.env.FB_APP_SECRET || "";
@@ -166,6 +202,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			entryId.length === 0 ||
 			/[,()"']/.test(entryId)
 		) {
+			rootTrace.log("info", "skipping invalid entry id");
+			rootTrace.flush();
 			continue;
 		}
 
@@ -181,19 +219,91 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		if (!connections || connections.length === 0) {
 			// Unknown page — skip silently
+			rootTrace.log("info", "skipping unknown page", { entryId });
+			rootTrace.flush();
 			continue;
 		}
 
-		// Process each messaging event
+		// Handover Protocol events arrive in the `standby` array when another
+		// Meta app has thread control. Persist them so the team inbox can claim
+		// the conversation instead of sending an automated reply.
+		const standbyEvents =
+			(
+				entry as unknown as {
+					standby?: Array<{
+						sender?: { id?: string };
+						recipient?: { id?: string };
+						timestamp?: number;
+						message?: { text?: string; mid?: string; is_echo?: boolean };
+					}>;
+				}
+			).standby ?? [];
+		for (const standby of standbyEvents) {
+			const standbySender = standby.sender?.id;
+			const standbyText = standby.message?.text;
+			if (!standbySender || !standbyText || standby.message?.is_echo === true)
+				continue;
+			const standbyConnection = connections.find(
+				(c) =>
+					(c.channel === "instagram" && c.channel_user_id === entryId) ||
+					(c.channel === "messenger" && c.page_id === entryId),
+			);
+			if (!standbyConnection) continue;
+			const standbyKey = `standby:${entryId}:${standbySender}:${standby.timestamp ?? standby.message?.mid ?? standbyText}`;
+			if (await isDuplicateEvent(standbyKey)) continue;
+			await supabase.from("agent_handoff_events").insert({
+				organization_id: standbyConnection.organization_id,
+				chat_id: entryId,
+				user_id: standbySender,
+				status: "pending_human",
+				reason: "Meta thread control standby",
+				escalated_by: "meta_standby",
+				customer_query: standbyText,
+				bot_response: null,
+				channel: standbyConnection.channel,
+			});
+		}
+
+		// Echoes are messages sent by the Page (including manual replies). They
+		// must be reconciled for the audit trail, but never enter the agent,
+		// flow, or customer-window pipelines.
 		const messagingEvents = entry.messaging ?? [];
 		for (const event of messagingEvents) {
-			// Skip echo messages (sent by the page itself)
-			if (event.message?.is_echo) continue;
-
+			const echo = event.message?.is_echo === true;
 			const senderId = event.sender.id;
-			const dedupeKey =
-				event.message?.mid ??
-				`${senderId}:${event.timestamp}:${event.postback?.payload ?? ""}`;
+			if (echo) {
+				const mid = event.message?.mid;
+				if (!mid || (await isDuplicateEvent(mid))) continue;
+				const echoConnection = connections.find(
+					(c) =>
+						(c.channel === "instagram" && c.channel_user_id === entryId) ||
+						(c.channel === "messenger" && c.page_id === entryId),
+				);
+				if (!echoConnection) continue;
+				await supabase.from("agent_audit_log").insert({
+					organization_id: echoConnection.organization_id,
+					user_id: event.recipient?.id ?? entryId,
+					channel: echoConnection.channel,
+					channel_chat_id: entryId,
+					channel_user_id: event.recipient?.id ?? entryId,
+					tool_name: "message_echoes",
+					tool_args: {
+						page_id: entryId,
+						sender_id: senderId,
+						mid,
+						text: event.message?.text ?? null,
+					},
+					tool_result: null,
+					error: null,
+					duration_ms: 0,
+				});
+				continue;
+			}
+
+			const dedupeKey = event.referral
+				? `ref:${senderId}:${sanitizeReferralToken(event.referral.ref)}:${event.referral.ad_id ?? ""}`
+				: (event.message?.mid ??
+					`${senderId}:${event.timestamp}:${event.postback?.payload ?? ""}`);
 			if (await isDuplicateEvent(dedupeKey)) continue;
 			// Instagram entries carry the IG business account id; Messenger entries
 			// carry the page id. Prefer the instagram row when entry.id matches the
@@ -201,13 +311,62 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			const instagramConnection = connections.find(
 				(c) => c.channel === "instagram" && c.channel_user_id === entryId,
 			);
-			const messengerConnection = connections.find(
+			const messengerConnections = connections.filter(
 				(c) => c.channel === "messenger" && c.page_id === entryId,
 			);
+			if (messengerConnections.length > 1) {
+				capture(new Error("Duplicate active Messenger channel connections"), {
+					context: "agent-gateway: duplicate channel_connections",
+					pageId: entryId,
+					connectionIds: messengerConnections.map((c) => c.id),
+				});
+			}
+			const messengerConnection = messengerConnections.sort(
+				(a, b) =>
+					new Date(b.created_at ?? 0).getTime() -
+					new Date(a.created_at ?? 0).getTime(),
+			)[0];
 			const connection = instagramConnection ?? messengerConnection;
-			if (!connection) continue;
 
+			if (!connection) continue;
 			const channel = instagramConnection ? "instagram" : "messenger";
+			const accountLinking = event.account_linking;
+			if (accountLinking) {
+				const code = accountLinking.authorization_code;
+				const token = code?.startsWith("link_") ? code.slice(5) : code;
+				const linkPayload = token ? verifyCompactToken(token) : null;
+				if (
+					!token ||
+					!linkPayload ||
+					linkPayload.orgId !== connection.organization_id ||
+					linkPayload.productType !== connection.product_type ||
+					accountLinking.status !== "linked"
+				)
+					continue;
+				const tokenHash = crypto
+					.createHash("sha256")
+					.update(token)
+					.digest("hex");
+				if (
+					await isDuplicateEvent(
+						`account-link:${entryId}:${senderId}:${tokenHash}`,
+					)
+				)
+					continue;
+				const { error: linkError } = await supabase
+					.from("linked_accounts")
+					.insert({
+						organization_id: linkPayload.orgId,
+						channel,
+						channel_user_id: senderId,
+						user_id: linkPayload.userId,
+						authorization_token_hash: tokenHash,
+					});
+				if (linkError && linkError.code !== "23505") {
+					capture(linkError, { context: "agent-gateway: account linking" });
+				}
+				continue;
+			}
 
 			// Tokens are stored encrypted (encryptSecret) — decrypt once per event.
 			const pageAccessToken = decryptSecret(connection.page_access_token ?? "");
@@ -243,49 +402,192 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			});
 
 			// Dispatch the event. A Meta messaging event carries exactly one of:
-			// postback (button click), quick_reply payload, or plain text — but a
-			// quick reply ALSO carries message.text (the displayed label), so
-			// these branches MUST be exclusive or the message is processed twice
-			// (double agent call, double reply, double rate-limit/budget spend).
+			// Referrals are attribution events, not ordinary text/postbacks.
+			// Persist and trigger the starter flow independently; failures must not
+			// prevent Meta from receiving a successful webhook acknowledgement.
+			if (event.referral) {
+				try {
+					// Try to redeem compact link token first — raw value, before sanitize removes "."
+					const rawRef = String(event.referral.ref ?? "");
+					if (rawRef.startsWith("link_")) {
+						const token = rawRef.slice(5);
+						const linkPayload = verifyCompactToken(token);
+						if (
+							linkPayload &&
+							linkPayload.orgId === connection.organization_id &&
+							linkPayload.productType === connection.product_type
+						) {
+							const tokenHash = crypto
+								.createHash("sha256")
+								.update(token)
+								.digest("hex");
+							if (
+								!(await isDuplicateEvent(
+									`account-link:${pageId}:${senderId}:${tokenHash}`,
+								))
+							) {
+								const { error: linkError } = await supabase
+									.from("linked_accounts")
+									.insert({
+										organization_id: linkPayload.orgId,
+										channel,
+										channel_user_id: senderId,
+										user_id: linkPayload.userId,
+										authorization_token_hash: tokenHash,
+									});
+								if (linkError && linkError.code !== "23505") {
+									capture(linkError, {
+										context: "agent-gateway: referral link redeem",
+									});
+								}
+							}
+							// Do not route verified link token into LLM starter flow
+							// Optionally thank user, but avoid leaking token
+							await handleMessage(supabase, {
+								pageId,
+								senderId,
+								channel,
+								text: "Холболт амжилттай — баярлалаа!",
+								pageAccessToken,
+								orgId: connection.organization_id,
+								userId: linkPayload.userId,
+								productType: connection.product_type as "tolom" | "zer",
+								trace,
+							});
+							// Continue to next event without generic referral insert
+							trace.log("info", "referral compact token redeemed", { channel });
+						} else {
+							// Invalid/expired token — fall through to generic referral handling with sanitized ref
+							const safeRef = sanitizeReferralToken(rawRef);
+							const safeSource = sanitizeReferralToken(event.referral.source);
+							await supabase.from("referral_events").insert({
+								organization_id: connection.organization_id,
+								channel,
+								page_id: pageId,
+								sender_id: senderId,
+								ref: safeRef,
+								source: safeSource,
+								type: event.referral.type,
+								ad_id: event.referral.ad_id ?? null,
+							});
+							await handleMessage(supabase, {
+								pageId,
+								senderId,
+								channel,
+								text: `Хэрэглэгч ${safeRef} эх үүсвэрээс орлоо (${safeSource}) — тохирох эхлэл урсгалыг эхлүүл`,
+								pageAccessToken,
+								orgId: connection.organization_id,
+								userId: connection.user_id ?? senderId,
+								productType: connection.product_type as "tolom" | "zer",
+								trace,
+							});
+						}
+					} else {
+						const safeRef = sanitizeReferralToken(rawRef);
+						const safeSource = sanitizeReferralToken(event.referral.source);
+						const { error: referralError } = await supabase
+							.from("referral_events")
+							.insert({
+								organization_id: connection.organization_id,
+								channel,
+								page_id: pageId,
+								sender_id: senderId,
+								ref: safeRef,
+								source: safeSource,
+								type: event.referral.type,
+								ad_id: event.referral.ad_id ?? null,
+							});
+						if (referralError) {
+							capture(referralError, {
+								context: "agent-gateway: facebook referral persistence",
+							});
+						}
+						await handleMessage(supabase, {
+							pageId,
+							senderId,
+							channel,
+							text: `Хэрэглэгч ${safeRef} эх үүсвэрээс орлоо (${safeSource}) — тохирох эхлэл урсгалыг эхлүүл`,
+							pageAccessToken,
+							orgId: connection.organization_id,
+							userId: connection.user_id ?? senderId,
+							productType: connection.product_type as "tolom" | "zer",
+							trace,
+						});
+					}
+				} catch (error) {
+					capture(error, {
+						context: "agent-gateway: facebook referral starter flow",
+					});
+				}
+			} else {
+				const consentPayload =
+					event.postback?.payload ?? event.message?.quick_reply?.payload;
+				if (
+					consentPayload === "subscribe" ||
+					consentPayload === "unsubscribe"
+				) {
+					await captureConsent(
+						supabase,
+						connection.organization_id,
+						channel,
+						senderId,
+						pageId,
+						consentPayload === "subscribe",
+						event.postback ? "postback" : "quick_reply",
+					);
+				}
 
-			// Handle postbacks (button clicks)
-			if (event.postback?.payload) {
-				await handlePostback(supabase, {
-					pageId,
-					senderId,
-					channel,
-					payload: event.postback.payload,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
-			} else if (event.message?.quick_reply?.payload) {
-				// Handle quick reply payloads
-				await handleQuickReply(supabase, {
-					pageId,
-					senderId,
-					channel,
-					payload: event.message.quick_reply.payload,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
-			} else if (event.message?.text) {
-				// Handle text messages
-				await handleMessage(supabase, {
-					pageId,
-					senderId,
-					channel,
-					text: event.message.text,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
+				// quick reply ALSO carries message.text (the displayed label), so
+				// these branches MUST be exclusive or the message is processed twice
+				// (double agent call, double reply, double rate-limit/budget spend).
+				if (
+					consentPayload === "subscribe" ||
+					consentPayload === "unsubscribe"
+				) {
+					// already handled consent — do not also process as postback/quick_reply
+				} else if (event.postback?.payload) {
+					await handlePostback(supabase, {
+						pageId,
+						senderId,
+						channel,
+						payload: event.postback.payload,
+						pageAccessToken,
+						orgId: connection.organization_id,
+						userId: connection.user_id ?? senderId,
+						productType: connection.product_type as "tolom" | "zer",
+						trace,
+					});
+				} else if (event.message?.quick_reply?.payload) {
+					// Handle quick reply payloads
+					await handleQuickReply(
+						supabase,
+						{
+							pageId,
+							senderId,
+							channel,
+							payload: event.message.quick_reply.payload,
+							pageAccessToken,
+							orgId: connection.organization_id,
+							userId: connection.user_id ?? senderId,
+							productType: connection.product_type as "tolom" | "zer",
+						},
+						trace,
+					);
+				} else if (event.message?.text) {
+					// Handle text messages
+					await handleMessage(supabase, {
+						pageId,
+						senderId,
+						channel,
+						text: event.message.text,
+						pageAccessToken,
+						orgId: connection.organization_id,
+						userId: connection.user_id ?? senderId,
+						productType: connection.product_type as "tolom" | "zer",
+						trace,
+					});
+				}
 			}
-
 			trace.flush();
 			// Update last_user_message_at for 24h window tracking
 			await supabase
@@ -299,6 +601,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			(c) => c.channel === "messenger" && c.page_id === entryId,
 		);
 		if (messengerConn && entry.changes && entry.changes.length > 0) {
+			const feedTrace = createTraceLogger({
+				traceId: `${rootTraceId}:feed:${entryId}`,
+				organizationId: messengerConn.organization_id,
+				channel: "messenger",
+				channelChatId: entryId,
+				requestText: "facebook feed change",
+				requestId: rootTraceId,
+				deploymentId,
+			});
 			const feedCtx = {
 				pageId: entryId,
 				pageAccessToken: decryptSecret(messengerConn.page_access_token ?? ""),
@@ -306,20 +617,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				userId: messengerConn.user_id ?? entryId,
 				productType: messengerConn.product_type as "tolom" | "zer" | "zatly",
 				connectionId: messengerConn.id,
+				trace: feedTrace,
 			};
 			for (const change of entry.changes) {
-				// Meta can redeliver feed changes independently of messaging
-				// events. Deduplicate before invoking the AI/reply path.
+				if (change.field !== "feed") continue;
 				const value = change.value;
 				const feedKey =
 					value.comment_id ??
 					`${value.item}:${value.verb}:${value.post_id ?? ""}:${value.created_time ?? ""}`;
 				if (await isDuplicateEvent(`feed:${entryId}:${feedKey}`)) continue;
 				await handleFeedChange(supabase, feedCtx, change);
+				feedTrace.log("info", "feed change handled", { feedKey });
 			}
+			feedTrace.flush();
 		}
 	}
 
+	rootTrace.flush();
 	return NextResponse.json({ ok: true });
 }
 
@@ -379,7 +693,7 @@ function quickRepliesForCustomerMessage(
 	if (/захиалга|order/.test(t)) {
 		return [
 			{ text: "Захиалга шалгах", callbackData: "order_status" },
-			{ text: "Хүргэлт асуух", callbackData: "delivery" },
+			{ text: "Сагс харах", callbackData: "cart_view" },
 			{ text: "Дэмжлэг", callbackData: "support" },
 		];
 	}
@@ -387,7 +701,7 @@ function quickRepliesForCustomerMessage(
 		return [
 			{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
 			{ text: "Захиалга шалгах", callbackData: "order_status" },
-			{ text: "Хүргэлт асуух", callbackData: "delivery" },
+			{ text: "Сагс харах", callbackData: "cart_view" },
 		];
 	}
 	return [
@@ -398,7 +712,10 @@ function quickRepliesForCustomerMessage(
 }
 
 /** Extract <qr>[{text,payload}]</qr> from AI response. Returns {cleanText, aiReplies}. */
-function extractAiQuickReplies(raw: string): { cleanText: string; aiReplies: Array<{ text: string; callbackData: string }> } {
+function extractAiQuickReplies(raw: string): {
+	cleanText: string;
+	aiReplies: Array<{ text: string; callbackData: string }>;
+} {
 	const m = raw.match(/<qr>([\s\S]*?)<\/qr>/i);
 	if (!m) return { cleanText: raw.trim(), aiReplies: [] };
 	const cleanText = raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim();
@@ -410,19 +727,27 @@ function extractAiQuickReplies(raw: string): { cleanText: string; aiReplies: Arr
 			.map((x: unknown) => {
 				if (!x || typeof x !== "object") return null;
 				const r = x as Record<string, unknown>;
-				const text = typeof r.text === "string" ? r.text.trim().slice(0, 20) : "";
-				const payload = typeof r.payload === "string" ? r.payload.trim().slice(0, 1000) : "";
+				const text =
+					typeof r.text === "string" ? r.text.trim().slice(0, 20) : "";
+				const payload =
+					typeof r.payload === "string" ? r.payload.trim().slice(0, 1000) : "";
 				if (!text || !payload) return null;
 				return { text, callbackData: payload };
 			})
 			.filter((x): x is { text: string; callbackData: string } => x !== null);
 		return { cleanText, aiReplies };
 	} catch {
-		return { cleanText: raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim(), aiReplies: [] };
+		return {
+			cleanText: raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim(),
+			aiReplies: [],
+		};
 	}
 }
 
-function resolveQuickReplies(aiReplies: Array<{ text: string; callbackData: string }>, fallback: Array<{ text: string; callbackData: string }> | undefined): Array<{ text: string; callbackData: string }> | undefined {
+function _resolveQuickReplies(
+	aiReplies: Array<{ text: string; callbackData: string }>,
+	fallback: Array<{ text: string; callbackData: string }> | undefined,
+): Array<{ text: string; callbackData: string }> | undefined {
 	if (aiReplies.length > 0) return aiReplies.slice(0, 3);
 	return fallback;
 }
@@ -436,6 +761,7 @@ interface MessageContext {
 	orgId: string;
 	userId: string;
 	productType: "tolom" | "zer";
+	trace?: TraceLogger;
 }
 
 /**
@@ -476,7 +802,10 @@ async function handleMessage(
 				(1000 * 60 * 60);
 
 			if (hoursSinceLastMessage > 24) {
-				trace?.set({ status: "filtered" });
+				trace?.set({
+					responseText: "Бидэнтэй харилцахаар ахиад мессеж бичнэ үү. 😊",
+					status: "filtered",
+				});
 				trace?.log("info", "24h window blocked", {
 					hoursSinceLastMessage: Math.round(hoursSinceLastMessage),
 				});
@@ -521,11 +850,10 @@ async function handleMessage(
 		if (flowResult) {
 			// Flow handled the message — hide typing and return
 			trace?.log("info", "flow handled", { flow: true });
-			trace?.set({ responseText: "[flow]", status: "ok" });
+			trace?.set({ responseText: flowResult, status: "ok" });
 			await channel.sendSenderAction(ctx.senderId, "typing_off");
 			return;
 		}
-
 		if (
 			ctx.productType === "zer" &&
 			ctx.channel === "messenger" &&
@@ -558,21 +886,10 @@ async function handleMessage(
 						}>)
 					: [];
 			if (products.length > 0) {
+				trace?.set({ responseText: "Таны асуусан бараанууд:", status: "ok" });
 				await channel.sendSenderAction(ctx.senderId, "typing_off");
 				await channel.sendMessage(ctx.senderId, "Таны асуусан бараанууд:");
-				const cardsSent = await channel.sendProductCards(ctx.senderId, products);
-				if (cardsSent) {
-					const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel, {
-						hasProducts: true,
-					});
-					if (qr && qr.length > 0) {
-						await channel.sendMessage(
-							ctx.senderId,
-							"Танд өөр ямар тусламж хэрэгтэй вэ?",
-							{ quickReplies: qr },
-						);
-					}
-				}
+				await channel.sendProductCards(ctx.senderId, products);
 				return;
 			}
 		}
@@ -580,6 +897,7 @@ async function handleMessage(
 		// No flow matched — fall through to AI agent handler
 		// Capture searchProducts results so we can render them as horizontal cards on Messenger
 		let capturedProducts: unknown = null;
+		let capturedQpayImage: string | null = null;
 		const toolCalls: Array<Record<string, unknown>> = [];
 		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
 			getSystemPrompt: systemPromptFor,
@@ -592,7 +910,11 @@ async function handleMessage(
 					"products" in result &&
 					Array.isArray((result as { products: unknown }).products) &&
 					(result as { products: unknown[] }).products.length > 0;
-				toolCalls.push({ name: toolName, hasProducts, result: hasProducts ? result : undefined });
+				toolCalls.push({
+					name: toolName,
+					hasProducts,
+					result: hasProducts ? result : undefined,
+				});
 				trace?.log("info", "tool result", { toolName, hasProducts });
 				if (
 					toolName === "searchProducts" &&
@@ -605,13 +927,28 @@ async function handleMessage(
 						capturedProducts = prods;
 					}
 				}
+				// Capture QPay QR for direct image send (bypassing confirmation gate)
+				if (
+					!capturedQpayImage &&
+					(toolName === "placeOrderWithQpay" ||
+						toolName === "checkoutCartWithQpay") &&
+					result !== null &&
+					typeof result === "object" &&
+					"qpay_qr_image" in result
+				) {
+					const img = (result as Record<string, unknown>).qpay_qr_image;
+					if (typeof img === "string" && img.trim())
+						capturedQpayImage = img.trim();
+				}
 			},
 		});
 		trace?.log("info", "LLM complete", {
 			responseLen: response.length,
 			preview: response.slice(0, 120),
 			toolCalls: toolCalls.length,
-			hasProducts: Array.isArray(capturedProducts) && (capturedProducts as unknown[]).length > 0,
+			hasProducts:
+				Array.isArray(capturedProducts) &&
+				(capturedProducts as unknown[]).length > 0,
 		});
 		trace?.set({
 			responseText: response,
@@ -621,7 +958,7 @@ async function handleMessage(
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
 
 		// AI-generated quick replies with deterministic fallback
-		const { cleanText: aiCleanText, aiReplies } = extractAiQuickReplies(response);
+		const { cleanText: aiCleanText } = extractAiQuickReplies(response);
 		const responseText = aiCleanText || response.trim();
 
 		// If the LLM called searchProducts on Messenger, render the result as
@@ -658,20 +995,12 @@ async function handleMessage(
 				}>,
 			);
 			if (cardsSent) {
-				const qr = quickRepliesForCustomerMessage(ctx.text, ctx.channel, {
-					hasProducts: true,
-				});
-				if (qr && qr.length > 0) {
-					await channel.sendMessage(
-						ctx.senderId,
-						"Танд өөр ямар тусламж хэрэгтэй вэ?",
-						{ quickReplies: qr },
-					);
-				}
 				return;
 			}
 			// Cards failed (e.g. Instagram, missing token, API error) — fall back to plain text
-			trace?.log("warn", "cards failed, fallback to text", { responseLen: response.length });
+			trace?.log("warn", "cards failed, fallback to text", {
+				responseLen: response.length,
+			});
 			await channel.sendMessage(ctx.senderId, response, {
 				quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
 			});
@@ -680,14 +1009,25 @@ async function handleMessage(
 		}
 
 		// No products — normal text reply
-		trace?.log("info", "sending text reply", { responseLen: response.length, preview: response.slice(0, 80) });
+		trace?.log("info", "sending text reply", {
+			responseLen: response.length,
+			preview: response.slice(0, 80),
+		});
 		trace?.set({ responseText: response, status: "ok" });
 		await channel.sendMessage(ctx.senderId, response, {
 			quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
 		});
+		if (capturedQpayImage) {
+			try {
+				await channel.sendImage?.(ctx.senderId, capturedQpayImage);
+			} catch {}
+		}
 	} catch (err) {
 		trace?.error(err);
-		trace?.set({ status: "error", error: err instanceof Error ? err.message : String(err) });
+		trace?.set({
+			status: "error",
+			error: err instanceof Error ? err.message : String(err),
+		});
 		capture(err, { context: "agent-gateway: facebook handleMessage" });
 		await channel.sendMessage(
 			ctx.senderId,
@@ -705,6 +1045,7 @@ interface PostbackContext {
 	orgId: string;
 	userId: string;
 	productType: "tolom" | "zer";
+	trace?: TraceLogger;
 }
 
 /**
@@ -719,7 +1060,10 @@ async function handlePostback(
 		pageId: ctx.pageId,
 		pageAccessToken: ctx.pageAccessToken,
 	});
-	trace?.log("info", "handlePostback", { payload: ctx.payload.slice(0, 100), channel: ctx.channel });
+	trace?.log("info", "handlePostback", {
+		payload: ctx.payload.slice(0, 100),
+		channel: ctx.channel,
+	});
 
 	if (ctx.payload.startsWith("confirm:")) {
 		const confirmId = ctx.payload.replace("confirm:", "");
@@ -870,15 +1214,6 @@ async function handlePostback(
 							imageUrl: resolvedImageUrl,
 						},
 					]);
-					await channel.sendMessage(ctx.senderId, "Сагсанд нэмэх үү?", {
-						quickReplies: [
-							{
-								text: "Сагсанд нэмэх",
-								callbackData: `CART_ADD:${product.id}`,
-							},
-							{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
-						],
-					});
 				} else {
 					await channel.sendMessage(ctx.senderId, "Бараа олдсонгүй.");
 				}
@@ -971,16 +1306,24 @@ async function handlePostback(
 					.eq("organization_id", ctx.orgId)
 					.maybeSingle();
 				const productName = (product?.name as string | null) ?? "барааг";
-				await handleMessage(supabase, {
-					...ctx,
-					text: `${productName} худалдаж авах хүсэлтэй байна. 1 ширхэг. Захиалга үүсгэхэд туслаач.`,
-				}, trace);
+				await handleMessage(
+					supabase,
+					{
+						...ctx,
+						text: `${productName} худалдаж авах хүсэлтэй байна. 1 ширхэг. Захиалга үүсгэхэд туслаач.`,
+					},
+					trace,
+				);
 			} catch (err) {
 				capture(err, { context: "agent-gateway: buy postback" });
-				await handleMessage(supabase, {
-					...ctx,
-					text: `BUY:${productId} худалдаж авах`,
-				}, trace);
+				await handleMessage(
+					supabase,
+					{
+						...ctx,
+						text: `BUY:${productId} худалдаж авах`,
+					},
+					trace,
+				);
 			}
 		}
 		return;
@@ -1122,6 +1465,7 @@ interface QuickReplyContext {
 	pageAccessToken: string;
 	orgId: string;
 	userId: string;
+	trace?: TraceLogger;
 	productType: "tolom" | "zer";
 }
 
@@ -1133,6 +1477,5 @@ async function handleQuickReply(
 	ctx: QuickReplyContext,
 	trace?: TraceLogger,
 ): Promise<void> {
-	// Delegate to postback handler (same logic)
-	await handlePostback(supabase, ctx);
+	await handlePostback(supabase, ctx, trace);
 }

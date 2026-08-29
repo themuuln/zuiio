@@ -6,6 +6,14 @@ import { resolveZerBaseUrl } from "@/lib/zer-resolver";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 
 const API_SECRET = "AGENT_GATEWAY_API_SECRET";
+const MongolianPhoneSchema = z
+	.string()
+	.trim()
+	.min(1)
+	.max(50)
+	.refine((value) => /^(976)?[89]\d{7}$/.test(value.replace(/[\s\-+]/g, "")), {
+		message: "Утасны дугаар буруу байна. 8 оронтой, 8 эсвэл 9-өөр эхлэх ёстой.",
+	});
 const PlaceOrderSchema = z.object({
 	items: z
 		.array(
@@ -18,9 +26,9 @@ const PlaceOrderSchema = z.object({
 		.min(1)
 		.max(50),
 	contact_name: z.string().trim().min(1).max(500),
-	contact_phone: z.string().trim().min(1).max(50),
+	contact_phone: MongolianPhoneSchema,
 	contact_email: z.string().trim().max(254).optional(),
-	delivery_type: z.enum(["delivery", "pickup"]).optional(),
+	delivery_type: z.enum(["delivery", "pickup"]).optional().default("delivery"),
 	address: z.string().trim().max(500).optional(),
 	address_note: z.string().trim().max(500).optional(),
 	pickup_branch_slug: z.string().trim().max(100).optional(),
@@ -90,7 +98,7 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 	return {
 		name: "placeOrderWithQpay",
 		description:
-			"Зөвхөн хэрэглэгч захиалгаа баталгаажуулсны дараа бараа сонгон QPay төлбөртэй захиалга үүсгэнэ. Эхлээд searchProducts ашиглан product_id ав. Бүх бараа, тоо, нэр, утас, хүргэлт эсвэл авах арга, хүргэлтийн хаягийг тодруулж, хэрэглэгчээс эцсийн баталгааг авсны дараа дууд.",
+			"Бараа сонгосон үед нэр, утас, хаяг (хүргэлтийн)-г нэг мессежээр бөөнөөр асуу. Жишээ: 'Нэр, утас, хаягаа бичнэ үү (ex: Temuulen 88650115 10-р хороолол)'. pickup-г хэрэглэгч өөрөө хэлсэн үед л сонго. Эцсийн зөвшөөрөл авсны дараа дууд.",
 		parameters: [
 			{
 				name: "items",
@@ -114,8 +122,9 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 			{
 				name: "delivery_type",
 				type: "string",
-				description: "delivery (хүргүүлэх) эсвэл pickup (дэлгүүрээс авах).",
-				required: true,
+				description:
+					"delivery (хүргэлт, default) эсвэл pickup — заагаагүй бол delivery гэж үзэж, бүү асуу.",
+				required: false,
 				enum: ["delivery", "pickup"],
 			},
 			{
@@ -151,6 +160,9 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 						"Захиалгын бараа, холбоо барих мэдээлэл дутуу эсвэл буруу байна.",
 				};
 			}
+			const canonicalPhone = parsed.data.contact_phone
+				.replace(/[^0-9]/g, "")
+				.replace(/^976/, "");
 
 			const secret = process.env[API_SECRET]?.trim();
 			if (!secret) {
@@ -175,7 +187,7 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 					channel: _context.channel ?? "messenger",
 					chat: _context.channelChatId ?? "",
 					user: _context.channelUserId ?? _context.userId,
-					args: parsed.data,
+					args: { ...parsed.data, contact_phone: canonicalPhone },
 				};
 				const idempotency_key = createHash("sha256")
 					.update(JSON.stringify(stablePayload))
@@ -192,6 +204,7 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 						body: JSON.stringify({
 							organization_id: _context.orgId,
 							...parsed.data,
+							contact_phone: canonicalPhone,
 							idempotency_key,
 						}),
 						signal: AbortSignal.timeout(15_000),
@@ -206,6 +219,38 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 
 				const order = payload.data.data;
 				const payment = normalizeInstructions(order.payment_instructions);
+				if (typeof _context.supabase.from === "function") {
+					const pending = {
+						order_id: order.order_id,
+						organization_id: _context.orgId,
+						psid: _context.channelUserId ?? _context.userId,
+						channel: _context.channel ?? "messenger",
+						channel_chat_id:
+							_context.channelChatId ??
+							_context.channelUserId ??
+							_context.userId,
+						amount: order.total_amount,
+						status: "pending",
+						expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+						trace_id: _context.traceId ?? null,
+					};
+					let { error: pendingError } = await _context.supabase
+						.from("qpay_pending")
+						.insert(pending);
+					if (pendingError) {
+						const retry = await _context.supabase
+							.from("qpay_pending")
+							.upsert(pending, { onConflict: "order_id" });
+						pendingError = retry.error;
+					}
+					if (pendingError) {
+						capture(pendingError, {
+							context: "agent-gateway: qpay_pending insert",
+							orderId: order.order_id,
+						});
+						return { error: "Төлбөрийн захиалгыг хадгалахад алдаа гарлаа." };
+					}
+				}
 				return {
 					order_id: order.order_id,
 					total_amount: order.total_amount,

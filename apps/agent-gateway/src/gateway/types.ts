@@ -28,6 +28,8 @@ export interface GatewayContext {
 	channelUserId: string;
 	pageId?: string;
 	pageAccessToken?: string;
+	/** Trace identifier for durable payment correlation (optional). */
+	traceId?: string;
 }
 
 /** A channel connection record from channel_connections table. */

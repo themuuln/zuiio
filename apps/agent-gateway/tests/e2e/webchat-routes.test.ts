@@ -82,7 +82,7 @@ describe("POST /api/webchat/message", () => {
 		expect(res.status).toBe(200);
 		expect(json.reply).toContain("Сайн уу");
 
-		const ctx = mockHandleAgentMessage.mock.calls[0]![0] as Record<
+		const ctx = mockHandleAgentMessage.mock.calls[0]?.[0] as Record<
 			string,
 			unknown
 		>;

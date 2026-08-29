@@ -5,11 +5,7 @@ import { FacebookChannel } from "@/channels/facebook";
 import { TelegramChannel } from "@/channels/telegram";
 import { WhatsAppChannel } from "@/channels/whatsapp";
 import type { GatewayTool, ToolContext } from "@/providers/types";
-import {
-	confirmButtons,
-	stageAction,
-	stagePersistentAction,
-} from "./confirmation";
+import { confirmButtons, stageAction } from "./confirmation";
 
 /**
  * Human-readable summary of a write action for the confirmation prompt.
@@ -60,9 +56,23 @@ export function gateWriteTool(
 			const { channel, channelChatId, channelUserId, pageId, pageAccessToken } =
 				ctx;
 
+			// QPay checkout must also go through confirmation — even customer-initiated
+			// "захиалах" is just a message that triggers the LLM; a hallucinated
+			// tool call with name/phone would otherwise create a real Zer order.
+			// Stage the action and require explicit confirm button press.
+			// Preserve field validation for clearer repair prompt before staging.
+			if (
+				(tool.name === "placeOrderWithQpay" ||
+					tool.name === "checkoutCartWithQpay") &&
+				(typeof args.contact_name !== "string" ||
+					!args.contact_name.trim() ||
+					typeof args.contact_phone !== "string" ||
+					!args.contact_phone.trim())
+			) {
+				return "Захиалгыг баталгаажуулахын тулд нэр болон утас дутуу байна. Нэр, утас, хаягаа бичнэ үү (ж: Temuulen 99111234 10-р хороолол).";
+			}
+
 			if (!channel || !channelChatId || !channelUserId || ctx.replaying) {
-				// No channel context (tests, non-messaging callers), or a durable
-				// replay — execute the underlying action directly.
 				return tool.execute(args, ctx);
 			}
 
@@ -72,26 +82,21 @@ export function gateWriteTool(
 				buttons: Array<Array<{ text: string; callbackData: string }>>;
 			};
 			try {
-				staged =
-					tool.name === "placeOrderWithQpay" ||
-					tool.name === "checkoutCartWithQpay"
-						? await stagePersistentAction(tool.name, args, summary, ctx)
-						: stageAction(
-								tool.name,
-								args,
-								channel,
-								channelChatId,
-								channelUserId,
-								summary,
-								pageId,
-								pageAccessToken,
-								(a) => tool.execute(a, ctx),
-							);
+				staged = stageAction(
+					tool.name,
+					args,
+					channel,
+					channelChatId,
+					channelUserId,
+					summary,
+					pageId,
+					pageAccessToken,
+					(a) => tool.execute(a, ctx),
+				);
 			} catch (error) {
 				capture(error, { context: "gateway: stage confirmation" });
 				return "Баталгаажуулах үйлдлийг хадгалахад алдаа гарлаа.";
 			}
-
 			// Push the confirmation UI on the channel, then tell the LLM the
 			// user is being asked. The final write happens only on confirm.
 			let sent = false;

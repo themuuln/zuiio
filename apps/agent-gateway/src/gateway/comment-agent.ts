@@ -9,6 +9,7 @@ import type { GatewayContext } from "@/gateway/types";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { getRedis } from "@/lib/redis";
 import { getSupabaseForProduct, type ServiceClient } from "@/lib/supabase";
+import type { TraceLogger } from "@/lib/trace";
 /**
  * Page comment auto-reply agent.
  *
@@ -124,7 +125,9 @@ export async function isCoolingDown(
 	try {
 		const redis = getRedis();
 		if (redis) {
-			const exists = await redis.get(`fb:comment:cooldown:${pageId}:${commenterId}`);
+			const exists = await redis.get(
+				`fb:comment:cooldown:${pageId}:${commenterId}`,
+			);
 			if (exists) return true;
 		}
 	} catch {}
@@ -156,11 +159,10 @@ export interface CommentEventContext {
 	pageId: string;
 	pageAccessToken: string;
 	orgId: string;
-	/** Org-owner user id for audit/session attribution. */
 	userId: string;
 	productType: "tolom" | "zer" | "zatly";
-	/** channel_connections row id (messenger connection for this page). */
-	connectionId: string;
+	connectionId?: string;
+	trace?: TraceLogger;
 }
 
 /**
@@ -173,7 +175,11 @@ export async function handleFeedChange(
 	change: MetaFeedChange,
 ): Promise<void> {
 	try {
-		if (change.field !== "feed") return;
+		ctx.trace?.log("info", "facebook feed change", {
+			item: change.value.item,
+			verb: change.value.verb,
+			commentId: change.value.comment_id ?? null,
+		});
 		const comment = toUserComment(change.value, ctx.pageId);
 		if (!comment) return;
 

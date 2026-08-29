@@ -61,6 +61,23 @@ blocker.
   policies, hours) via `POST /api/dashboard/kb` (Bearer `DASHBOARD_SECRET`).
   There is no KB management UI yet — only the API.
 
+
+## Full-Potential Backlog — Ranked New Ideas (2026-08-27 research)
+
+| Rank | Idea | Impact / Effort | Permission or field | What it's for (short Mongolian/English purpose) |
+|---:|---|---|---|---|
+| 1 | Referral-triggered starter flows — **SHIPPED** ([migration](supabase/migrations/20260828000000_referral_events.sql); referral_events + webhook) | High/Low | `messaging_referrals` | attribute m.me ref/Ad QR → starter flow not generic greeting |
+| 2 | Unified human inbox (human takeover/return-to-AI) | High/Medium | `standby`, `messaging_handovers` | sales/support 24h chats without history loss |
+| 3 | IG comments → Private Reply DMs | High/Low | `instagram.comments` | 7-day comment→DM window |
+| 4 | Persistent menu + Ice Breakers (4 FAQ chips) | High/Low | `messaging_postbacks` | always-visible entry points |
+| 5 | Consent-aware sequences/broadcasts | High/Medium | opt-in/notification fields | legal outside-24h follow-ups |
+| 6 | Messenger/IG account linking | High/Medium | `messaging_account_linking` | prove PSID = Zer/Tolom user → org actions |
+| 7 | Zer inventory product carousel | High/Medium | catalog/product perms | tappable cards vs text links |
+| 8 | Segment + A/B funnel analytics | Medium/Medium | existing fields | which flow/copy converts |
+| 9 | Message echo reconciliation | Medium/Low | `message_echoes` | absorb manual Page replies, avoid dupe |
+| 10 | Mongolian vertical templates (repair/beauty/retail) | ✅ Available | `/api/dashboard/templates` GET lists templates; POST clones one into an org's active `flow_versions` | faster onboarding |
+| 11 | Conversation-Ad ROI dashboard | High/High | referral + ads perms | ad click → lead → Zer order |
+| 12 | Knowledge-grounded escalation | High/Medium | existing scopes | low-confidence → human SLA queue |
 ## Known non-blockers
 
 - `apps/agent-gateway`: 77 pre-existing biome warnings (`noNonNullAssertion`) —

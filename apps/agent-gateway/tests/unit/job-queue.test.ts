@@ -44,7 +44,7 @@ describe("enqueueJob", () => {
 		expect(result).toEqual({ id: "job-1" });
 
 		const insertCall = (sb as { insert: ReturnType<typeof vi.fn> }).insert.mock
-			.calls[0]![0] as Record<string, unknown>;
+			.calls[0]?.[0] as Record<string, unknown>;
 		expect(insertCall).toMatchObject({
 			organization_id: "org-1",
 			channel: "whatsapp",
@@ -95,7 +95,7 @@ describe("claimJobs", () => {
 		expect(rows).toHaveLength(1);
 		expect(rows[0]?.id).toBe("j1");
 		const updateCall = (sb as { update: ReturnType<typeof vi.fn> }).update.mock
-			.calls[0]![0] as { status: string };
+			.calls[0]?.[0] as { status: string };
 		expect(updateCall.status).toBe("processing");
 	});
 
@@ -127,7 +127,7 @@ describe("completeJob", () => {
 		await completeJob(sb, "j1");
 
 		const patch = (sb as { update: ReturnType<typeof vi.fn> }).update.mock
-			.calls[0]![0] as { status: string; attempts: number };
+			.calls[0]?.[0] as { status: string; attempts: number };
 		expect(patch.status).toBe("done");
 		expect(patch.attempts).toBe(2);
 	});
@@ -141,7 +141,7 @@ describe("completeJob", () => {
 		});
 		await completeJob(sb, "j1", "boom");
 		let patch = (sb as { update: ReturnType<typeof vi.fn> }).update.mock
-			.calls[0]![0] as { status: string; last_error: string };
+			.calls[0]?.[0] as { status: string; last_error: string };
 		expect(patch.status).toBe("pending");
 		expect(patch.last_error).toBe("boom");
 
@@ -151,7 +151,7 @@ describe("completeJob", () => {
 		});
 		await completeJob(sb, "j1", "boom");
 		patch = (sb as { update: ReturnType<typeof vi.fn> }).update.mock
-			.calls[1]![0] as { status: string };
+			.calls[1]?.[0] as { status: string };
 		expect(patch.status).toBe("failed");
 	});
 });

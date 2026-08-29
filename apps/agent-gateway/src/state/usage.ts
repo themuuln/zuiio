@@ -40,6 +40,8 @@ export interface UsageStats {
 	byChannel: Array<{ channel: string; toolCalls: number; errors: number }>;
 	/** Tool error rate in the period (0-1). */
 	errorRate: number;
+	/** Funnel totals for persistent experiment cohorts. */
+	funnel: Array<{ experimentId: string; variant: string; users: number }>;
 }
 
 /** Nearest-rank percentile over a sorted array. */
@@ -197,6 +199,42 @@ export async function getUsageStats(
 			.eq("organization_id", orgId)
 			.gte("updated_at", start.toISOString());
 
+		let funnel: Array<{
+			experimentId: string;
+			variant: string;
+			users: number;
+		}> = [];
+		try {
+			const { data: experiments } = await supabase
+				.from("experiments")
+				.select("id")
+				.eq("organization_id", orgId);
+			const experimentIds = (experiments ?? []).map((row) => row.id);
+			if (experimentIds.length === 0) {
+				funnel = [];
+			} else {
+				const { data: assignments } = await supabase
+					.from("experiment_assignments")
+					.select("experiment_id, variant, channel_user_id")
+					.in("experiment_id", experimentIds)
+					.gte("assigned_at", start.toISOString());
+				const funnelMap = new Map<string, Set<string>>();
+				for (const row of assignments ?? []) {
+					const typed = row as Record<string, unknown>;
+					const key = JSON.stringify([typed.experiment_id, typed.variant]);
+					const users = funnelMap.get(key) ?? new Set<string>();
+					users.add(String(typed.channel_user_id));
+					funnelMap.set(key, users);
+				}
+				funnel = Array.from(funnelMap.entries()).map(([key, users]) => {
+					const [experimentId, variant] = JSON.parse(key) as [string, string];
+					return { experimentId, variant, users: users.size };
+				});
+			}
+		} catch {
+			funnel = [];
+		}
+
 		// Estimated cost
 		const estimatedCost = (totalTokens / 1_000_000) * providerCostPer1M;
 
@@ -221,6 +259,7 @@ export async function getUsageStats(
 			conversationCount: conversationCount ?? 0,
 			byChannel,
 			errorRate: totalToolCalls > 0 ? errorCount / totalToolCalls : 0,
+			funnel,
 		};
 	} catch (err) {
 		capture(err, {
@@ -244,6 +283,7 @@ export async function getUsageStats(
 			conversationCount: 0,
 			byChannel: [],
 			errorRate: 0,
+			funnel: [],
 		};
 	}
 }

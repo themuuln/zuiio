@@ -233,6 +233,8 @@ export async function POST(request: Request) {
 					}
 
 					// No flow matched — fall through to the AI agent handler
+					// Capture QPay QR output and deliver it as a native image.
+					let capturedQpayImage: string | null = null;
 					const response = await handleAgentMessage(
 						ctx.context,
 						sanitizeUserInput(text),
@@ -241,10 +243,31 @@ export async function POST(request: Request) {
 							getSystemPrompt: systemPromptFor,
 							getTools: (toolCtx) =>
 								getProductTools(ctx?.context.productType, toolCtx),
+							onToolResult: (toolName, result) => {
+								if (
+									capturedQpayImage ||
+									(toolName !== "placeOrderWithQpay" &&
+										toolName !== "checkoutCartWithQpay") ||
+									!result ||
+									typeof result !== "object" ||
+									typeof (result as Record<string, unknown>).qpay_qr_image !==
+										"string"
+								)
+									return;
+								capturedQpayImage = (result as Record<string, string>)
+									.qpay_qr_image;
+							},
 						},
 					);
 
 					await wa.sendMessage(msg.from, response);
+					if (capturedQpayImage) {
+						try {
+							await wa.sendImage(msg.from, capturedQpayImage);
+						} catch (error) {
+							capture(error, { context: "whatsapp: qpay qr sendImage" });
+						}
+					}
 				} catch (err) {
 					capture(err, {
 						context: "agent-gateway: whatsapp webhook message error",

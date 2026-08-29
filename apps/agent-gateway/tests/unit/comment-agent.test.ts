@@ -113,8 +113,12 @@ describe("per-commenter cooldown", () => {
 
 	it("blocks replies within the cooldown window", async () => {
 		await markReplied("page_1", "user_1", 1_000_000);
-		expect(await isCoolingDown("page_1", "user_1", 1_000_000 + 59_999)).toBe(true);
-		expect(await isCoolingDown("page_1", "user_1", 1_000_000 + 60_000)).toBe(false);
+		expect(await isCoolingDown("page_1", "user_1", 1_000_000 + 59_999)).toBe(
+			true,
+		);
+		expect(await isCoolingDown("page_1", "user_1", 1_000_000 + 60_000)).toBe(
+			false,
+		);
 	});
 
 	it("tracks commenters independently", async () => {

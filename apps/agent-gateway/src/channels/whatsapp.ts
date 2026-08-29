@@ -68,6 +68,71 @@ export class WhatsAppChannel implements Channel {
 		return res.ok;
 	}
 
+	async sendImage(
+		chatId: number | string,
+		imageUrl: string,
+		caption?: string,
+	): Promise<boolean> {
+		if (imageUrl.startsWith("data:")) {
+			try {
+				const base64 = imageUrl.split(",")[1] ?? "";
+				if (!base64) throw new Error("empty data URL");
+				const buffer = Buffer.from(base64, "base64");
+				const form = new FormData();
+				form.append("messaging_product", "whatsapp");
+				form.append(
+					"file",
+					new Blob([buffer], { type: "image/png" }),
+					"qpay.png",
+				);
+				form.append("type", "image/png");
+				const uploadRes = await fetch(`${this.baseUrl}/media`, {
+					method: "POST",
+					headers: { Authorization: `Bearer ${this.accessToken}` },
+					body: form as unknown as BodyInit,
+				});
+				if (!uploadRes.ok) {
+					const err = await uploadRes.text().catch(() => "unknown");
+					capture(
+						new Error(
+							`WhatsApp media upload failed: ${uploadRes.status} ${err}`,
+						),
+						{
+							context: "whatsapp: sendImage upload",
+						},
+					);
+					return this.sendMessage(
+						chatId,
+						`${caption ? `${caption}\n` : ""}[QR зураг илгээхэд алдаа гарлаа — төлбөрийн линкээр төлнө үү.]`,
+					);
+				}
+				const { id } = (await uploadRes.json()) as { id: string };
+				const res = await this.api("messages", {
+					messaging_product: "whatsapp",
+					recipient_type: "individual",
+					to: chatId.toString(),
+					type: "image",
+					image: { id, ...(caption ? { caption } : {}) },
+				});
+				return res.ok;
+			} catch (error) {
+				capture(error, { context: "whatsapp: sendImage data URL exception" });
+				return this.sendMessage(
+					chatId,
+					`${caption ? `${caption}\n` : ""}[QR зураг түр боломжгүй — төлбөрийн линкээр төлнө үү.]`,
+				);
+			}
+		}
+		const res = await this.api("messages", {
+			messaging_product: "whatsapp",
+			recipient_type: "individual",
+			to: chatId.toString(),
+			type: "image",
+			image: { link: imageUrl, ...(caption ? { caption } : {}) },
+		});
+		return res.ok;
+	}
+
 	async sendInlineKeyboard(
 		chatId: number | string,
 		text: string,

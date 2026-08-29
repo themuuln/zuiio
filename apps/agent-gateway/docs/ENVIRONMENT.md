@@ -42,13 +42,16 @@ These do not block startup; each gates its own surface and fails closed when uns
 
 ## Optional Variables
 
-### Fallback LLM Provider
+### OpenAI-compatible fallback
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | OpenAI API key for fallback provider | _(none — fallback disabled)_ |
-| `OPENAI_BASE_URL` | OpenAI API base URL | `https://api.openai.com/v1` |
-| `OPENAI_FALLBACK_MODEL` | Model name for fallback | `gpt-4o-mini` |
+| `OPENAI_API_KEY` | OpenAI API key, or the private key configured on the Codex Worker | _(none — fallback disabled)_ |
+| `OPENAI_BASE_URL` | OpenAI-compatible base URL; set to the Worker `/codex/v1` URL for ChatGPT quota | `https://api.openai.com/v1` |
+| `OPENAI_FALLBACK_MODEL` | Fallback model — use `gpt-5.6-luna` when `OPENAI_BASE_URL` points to the Codex Worker (Worker rejects other models with 400), otherwise `gpt-4o-mini` | `gpt-4o-mini` (Codex Worker: `gpt-5.6-luna` required) |
+The Worker secrets are configured separately in `cloudflare-worker`:
+`CODEX_REFRESH_TOKEN`, `CODEX_ACCOUNT_ID`, `CODEX_CLIENT_ID`, and
+`CODEX_PROXY_API_KEY`. Store them in Cloudflare Secrets, not this repository.
 
 ### OpenCodeGo Configuration
 

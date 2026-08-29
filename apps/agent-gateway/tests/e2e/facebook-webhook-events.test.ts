@@ -6,7 +6,7 @@
  */
 
 import crypto from "node:crypto";
-import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createServiceClient } from "@/lib/supabase";
 
@@ -167,7 +167,7 @@ describe("facebook webhook — event paths", () => {
 
 		expect(res.status).toBe(200);
 		expect(mockHandleAgentMessage).toHaveBeenCalledTimes(1);
-		const ctx = mockHandleAgentMessage.mock.calls[0]![0] as Record<
+		const ctx = mockHandleAgentMessage.mock.calls[0]?.[0] as Record<
 			string,
 			unknown
 		>;
@@ -287,13 +287,17 @@ describe("facebook webhook — event paths", () => {
 	it("stamps last_user_message_at on the connection row", async () => {
 		const { POST } = await import("@/app/api/facebook/webhook/route");
 		await POST(post(messengerEvent({ message: { text: "hi" } })));
-		// @ts-ignore
+		// @ts-expect-error
 		const allServices = createServiceClient.mock.results.map((r) => r.value);
-		// @ts-ignore
-		const hasFrom = allServices.some((s) => s.from.mock.calls.some((c) => c[0] === "channel_connections"));
+		// @ts-expect-error
+		const hasFrom = allServices.some((s) =>
+			s.from.mock.calls.some((c) => c[0] === "channel_connections"),
+		);
 		expect(hasFrom).toBe(true);
-		// @ts-ignore
-		const hasUpdate = allServices.some((s) => s.update.mock.calls.some((c) => c[0] && c[0].last_user_message_at));
+		// @ts-expect-error
+		const hasUpdate = allServices.some((s) =>
+			s.update.mock.calls.some((c) => c[0]?.last_user_message_at),
+		);
 		expect(hasUpdate).toBe(true);
 	});
 });

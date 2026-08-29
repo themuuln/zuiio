@@ -46,7 +46,6 @@ function verifyStateSignature(
 	return timingSafeEqualStr(expected, sig);
 }
 
-
 const _facebookChannel = new FacebookChannel();
 
 /**

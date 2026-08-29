@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createSessionValue, proxy } from "@/proxy";
 
 const AUTH_COOKIE = "ag_dash_auth";
@@ -56,9 +56,7 @@ describe("dashboard middleware", () => {
 
 	it("rejects a forged cookie", async () => {
 		process.env.DASHBOARD_SECRET = "secret";
-		const res = await proxy(
-			makeRequest("/dashboard", `${AUTH_COOKIE}=forged`),
-		);
+		const res = await proxy(makeRequest("/dashboard", `${AUTH_COOKIE}=forged`));
 		expect(res.status).toBe(307);
 	});
 });

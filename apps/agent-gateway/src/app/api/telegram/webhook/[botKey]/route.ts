@@ -146,10 +146,25 @@ export async function POST(
 					chatType,
 					{ onFirstToken: stopTyping },
 				);
+				let capturedQpayImage: string | null = null;
 				const agentPromise = handleAgentMessage(ctx, transcribed, chatType, {
 					getSystemPrompt: systemPromptFor,
 					getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
 					onToken: responseStream.onToken,
+					onToolResult: (toolName, result) => {
+						if (
+							capturedQpayImage ||
+							(toolName !== "placeOrderWithQpay" &&
+								toolName !== "checkoutCartWithQpay") ||
+							!result ||
+							typeof result !== "object" ||
+							typeof (result as Record<string, unknown>).qpay_qr_image !==
+								"string"
+						)
+							return;
+						capturedQpayImage = (result as Record<string, string>)
+							.qpay_qr_image;
+					},
 				});
 
 				agentInBackground = true;
@@ -173,7 +188,14 @@ export async function POST(
 								TelegramChannel.REACTIONS.done,
 							);
 						}
-						return responseStream.finish(response);
+						await responseStream.finish(response);
+						if (capturedQpayImage) {
+							try {
+								await tg.sendImage(chatId, capturedQpayImage);
+							} catch (error) {
+								capture(error, { context: "telegram: qpay qr sendImage" });
+							}
+						}
 					},
 					onError: async (message) => {
 						stopTyping();
@@ -211,11 +233,23 @@ export async function POST(
 		const responseStream = createTelegramResponseStream(tg, chatId, chatType, {
 			onFirstToken: stopTyping,
 		});
-
+		let capturedQpayImage: string | null = null;
 		const agentPromise = handleAgentMessage(ctx, text, chatType, {
 			getSystemPrompt: systemPromptFor,
 			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
 			onToken: responseStream.onToken,
+			onToolResult: (toolName, result) => {
+				if (
+					capturedQpayImage ||
+					(toolName !== "placeOrderWithQpay" &&
+						toolName !== "checkoutCartWithQpay") ||
+					!result ||
+					typeof result !== "object" ||
+					typeof (result as Record<string, unknown>).qpay_qr_image !== "string"
+				)
+					return;
+				capturedQpayImage = (result as Record<string, string>).qpay_qr_image;
+			},
 		});
 
 		runAgentWithFallback(agentPromise, {
@@ -231,10 +265,16 @@ export async function POST(
 			},
 			onResult: async (response) => {
 				stopTyping();
-				if (userMessageId) {
+				if (userMessageId)
 					tg.setReaction(chatId, userMessageId, TelegramChannel.REACTIONS.done);
+				await responseStream.finish(response);
+				if (capturedQpayImage) {
+					try {
+						await tg.sendImage(chatId, capturedQpayImage);
+					} catch (error) {
+						capture(error, { context: "telegram: qpay qr sendImage" });
+					}
 				}
-				return responseStream.finish(response);
 			},
 			onError: async (message) => {
 				stopTyping();

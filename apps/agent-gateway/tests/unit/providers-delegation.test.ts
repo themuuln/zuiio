@@ -32,7 +32,7 @@ describe("OpenCodeGoProvider", () => {
 		});
 
 		expect(result).toBe("reply");
-		const opts = mockLoop.mock.calls[0]![0] as Record<string, unknown>;
+		const opts = mockLoop.mock.calls[0]?.[0] as Record<string, unknown>;
 		expect(opts.baseUrl).toBe("https://opencode.ai/zen/go/v1");
 		expect(opts.model).toBe("deepseek-v4-flash");
 		expect(opts.label).toBe("OpenCodeGo");
@@ -48,7 +48,7 @@ describe("OpenCodeGoProvider", () => {
 			context: CONTEXT,
 			onToken,
 		});
-		expect(mockLoop.mock.calls[0]![0]).toMatchObject({
+		expect(mockLoop.mock.calls[0]?.[0]).toMatchObject({
 			model: "custom",
 			onToken,
 		});
@@ -66,7 +66,7 @@ describe("GptMiniProvider", () => {
 		});
 
 		expect(result).toBe("reply");
-		const opts = mockLoop.mock.calls[0]![0] as Record<string, unknown>;
+		const opts = mockLoop.mock.calls[0]?.[0] as Record<string, unknown>;
 		expect(opts.baseUrl).toBe("https://api.openai.com/v1");
 		expect(opts.model).toBe("gpt-4o-mini");
 		expect(opts.label).toBe("OpenAI");

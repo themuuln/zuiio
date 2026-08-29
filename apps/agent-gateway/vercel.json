@@ -32,6 +32,10 @@
 		{
 			"path": "/api/cron/re-embed",
 			"schedule": "25 3 * * *"
+		},
+		{
+			"path": "/api/cron/qpay-poll",
+			"schedule": "30 3 * * *"
 		}
 	]
 }

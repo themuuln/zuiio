@@ -14,6 +14,7 @@ export interface HandoffConfig {
 	sentimentEnabled: boolean;
 	adminChatId: number | null;
 	autoHandoffAfterHours: boolean;
+	lowConfidenceThreshold: number;
 }
 
 const DEFAULT_HANDOFF_CONFIG: HandoffConfig = {
@@ -21,6 +22,7 @@ const DEFAULT_HANDOFF_CONFIG: HandoffConfig = {
 	sentimentEnabled: true,
 	adminChatId: null,
 	autoHandoffAfterHours: true,
+	lowConfidenceThreshold: 0.6,
 };
 
 /**
@@ -34,12 +36,17 @@ export async function getHandoffConfig(
 	const { data, error } = await supabase
 		.from("agent_handoff_config")
 		.select(
-			"keyword_triggers, sentiment_enabled, admin_chat_id, auto_handoff_after_hours",
+			"keyword_triggers, sentiment_enabled, admin_chat_id, auto_handoff_after_hours, low_confidence_threshold",
 		)
 		.eq("organization_id", orgId)
 		.maybeSingle();
 
 	if (error || !data) return DEFAULT_HANDOFF_CONFIG;
+
+	const rawThreshold = Number(data.low_confidence_threshold ?? 0.6);
+	const lowConfidenceThreshold = Number.isFinite(rawThreshold)
+		? Math.min(1, Math.max(0, rawThreshold))
+		: DEFAULT_HANDOFF_CONFIG.lowConfidenceThreshold;
 
 	return {
 		keywordTriggers: Array.isArray(data.keyword_triggers)
@@ -48,6 +55,7 @@ export async function getHandoffConfig(
 		sentimentEnabled: (data.sentiment_enabled as boolean) ?? true,
 		adminChatId: data.admin_chat_id as number | null,
 		autoHandoffAfterHours: (data.auto_handoff_after_hours as boolean) ?? true,
+		lowConfidenceThreshold,
 	};
 }
 

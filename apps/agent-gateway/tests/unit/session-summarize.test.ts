@@ -49,7 +49,7 @@ describe("appendToSession", () => {
 		await appendToSession(sb, "org-1", "c", "u", "hi", "hello", 10, "telegram");
 
 		const upsertCall = (sb as { upsert: ReturnType<typeof vi.fn> }).upsert.mock
-			.calls[0]![0] as Record<string, unknown>;
+			.calls[0]?.[0] as Record<string, unknown>;
 		expect(upsertCall.messages).toEqual([
 			{ role: "user", content: "hi" },
 			{ role: "assistant", content: "hello" },
@@ -74,17 +74,17 @@ describe("summarizeIfNeeded", () => {
 		mockChatCompletion.mockResolvedValue("Товч хураангуй...");
 		const result = await summarizeIfNeeded(messages);
 		expect(result).not.toBeNull();
-		expect(result![0]?.role).toBe("system");
-		expect(result![0]?.content).toContain("Ярианы товч");
+		expect(result?.[0]?.role).toBe("system");
+		expect(result?.[0]?.content).toContain("Ярианы товч");
 		// 1 summary + 10 verbatim
-		expect(result!.length).toBe(11);
+		expect(result?.length).toBe(11);
 	});
 
 	it("falls back to the recent window when summarization fails", async () => {
 		mockChatCompletion.mockRejectedValue(new Error("LLM down"));
 		const result = await summarizeIfNeeded(messages);
 		expect(result).toHaveLength(10);
-		expect(result![0]?.role).not.toBe("system");
+		expect(result?.[0]?.role).not.toBe("system");
 	});
 
 	it("returns null when old content is too short", async () => {

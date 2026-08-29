@@ -110,6 +110,65 @@ export class TelegramChannel implements Channel {
 		}
 	}
 
+	async sendImage(
+		chatId: number | string,
+		imageUrl: string,
+		caption?: string,
+	): Promise<boolean> {
+		try {
+			// QPay QR is returned as data:image/png;base64 — Telegram JSON photo
+			// field does not accept data URLs, so re-encode as multipart.
+			if (imageUrl.startsWith("data:")) {
+				const base64 = imageUrl.split(",")[1] ?? "";
+				if (!base64) return false;
+				const buffer = Buffer.from(base64, "base64");
+				const form = new FormData();
+				form.append("chat_id", String(chatId));
+				form.append(
+					"photo",
+					new Blob([buffer], { type: "image/png" }),
+					"qpay.png",
+				);
+				if (caption) form.append("caption", caption);
+				const res = await fetch(`${this.baseUrl}/sendPhoto`, {
+					method: "POST",
+					body: form as unknown as BodyInit,
+				});
+				if (!res.ok) {
+					const err = await res.text().catch(() => "unknown");
+					capture(
+						new Error(
+							`Telegram sendPhoto (multipart) failed: ${res.status} ${err}`,
+						),
+						{
+							context: "telegram: sendImage data URL",
+						},
+					);
+				}
+				return res.ok;
+			}
+			const res = await fetch(`${this.baseUrl}/sendPhoto`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					chat_id: chatId,
+					photo: imageUrl,
+					...(caption ? { caption } : {}),
+				}),
+			});
+			if (!res.ok) {
+				const err = await res.text().catch(() => "unknown");
+				capture(new Error(`Telegram sendPhoto failed: ${res.status} ${err}`), {
+					context: "telegram: sendImage",
+				});
+			}
+			return res.ok;
+		} catch (error) {
+			capture(error, { context: "telegram: sendImage exception" });
+			return false;
+		}
+	}
+
 	/**
 	 * Send a rich message with native table rendering (Bot API 10.1+).
 	 * Returns true if sent successfully, false to fall back to HTML.

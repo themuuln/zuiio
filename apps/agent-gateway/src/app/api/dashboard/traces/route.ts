@@ -16,7 +16,10 @@ export async function GET(request: Request) {
 	const limitRaw = url.searchParams.get("limit");
 	const traceId = url.searchParams.get("traceId");
 
-	const limit = Math.min(Math.max(Number.parseInt(limitRaw ?? "50", 10) || 50, 1), 100);
+	const limit = Math.min(
+		Math.max(Number.parseInt(limitRaw ?? "50", 10) || 50, 1),
+		100,
+	);
 
 	const sb = createServiceClient();
 	let query = sb

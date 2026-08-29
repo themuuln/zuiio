@@ -1218,7 +1218,7 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 		);
 		// Script tags should be sanitized — angle brackets stripped or escaped,
 		// core content preserved, no raw <script> survives.
-		expect(result.message).not.toContain('<script>');
+		expect(result.message).not.toContain("<script>");
 		expect(result.message).toContain("Өнөөдрийн борлуулалт");
 	});
 

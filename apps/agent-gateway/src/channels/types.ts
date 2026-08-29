@@ -10,6 +10,7 @@ export interface SendMessageOptions {
 	replyToMessageId?: number;
 	/** Channel-specific: Messenger quick replies, Instagram quick replies */
 	quickReplies?: InlineButton[];
+	messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
 }
 
 /** Generic channel adapter interface. */
@@ -48,7 +49,7 @@ export interface Channel {
 		filename: string,
 		caption?: string,
 	): Promise<void>;
-	/** Send horizontally scrollable product cards (Facebook Generic Template). Optional — Messenger only. */
+	/** Send horizontally scrollable product cards (Facebook/Instagram Generic Template). */
 	sendProductCards?(
 		chatId: string,
 		products: Array<{
@@ -59,6 +60,11 @@ export interface Channel {
 			currentStock?: number | null;
 			imageUrl?: string | null;
 		}>,
+		options?: {
+			mode?: "product_carousel" | "generic";
+			messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
+			instagram?: boolean;
+		},
 	): Promise<boolean>;
 	/** Send an image (Messenger/Telegram). Optional. For Messenger, imageUrl can be https URL or data:image/png;base64. */
 	sendImage?(
@@ -150,14 +156,28 @@ export interface MetaWebhookEntry {
 	id: string; // page_id
 	time: number;
 	messaging?: MetaMessagingEvent[];
+	account_linking?: MetaAccountLinkingEvent;
 	changes?: MetaFeedChange[];
+}
+
+export interface MetaAccountLinkingEvent {
+	status?: "linked" | "unlinked" | string;
+	authorization_code?: string;
 }
 
 /** A single messaging event from Meta webhook. */
 export interface MetaMessagingEvent {
+	account_linking?: MetaAccountLinkingEvent;
 	sender: { id: string }; // PSID or IGSID
 	recipient: { id: string }; // page_id
 	timestamp: number;
+	referral?: {
+		ref: string;
+		source: string;
+		type: string;
+		ad_id?: string;
+		referer_uri?: string;
+	};
 	message?: {
 		mid?: string;
 		text?: string;

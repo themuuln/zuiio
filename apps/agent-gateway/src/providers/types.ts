@@ -21,6 +21,8 @@ export interface ToolContext {
 	channelUserId?: string;
 	pageId?: string;
 	pageAccessToken?: string;
+	/** Trace identifier for durable payment correlation (optional). */
+	traceId?: string;
 	/** Skip staging when a persisted action is being replayed. */
 	replaying?: boolean;
 }
@@ -37,6 +39,8 @@ export interface GatewayTool {
 	name: string;
 	description: string;
 	parameters: ToolParam[];
+	/** Explicitly marks tools that mutate durable state. */
+	write?: boolean;
 	execute: (
 		args: Record<string, unknown>,
 		context: ToolContext,

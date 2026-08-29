@@ -138,7 +138,7 @@ describe("facebook webhook — dual-row routing (regression)", () => {
 		);
 
 		expect(res.status).toBe(200);
-		const ctx = mockHandleAgentMessage.mock.calls[0]![0] as Record<
+		const ctx = mockHandleAgentMessage.mock.calls[0]?.[0] as Record<
 			string,
 			unknown
 		>;
@@ -168,7 +168,7 @@ describe("facebook webhook — dual-row routing (regression)", () => {
 		);
 
 		expect(res.status).toBe(200);
-		const ctx = mockHandleAgentMessage.mock.calls[0]![0] as Record<
+		const ctx = mockHandleAgentMessage.mock.calls[0]?.[0] as Record<
 			string,
 			unknown
 		>;

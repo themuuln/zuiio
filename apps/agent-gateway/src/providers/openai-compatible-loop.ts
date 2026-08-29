@@ -34,7 +34,7 @@ export interface OpenAiCompatibleLoopOptions {
 	timeoutMs?: number;
 }
 
-const DEFAULT_TIMEOUT_MS = 90_000;
+const DEFAULT_TIMEOUT_MS = 45_000;
 const MAX_RETRIES = 2;
 
 function sleep(ms: number): Promise<void> {
@@ -316,37 +316,87 @@ export async function runOpenAiCompatibleLoop(
 		// tool calls in the next request.
 		messages.push({ role: "assistant", ...message });
 
-		// Execute each tool call
-		for (const tc of message.tool_calls) {
+		// Execute tool calls — parallel for read-only, sequential when any
+		// write tool (cart/order) is present to avoid cart read/write races.
+		// e.g. addToCart + checkoutCartWithQpay in one turn would otherwise
+		// have checkout read a stale cart.
+		const WRITE_TOOLS: Record<string, true> = {
+			placeOrderWithQpay: true,
+			checkoutCartWithQpay: true,
+			addToCart: true,
+			clearCart: true,
+			rememberCustomerFact: true,
+			writeData: true,
+		};
+		const hasWrite = message.tool_calls.some((tc) => {
 			const tool = toolByName.get(tc.function.name);
-			let resultContent: string;
-
-			if (!tool) {
-				resultContent = JSON.stringify({
-					error: `Багаж олдсонгүй: ${tc.function.name}`,
-				});
-			} else {
-				try {
-					const args = JSON.parse(tc.function.arguments) as Record<
-						string,
-						unknown
-					>;
-					const raw = await tool.execute(args, context);
-					resultContent = typeof raw === "string" ? raw : JSON.stringify(raw);
-				} catch (err) {
+			return Boolean(tool?.write || WRITE_TOOLS[tc.function.name]);
+		});
+		let toolResults: Array<{ tool_call_id: string; content: string }>;
+		if (hasWrite) {
+			toolResults = [];
+			for (const tc of message.tool_calls) {
+				const tool = toolByName.get(tc.function.name);
+				let resultContent: string;
+				if (!tool) {
 					resultContent = JSON.stringify({
-						error:
-							err instanceof Error
-								? err.message
-								: "Багаж ажиллуулахад алдаа гарлаа",
+						error: `Багаж олдсонгүй: ${tc.function.name}`,
 					});
+				} else {
+					try {
+						const args = JSON.parse(tc.function.arguments) as Record<
+							string,
+							unknown
+						>;
+						const raw = await tool.execute(args, context);
+						resultContent = typeof raw === "string" ? raw : JSON.stringify(raw);
+					} catch (err) {
+						resultContent = JSON.stringify({
+							error:
+								err instanceof Error
+									? err.message
+									: "Багаж ажиллуулахад алдаа гарлаа",
+						});
+					}
 				}
+				toolResults.push({ tool_call_id: tc.id, content: resultContent });
 			}
-
+		} else {
+			toolResults = await Promise.all(
+				message.tool_calls.map(async (tc) => {
+					const tool = toolByName.get(tc.function.name);
+					let resultContent: string;
+					if (!tool) {
+						resultContent = JSON.stringify({
+							error: `Багаж олдсонгүй: ${tc.function.name}`,
+						});
+					} else {
+						try {
+							const args = JSON.parse(tc.function.arguments) as Record<
+								string,
+								unknown
+							>;
+							const raw = await tool.execute(args, context);
+							resultContent =
+								typeof raw === "string" ? raw : JSON.stringify(raw);
+						} catch (err) {
+							resultContent = JSON.stringify({
+								error:
+									err instanceof Error
+										? err.message
+										: "Багаж ажиллуулахад алдаа гарлаа",
+							});
+						}
+					}
+					return { tool_call_id: tc.id, content: resultContent };
+				}),
+			);
+		}
+		for (const r of toolResults) {
 			messages.push({
 				role: "tool",
-				tool_call_id: tc.id,
-				content: resultContent,
+				tool_call_id: r.tool_call_id,
+				content: r.content,
 			});
 		}
 	}

@@ -1,0 +1,23 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "agent-gateway-webhook",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-27",
+	"secrets": {
+		"required": [
+			"SUPABASE_URL",
+			"SUPABASE_SERVICE_ROLE_KEY",
+			"MACBOOK_TUNNEL_URL",
+			"CODEX_REFRESH_TOKEN",
+			"CODEX_ACCOUNT_ID",
+			"CODEX_CLIENT_ID",
+			"CODEX_PROXY_API_KEY"
+		]
+	},
+	"kv_namespaces": [
+		{
+			"binding": "CODEX_KV",
+			"id": "1afd09e03d914220bc55f247551b9f1a"
+		}
+	]
+}

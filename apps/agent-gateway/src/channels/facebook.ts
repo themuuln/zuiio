@@ -49,14 +49,22 @@ export class FacebookChannel implements Channel {
 			);
 			return false;
 		}
-
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
-
 			const formatted = markdownToMessengerFormat(text);
+			const messagingType = options?.messagingType ?? "RESPONSE";
+			if (messagingType === "MESSAGE_TAG") {
+				capture(
+					new Error("Facebook MESSAGE_TAG requires validated approved tag"),
+					{
+						context: "facebook-channel",
+					},
+				);
+				return false;
+			}
 			const payload: Record<string, unknown> = {
 				recipient: { id: chatId.toString() },
-				messaging_type: "RESPONSE",
+				messaging_type: messagingType,
 				message: { text: formatted },
 			};
 
@@ -159,7 +167,21 @@ export class FacebookChannel implements Channel {
 			currentStock?: number | null;
 			imageUrl?: string | null;
 		}>,
+		options?: {
+			mode?: "product_carousel" | "generic";
+			messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
+			instagram?: boolean;
+		},
 	): Promise<boolean> {
+		if (options?.messagingType === "MESSAGE_TAG") {
+			capture(
+				new Error("Facebook MESSAGE_TAG requires validated approved tag"),
+				{
+					context: "facebook-channel",
+				},
+			);
+			return false;
+		}
 		if (!this.pageId || !this.pageAccessToken || products.length === 0) {
 			return false;
 		}
@@ -221,11 +243,21 @@ export class FacebookChannel implements Channel {
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						recipient: { id: chatId },
-						messaging_type: "RESPONSE",
+						messaging_type: options?.messagingType ?? "RESPONSE",
 						message: {
 							attachment: {
 								type: "template",
-								payload: { template_type: "generic", elements },
+								payload: {
+									template_type: "generic",
+									elements: options?.instagram
+										? elements.map((element) => ({
+												...element,
+												buttons: (
+													element.buttons as Array<Record<string, unknown>>
+												).slice(0, 3),
+											}))
+										: elements,
+								},
 							},
 						},
 					}),
@@ -250,12 +282,35 @@ export class FacebookChannel implements Channel {
 		if (!pageId || !pageAccessToken || !imageUrl) return false;
 		const trimmed = imageUrl.trim();
 		if (!trimmed) return false;
-		// Normalize: allow https URL, data: URL, or raw base64
-		const url =
-			trimmed.startsWith("http") || trimmed.startsWith("data:")
-				? trimmed
-				: `data:image/png;base64,${trimmed}`;
 		try {
+			let attachmentPayload: Record<string, unknown>;
+			if (trimmed.startsWith("data:image/")) {
+				const match = trimmed.match(/^data:(image\/[^;]+);base64,(.+)$/);
+				if (!match) return false;
+				const bytes = Buffer.from(match[2], "base64");
+				const form = new FormData();
+				form.append(
+					"message",
+					JSON.stringify({
+						attachment: { type: "image", payload: { is_reusable: true } },
+					}),
+				);
+				form.append(
+					"filedata",
+					new Blob([bytes], { type: match[1] }),
+					"qpay.png",
+				);
+				const upload = await fetch(
+					`${GRAPH_API_BASE}/${pageId}/message_attachments?access_token=${pageAccessToken}`,
+					{ method: "POST", body: form },
+				);
+				if (!upload.ok) return false;
+				const data = (await upload.json()) as { attachment_id?: string };
+				if (!data.attachment_id) return false;
+				attachmentPayload = { attachment_id: data.attachment_id };
+			} else {
+				attachmentPayload = { url: trimmed, is_reusable: true };
+			}
 			const res = await fetch(
 				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
 				{
@@ -265,17 +320,13 @@ export class FacebookChannel implements Channel {
 						recipient: { id: String(chatId) },
 						messaging_type: "RESPONSE",
 						message: {
-							attachment: {
-								type: "image",
-								payload: { url, is_reusable: true },
-							},
+							attachment: { type: "image", payload: attachmentPayload },
 						},
 					}),
 				},
 			);
 			if (!res.ok) {
-				const err = await res.text().catch(() => "unknown");
-				capture(new Error(`Facebook sendImage failed: ${res.status} ${err}`), {
+				capture(new Error(`Facebook sendImage failed: ${res.status}`), {
 					context: "facebook-channel",
 				});
 				return false;
@@ -313,7 +364,7 @@ export class FacebookChannel implements Channel {
 	async subscribeToWebhook(
 		pageId: string,
 		pageAccessToken: string,
-		subscribedFields = "messages,messaging_postbacks,feed",
+		subscribedFields = "messages,messaging_postbacks,feed,messaging_referrals,messaging_handovers,message_echoes,standby,messaging_account_linking",
 	): Promise<boolean> {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;

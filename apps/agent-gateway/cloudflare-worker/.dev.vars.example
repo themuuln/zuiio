@@ -1,0 +1,11 @@
+# Existing Telegram webhook proxy secrets
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=replace-me
+MACBOOK_TUNNEL_URL=https://your-tunnel.example.com/webhook
+
+# Codex ChatGPT subscription proxy secrets
+CODEX_REFRESH_TOKEN=replace-me
+CODEX_ACCOUNT_ID=replace-me
+CODEX_CLIENT_ID=replace-me
+CODEX_PROXY_API_KEY=replace-me
+# CODEX_BASE_URL=https://chatgpt.com/backend-api/codex

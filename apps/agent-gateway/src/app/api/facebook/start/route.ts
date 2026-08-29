@@ -97,7 +97,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 	// State cookie for the callback round-trip verification (legacy fallback).
 	response.cookies.set("fb_oauth_state", payload, {
-	httpOnly: true,
+		httpOnly: true,
 		secure: true,
 		sameSite: "none",
 		path: "/",

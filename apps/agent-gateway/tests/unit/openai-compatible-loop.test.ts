@@ -106,8 +106,8 @@ describe("runOpenAiCompatibleLoop — streaming", () => {
 		expect(result).toBe("Дууслаа");
 		// Second request includes the tool result
 		const secondBody = JSON.parse(
-			(globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1]![1]!
-				.body as string,
+			(globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1]?.[1]
+				?.body as string,
 		);
 		const toolMsg = secondBody.messages.find(
 			(m: { role: string }) => m.role === "tool",
@@ -128,7 +128,6 @@ describe("runOpenAiCompatibleLoop — streaming", () => {
 			],
 		});
 	});
-
 });
 describe("runOpenAiCompatibleLoop — resilience", () => {
 	it("retries on 429 then succeeds", async () => {

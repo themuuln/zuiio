@@ -236,7 +236,7 @@ describe("POST /api/facebook/select", () => {
 			(r: { value: { upsert: unknown } }) => r.value.upsert,
 		);
 		expect(upsert).toBeDefined();
-		const upsertArgs = (upsert!.value.upsert as ReturnType<typeof vi.fn>).mock
+		const upsertArgs = (upsert?.value.upsert as ReturnType<typeof vi.fn>).mock
 			.calls[0] as unknown[];
 		expect(upsertArgs[0]).toMatchObject({
 			organization_id: ORG_ID,

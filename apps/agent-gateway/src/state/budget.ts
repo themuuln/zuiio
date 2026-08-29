@@ -5,7 +5,7 @@ import { capture } from "@zuiio/capture";
 import { getCachedBudget, setCachedBudget } from "@/lib/cache";
 
 export const REQUEST_LIMITS = {
-	maxToolRounds: 10,
+	maxToolRounds: 5,
 	maxTotalTokens: 100_000,
 	maxResultTokens: 16_384,
 } as const;

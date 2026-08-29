@@ -192,9 +192,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 				// pages connected before the "feed" field (comment agent) was added.
 				// Non-fatal: subscription failures don't mark the row as failed.
 				try {
-					await new FacebookChannel().subscribeToWebhook(conn.page_id, pageToken);
+					await new FacebookChannel().subscribeToWebhook(
+						conn.page_id,
+						pageToken,
+					);
 				} catch (e) {
-					capture(e, { context: "agent-gateway: cron refresh-meta-tokens webhook" });
+					capture(e, {
+						context: "agent-gateway: cron refresh-meta-tokens webhook",
+					});
 				}
 			} catch (err) {
 				failed++;
