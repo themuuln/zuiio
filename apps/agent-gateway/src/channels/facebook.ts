@@ -283,52 +283,91 @@ export class FacebookChannel implements Channel {
 		const trimmed = imageUrl.trim();
 		if (!trimmed) return false;
 		try {
-			let attachmentPayload: Record<string, unknown>;
-			if (trimmed.startsWith("data:image/")) {
-				const match = trimmed.match(/^data:(image\/[^;]+);base64,(.+)$/);
-				if (!match) return false;
-				const bytes = Buffer.from(match[2], "base64");
-				const form = new FormData();
-				form.append(
-					"message",
-					JSON.stringify({
-						attachment: { type: "image", payload: { is_reusable: true } },
-					}),
+			// 1. Regular HTTP/HTTPS URL
+			if (/^https?:\/\//i.test(trimmed)) {
+				const res = await fetch(
+					`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							recipient: { id: String(chatId) },
+							messaging_type: "RESPONSE",
+							message: {
+								attachment: {
+									type: "image",
+									payload: { url: trimmed, is_reusable: true },
+								},
+							},
+						}),
+					},
 				);
-				form.append(
-					"filedata",
-					new Blob([bytes], { type: match[1] }),
-					"qpay.png",
-				);
-				const upload = await fetch(
-					`${GRAPH_API_BASE}/${pageId}/message_attachments?access_token=${pageAccessToken}`,
-					{ method: "POST", body: form },
-				);
-				if (!upload.ok) return false;
-				const data = (await upload.json()) as { attachment_id?: string };
-				if (!data.attachment_id) return false;
-				attachmentPayload = { attachment_id: data.attachment_id };
-			} else {
-				attachmentPayload = { url: trimmed, is_reusable: true };
+				if (!res.ok) {
+					const err = await res.text().catch(() => "unknown");
+					capture(
+						new Error(`Facebook sendImage URL failed: ${res.status} ${err}`),
+						{
+							context: "facebook-channel",
+						},
+					);
+					return false;
+				}
+				return true;
 			}
+
+			// 2. Base64 encoded image (data URI or raw base64 string from QPay)
+			let mimeType = "image/png";
+			let base64Data = trimmed;
+			if (trimmed.startsWith("data:")) {
+				const commaIdx = trimmed.indexOf(",");
+				if (commaIdx !== -1) {
+					const meta = trimmed.slice(5, commaIdx);
+					const extractedMime = meta.split(";")[0];
+					if (extractedMime) mimeType = extractedMime;
+					base64Data = trimmed.slice(commaIdx + 1);
+				}
+			}
+			base64Data = base64Data.replace(/\s+/g, "");
+			const bytes = Buffer.from(base64Data, "base64");
+			if (bytes.length === 0) {
+				capture(new Error("Facebook sendImage: empty base64 image data"), {
+					context: "facebook-channel",
+				});
+				return false;
+			}
+
+			// Send multipart/form-data directly to /{pageId}/messages
+			const form = new FormData();
+			form.append("recipient", JSON.stringify({ id: String(chatId) }));
+			form.append("messaging_type", "RESPONSE");
+			form.append(
+				"message",
+				JSON.stringify({
+					attachment: { type: "image", payload: { is_reusable: true } },
+				}),
+			);
+			form.append(
+				"filedata",
+				new Blob([bytes], { type: mimeType }),
+				"qpay.png",
+			);
+
 			const res = await fetch(
 				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
 				{
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						recipient: { id: String(chatId) },
-						messaging_type: "RESPONSE",
-						message: {
-							attachment: { type: "image", payload: attachmentPayload },
-						},
-					}),
+					body: form,
 				},
 			);
+
 			if (!res.ok) {
-				capture(new Error(`Facebook sendImage failed: ${res.status}`), {
-					context: "facebook-channel",
-				});
+				const err = await res.text().catch(() => "unknown");
+				capture(
+					new Error(`Facebook sendImage binary failed: ${res.status} ${err}`),
+					{
+						context: "facebook-channel",
+					},
+				);
 				return false;
 			}
 			return true;

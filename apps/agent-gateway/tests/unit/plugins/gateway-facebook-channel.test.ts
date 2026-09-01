@@ -116,4 +116,48 @@ describe("FacebookChannel", () => {
 
 		expect(result).toBeNull();
 	});
+
+	describe("sendImage", () => {
+		it("sends image via URL as JSON attachment", async () => {
+			fetchSpy.mockResolvedValue(new Response(JSON.stringify({ message_id: "m_1" }), { status: 200 }));
+			const ok = await channel.sendImage("user-1", "https://example.com/qr.png");
+			expect(ok).toBe(true);
+			expect(fetchSpy).toHaveBeenCalledWith(
+				expect.stringContaining(`/messages?access_token=${PAGE_TOKEN}`),
+				expect.objectContaining({
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: expect.stringContaining("https://example.com/qr.png"),
+				}),
+			);
+		});
+
+		it("sends raw base64 image data as multipart/form-data", async () => {
+			fetchSpy.mockResolvedValue(new Response(JSON.stringify({ message_id: "m_2" }), { status: 200 }));
+			const rawBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+			const ok = await channel.sendImage("user-1", rawBase64);
+			expect(ok).toBe(true);
+			expect(fetchSpy).toHaveBeenCalledWith(
+				expect.stringContaining(`/messages?access_token=${PAGE_TOKEN}`),
+				expect.objectContaining({
+					method: "POST",
+					body: expect.any(FormData),
+				}),
+			);
+		});
+
+		it("sends data:image/png;base64 as multipart/form-data", async () => {
+			fetchSpy.mockResolvedValue(new Response(JSON.stringify({ message_id: "m_3" }), { status: 200 }));
+			const dataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+			const ok = await channel.sendImage("user-1", dataUri);
+			expect(ok).toBe(true);
+			expect(fetchSpy).toHaveBeenCalledWith(
+				expect.stringContaining(`/messages?access_token=${PAGE_TOKEN}`),
+				expect.objectContaining({
+					method: "POST",
+					body: expect.any(FormData),
+				}),
+			);
+		});
+	});
 });

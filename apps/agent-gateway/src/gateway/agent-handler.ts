@@ -430,7 +430,7 @@ export async function handleAgentMessage(
 	}
 	if (ctx.channel === "messenger" && ctx.audience === "customer") {
 		systemPrompt +=
-			"\n\nFACEBOOK MESSENGER RULE: When you call searchProducts and find products, give ONLY a brief intro (one short sentence like 'Таны хайсан бараанууд:') — do NOT enumerate products as a numbered or bulleted text list, because they will be displayed as horizontally scrollable cards with image, price and buttons. Keep response under 2 sentences when products are shown.";
+			"\n\nFACEBOOK MESSENGER RULES:\n1. When products are shown, give ONLY a brief intro (e.g. 'Таны хайсан бараанууд:') — do NOT enumerate products as a numbered or bulleted text list, because they will be displayed as horizontally scrollable cards with image, price and buttons.\n2. On product cards or details, do NOT ask redundant questions like 'Танд өөр ямар тусламж хэрэгтэй вэ?' or 'Сагсанд нэмэх үү?' — action buttons are already provided on the cards.\n3. For ordering, delivery is standard; do NOT ask 'Хүргэлт эсвэл Авч явах уу' unless the customer asks for pickup. Ask for recipient name, phone, and delivery address in a single concise message.\n4. When the user confirms order details ('Тийм' / confirms), proceed immediately to create the order with QPay without asking repeated confirmations.";
 	}
 	timings.contextLoad = Math.round(performance.now() - t);
 

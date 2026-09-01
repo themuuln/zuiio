@@ -93,6 +93,17 @@ describe("markdownToMessengerFormat", () => {
 			"HelloWorld",
 		);
 	});
+	it("strips <qr>...</qr> blocks and raw JSON buttons completely", () => {
+		const input =
+			'Бараа олдсонгүй.\n\n<qr>[{"text":"🔍 Шампунь хайх", "payload":"catalog"}, {"text":"🛒 Сагс харах", "payload":"cart_view"}]</qr>';
+		expect(markdownToMessengerFormat(input)).toBe("Бараа олдсонгүй.");
+	});
+
+	it("strips trailing untagged quick reply JSON arrays", () => {
+		const input =
+			'Бараа олдсонгүй.\n\n[{"text":"🔍 Шампунь хайх", "payload":"catalog"}]';
+		expect(markdownToMessengerFormat(input)).toBe("Бараа олдсонгүй.");
+	});
 	it("handles empty input", () => {
 		expect(markdownToMessengerFormat("")).toBe("");
 	});

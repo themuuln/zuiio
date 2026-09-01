@@ -15,6 +15,12 @@ import {
 	replayCustomerCheckoutAction,
 } from "@/gateway/customer-cart-tool";
 import { createCustomerProductTool } from "@/gateway/customer-product-tool";
+import {
+	buildQpayBankQuickReplies,
+	formatBankPaymentMessage,
+	type QpayBankUrl,
+	resolveBankDeeplink,
+} from "@/gateway/qpay-helpers";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
 import { formatWriteResult } from "@/lib/format-result";
@@ -711,47 +717,67 @@ function quickRepliesForCustomerMessage(
 	];
 }
 
-/** Extract <qr>[{text,payload}]</qr> from AI response. Returns {cleanText, aiReplies}. */
+/** Extract <qr>[{text,payload}]</qr> or trailing JSON quick replies from AI response. Returns {cleanText, aiReplies}. */
 function extractAiQuickReplies(raw: string): {
 	cleanText: string;
 	aiReplies: Array<{ text: string; callbackData: string }>;
 } {
+	let jsonStr: string | null = null;
+	let cleanText = raw;
+
 	const m = raw.match(/<qr>([\s\S]*?)<\/qr>/i);
-	if (!m) return { cleanText: raw.trim(), aiReplies: [] };
-	const cleanText = raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim();
+	if (m) {
+		jsonStr = m[1].trim();
+		cleanText = raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim();
+	} else {
+		// Fallback: match trailing JSON array without <qr> tags
+		const mJson = raw.match(
+			/\n*\s*(\[\s*\{[\s\S]*?"(?:payload|callbackData)"[\s\S]*\}\s*\])\s*$/i,
+		);
+		if (mJson) {
+			jsonStr = mJson[1].trim();
+			cleanText = raw.slice(0, mJson.index).trim();
+		}
+	}
+
+	// Always clean any stray <qr> tags
+	cleanText = cleanText.replace(/<\/?qr>/gi, "").trim();
+
+	if (!jsonStr) return { cleanText, aiReplies: [] };
+
 	try {
-		const parsed = JSON.parse(m[1].trim());
+		const parsed = JSON.parse(jsonStr);
 		if (!Array.isArray(parsed)) return { cleanText, aiReplies: [] };
 		const aiReplies = parsed
-			.slice(0, 3)
+			.slice(0, 5)
 			.map((x: unknown) => {
 				if (!x || typeof x !== "object") return null;
 				const r = x as Record<string, unknown>;
 				const text =
 					typeof r.text === "string" ? r.text.trim().slice(0, 20) : "";
 				const payload =
-					typeof r.payload === "string" ? r.payload.trim().slice(0, 1000) : "";
+					typeof r.payload === "string"
+						? r.payload.trim().slice(0, 1000)
+						: typeof r.callbackData === "string"
+							? r.callbackData.trim().slice(0, 1000)
+							: "";
 				if (!text || !payload) return null;
 				return { text, callbackData: payload };
 			})
 			.filter((x): x is { text: string; callbackData: string } => x !== null);
 		return { cleanText, aiReplies };
 	} catch {
-		return {
-			cleanText: raw.replace(/<qr>[\s\S]*?<\/qr>/gi, "").trim(),
-			aiReplies: [],
-		};
+		return { cleanText, aiReplies: [] };
 	}
 }
 
-function _resolveQuickReplies(
+function resolveQuickReplies(
 	aiReplies: Array<{ text: string; callbackData: string }>,
 	fallback: Array<{ text: string; callbackData: string }> | undefined,
 ): Array<{ text: string; callbackData: string }> | undefined {
-	if (aiReplies.length > 0) return aiReplies.slice(0, 3);
+	if (aiReplies.length > 0) return aiReplies.slice(0, 5);
 	return fallback;
 }
-
 interface MessageContext {
 	pageId: string;
 	senderId: string;
@@ -784,39 +810,6 @@ async function handleMessage(
 	});
 
 	try {
-		// Check 24h messaging window against the per-sender session, which is keyed
-		// by (org, channel, chat, user) — the old channel_connections lookup compared
-		// against channel_user_id (= page id) and could never match a sender PSID.
-		const { data: session } = await supabase
-			.from("agent_sessions")
-			.select("updated_at")
-			.eq("organization_id", ctx.orgId)
-			.eq("channel", ctx.channel)
-			.eq("channel_chat_id", ctx.pageId)
-			.eq("channel_user_id", ctx.senderId)
-			.maybeSingle();
-
-		if (session?.updated_at) {
-			const hoursSinceLastMessage =
-				(Date.now() - new Date(session.updated_at as string).getTime()) /
-				(1000 * 60 * 60);
-
-			if (hoursSinceLastMessage > 24) {
-				trace?.set({
-					responseText: "Бидэнтэй харилцахаар ахиад мессеж бичнэ үү. 😊",
-					status: "filtered",
-				});
-				trace?.log("info", "24h window blocked", {
-					hoursSinceLastMessage: Math.round(hoursSinceLastMessage),
-				});
-				await channel.sendMessage(
-					ctx.senderId,
-					"Бидэнтэй харилцахаар ахиад мессеж бичнэ үү. 😊",
-				);
-				return;
-			}
-		}
-
 		const dataClient =
 			ctx.productType === "tolom" ? getSupabaseForProduct("tolom") : supabase;
 
@@ -898,6 +891,10 @@ async function handleMessage(
 		// Capture searchProducts results so we can render them as horizontal cards on Messenger
 		let capturedProducts: unknown = null;
 		let capturedQpayImage: string | null = null;
+		let capturedPaymentUrls: QpayBankUrl[] | null = null;
+		let capturedPaymentLink: string | null = null;
+		let capturedQrText: string | null = null;
+		let capturedOrderId: string | null = null;
 		const toolCalls: Array<Record<string, unknown>> = [];
 		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
 			getSystemPrompt: systemPromptFor,
@@ -927,18 +924,32 @@ async function handleMessage(
 						capturedProducts = prods;
 					}
 				}
-				// Capture QPay QR for direct image send (bypassing confirmation gate)
+				// Capture QPay QR and payment info for direct send
 				if (
-					!capturedQpayImage &&
 					(toolName === "placeOrderWithQpay" ||
 						toolName === "checkoutCartWithQpay") &&
 					result !== null &&
-					typeof result === "object" &&
-					"qpay_qr_image" in result
+					typeof result === "object"
 				) {
-					const img = (result as Record<string, unknown>).qpay_qr_image;
-					if (typeof img === "string" && img.trim())
-						capturedQpayImage = img.trim();
+					const rec = result as Record<string, unknown>;
+					if (
+						typeof rec.qpay_qr_image === "string" &&
+						rec.qpay_qr_image.trim()
+					) {
+						capturedQpayImage = rec.qpay_qr_image.trim();
+					}
+					if (Array.isArray(rec.payment_urls)) {
+						capturedPaymentUrls = rec.payment_urls as QpayBankUrl[];
+					}
+					if (typeof rec.payment_link === "string" && rec.payment_link.trim()) {
+						capturedPaymentLink = rec.payment_link.trim();
+					}
+					if (typeof rec.qpay_qr_text === "string" && rec.qpay_qr_text.trim()) {
+						capturedQrText = rec.qpay_qr_text.trim();
+					}
+					if (typeof rec.order_id === "string" && rec.order_id.trim()) {
+						capturedOrderId = rec.order_id.trim();
+					}
 				}
 			},
 		});
@@ -949,6 +960,7 @@ async function handleMessage(
 			hasProducts:
 				Array.isArray(capturedProducts) &&
 				(capturedProducts as unknown[]).length > 0,
+			hasPaymentLink: Boolean(capturedPaymentLink),
 		});
 		trace?.set({
 			responseText: response,
@@ -958,7 +970,8 @@ async function handleMessage(
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
 
 		// AI-generated quick replies with deterministic fallback
-		const { cleanText: aiCleanText } = extractAiQuickReplies(response);
+		const { cleanText: aiCleanText, aiReplies } =
+			extractAiQuickReplies(response);
 		const responseText = aiCleanText || response.trim();
 
 		// If the LLM called searchProducts on Messenger, render the result as
@@ -1001,27 +1014,51 @@ async function handleMessage(
 			trace?.log("warn", "cards failed, fallback to text", {
 				responseLen: response.length,
 			});
-			await channel.sendMessage(ctx.senderId, response, {
-				quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
+			await channel.sendMessage(ctx.senderId, responseText, {
+				quickReplies: resolveQuickReplies(
+					aiReplies,
+					quickRepliesForCustomerMessage(ctx.text, ctx.channel),
+				),
 			});
-			trace?.set({ responseText: response, status: "ok" });
+			trace?.set({ responseText, status: "ok" });
 			return;
 		}
 
 		// No products — normal text reply
 		trace?.log("info", "sending text reply", {
-			responseLen: response.length,
-			preview: response.slice(0, 80),
+			responseLen: responseText.length,
+			preview: responseText.slice(0, 80),
 		});
-		trace?.set({ responseText: response, status: "ok" });
-		await channel.sendMessage(ctx.senderId, response, {
-			quickReplies: quickRepliesForCustomerMessage(ctx.text, ctx.channel),
-		});
+		trace?.set({ responseText, status: "ok" });
+
+		// If QPay was returned, send QR image first!
 		if (capturedQpayImage) {
 			try {
 				await channel.sendImage?.(ctx.senderId, capturedQpayImage);
 			} catch {}
 		}
+
+		let quickReplies: Array<{ text: string; callbackData: string }> | undefined;
+		if (capturedOrderId) {
+			const bankReplies = buildQpayBankQuickReplies(
+				capturedOrderId,
+				capturedPaymentUrls,
+				capturedQrText,
+			);
+			if (bankReplies.length > 0) {
+				quickReplies = bankReplies;
+			}
+		}
+		if (!quickReplies) {
+			quickReplies = resolveQuickReplies(
+				aiReplies,
+				quickRepliesForCustomerMessage(ctx.text, ctx.channel),
+			);
+		}
+
+		await channel.sendMessage(ctx.senderId, responseText, {
+			quickReplies,
+		});
 	} catch (err) {
 		trace?.error(err);
 		trace?.set({
@@ -1114,6 +1151,38 @@ async function handlePostback(
 			const isOrderCheckout =
 				staged.toolName === "placeOrderWithQpay" ||
 				staged.toolName === "checkoutCartWithQpay";
+
+			let bankReplies: Array<{ text: string; callbackData: string }> = [];
+			if (
+				result !== null &&
+				typeof result === "object" &&
+				"payment_method" in result &&
+				(result as Record<string, unknown>).payment_method === "qpay"
+			) {
+				const record = result as Record<string, unknown>;
+				const qrImage =
+					typeof record.qpay_qr_image === "string"
+						? record.qpay_qr_image.trim()
+						: null;
+				// Send QPay QR image first
+				if (qrImage) {
+					try {
+						await channel.sendImage?.(ctx.senderId, qrImage);
+					} catch {}
+				}
+
+				const orderId =
+					typeof record.order_id === "string" ? record.order_id : "";
+				const paymentUrls = Array.isArray(record.payment_urls)
+					? (record.payment_urls as QpayBankUrl[])
+					: [];
+				const qrText =
+					typeof record.qpay_qr_text === "string" ? record.qpay_qr_text : null;
+				if (orderId) {
+					bankReplies = buildQpayBankQuickReplies(orderId, paymentUrls, qrText);
+				}
+			}
+
 			const followUps = isOrderCheckout
 				? [
 						{ text: "Захиалга шалгах", callbackData: "order_status" },
@@ -1124,26 +1193,11 @@ async function handlePostback(
 						{ text: "Сагс харах", callbackData: "cart_view" },
 						{ text: "Бүтээгдэхүүн үзэх", callbackData: "catalog" },
 					];
+
+			const quickReplies = bankReplies.length > 0 ? bankReplies : followUps;
 			await channel.sendMessage(ctx.senderId, formatWriteResult(result), {
-				quickReplies: followUps,
+				quickReplies,
 			});
-			// If the order returned a QPay QR image, send it as an image attachment
-			if (
-				result !== null &&
-				typeof result === "object" &&
-				"payment_method" in result &&
-				"qpay_qr_image" in result
-			) {
-				const record = result as Record<string, unknown>;
-				if (record.payment_method === "qpay") {
-					const qrImage = record.qpay_qr_image;
-					if (typeof qrImage === "string" && qrImage.trim()) {
-						try {
-							await channel.sendImage?.(ctx.senderId, qrImage);
-						} catch {}
-					}
-				}
-			}
 		} catch (err) {
 			capture(err, { context: "agent-gateway: confirm staged action (meta)" });
 			await channel.sendMessage(
@@ -1160,6 +1214,105 @@ async function handlePostback(
 		return;
 	}
 
+	if (
+		ctx.payload.startsWith("QPAY_BANK:") ||
+		ctx.payload.startsWith("qpay_bank:")
+	) {
+		const parts = ctx.payload.split(":");
+		const rawBankName = parts[1] ?? "";
+		const orderId = parts[2]?.trim() ?? "";
+		const bankName = rawBankName ? decodeURIComponent(rawBankName) : "Банк";
+
+		if (orderId) {
+			try {
+				const { data: pending } = await supabase
+					.from("qpay_pending")
+					.select(
+						"order_id, amount, payment_urls, payment_link, qr_text, qr_image",
+					)
+					.eq("order_id", orderId)
+					.maybeSingle();
+
+				const rawUrls = Array.isArray(pending?.payment_urls)
+					? (pending.payment_urls as unknown as QpayBankUrl[])
+					: [];
+				const resolved = resolveBankDeeplink(
+					bankName,
+					rawUrls,
+					pending?.qr_text,
+				);
+				const matchedName = resolved?.name || bankName;
+				const deeplink = resolved?.link || "";
+				const paymentLink = pending?.payment_link || rawUrls[0]?.link || "";
+
+				const msg = formatBankPaymentMessage({
+					bankName: matchedName,
+					deeplink,
+					paymentLink,
+				});
+
+				const followUps = buildQpayBankQuickReplies(
+					orderId,
+					rawUrls,
+					pending?.qr_text,
+				);
+				await channel.sendMessage(ctx.senderId, msg, {
+					quickReplies: followUps,
+				});
+			} catch (err) {
+				capture(err, { context: "agent-gateway: QPAY_BANK postback" });
+				await channel.sendMessage(
+					ctx.senderId,
+					"Төлбөрийн мэдээлэл авахад алдаа гарлаа.",
+				);
+			}
+		}
+		return;
+	}
+
+	if (
+		ctx.payload.startsWith("QPAY_LINK:") ||
+		ctx.payload.startsWith("qpay_link:")
+	) {
+		const orderId = ctx.payload
+			.replace(/^qpay_link:/i, "")
+			.replace(/^QPAY_LINK:/, "")
+			.trim();
+		if (orderId) {
+			try {
+				const { data: pending } = await supabase
+					.from("qpay_pending")
+					.select("order_id, payment_link, payment_urls, qr_text")
+					.eq("order_id", orderId)
+					.maybeSingle();
+
+				const rawUrls = Array.isArray(pending?.payment_urls)
+					? (pending.payment_urls as unknown as QpayBankUrl[])
+					: [];
+				const paymentLink = pending?.payment_link || rawUrls[0]?.link || "";
+
+				const msg = paymentLink
+					? `🔗 <b>QPay ерөнхий холбоос:</b>\n${paymentLink}\n\nДээрх холбоосоор орж дурын банкны аппаа сонгон төлбөрөө хийнэ үү.`
+					: "QPay холбоос олдсонгүй. Манай ажилтан тантай холбогдоно.";
+
+				const followUps = buildQpayBankQuickReplies(
+					orderId,
+					rawUrls,
+					pending?.qr_text,
+				);
+				await channel.sendMessage(ctx.senderId, msg, {
+					quickReplies: followUps,
+				});
+			} catch (err) {
+				capture(err, { context: "agent-gateway: QPAY_LINK postback" });
+				await channel.sendMessage(
+					ctx.senderId,
+					"QPay холбоос авахад алдаа гарлаа.",
+				);
+			}
+		}
+		return;
+	}
 	if (ctx.payload.startsWith("PRODUCT:")) {
 		const productId = ctx.payload.slice("PRODUCT:".length).trim();
 		if (productId) {

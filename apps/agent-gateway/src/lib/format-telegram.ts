@@ -7,6 +7,13 @@
  */
 export function markdownToMessengerFormat(text: string): string {
 	let result = convertTablesToPlainList(text);
+	// Strip any <qr>...</qr> blocks before tag removal
+	result = result.replace(/<qr>[\s\S]*?<\/qr>/gi, "");
+	// Strip un-tagged quick reply JSON arrays if model emitted bare JSON at end
+	result = result.replace(
+		/\n*\s*\[\s*\{[\s\S]*?"(?:payload|callbackData)"[\s\S]*\}\s*\]\s*$/i,
+		"",
+	);
 	result = result.replace(/<\/?strong>/gi, "*");
 	result = result.replace(/<\/?b>/gi, "*");
 	result = result.replace(/<\/?(?:i|em)>/gi, "");

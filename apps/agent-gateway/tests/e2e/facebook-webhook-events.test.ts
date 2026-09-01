@@ -46,17 +46,18 @@ vi.mock("@/runtime/confirmation", () => ({
 const mockSendMessage = vi.fn(async () => {});
 const mockSendSenderAction = vi.fn(async () => {});
 const mockSendProductCards = vi.fn(async () => true);
+const mockSendImage = vi.fn(async () => true);
 vi.mock("@/channels/facebook", () => ({
 	FacebookChannel: class {
 		sendMessage = mockSendMessage;
 		sendSenderAction = mockSendSenderAction;
 		sendProductCards = mockSendProductCards;
+		sendImage = mockSendImage;
 	},
 }));
-
 let mockConnections: unknown[];
 let mockSessionRow: unknown = null;
-
+let mockQpayPendingRow: unknown = null;
 vi.mock("@/lib/supabase", () => ({
 	createServiceClient: vi.fn(() => {
 		const chain: Record<string, unknown> = {};
@@ -66,7 +67,10 @@ vi.mock("@/lib/supabase", () => ({
 		chain.update = vi.fn(() => chain);
 		chain.insert = vi.fn(() => Promise.resolve({ data: null, error: null }));
 		chain.maybeSingle = vi.fn(() =>
-			Promise.resolve({ data: mockSessionRow, error: null }),
+			Promise.resolve({
+				data: mockQpayPendingRow ?? mockSessionRow,
+				error: null,
+			}),
 		);
 		chain.order = vi.fn(() => chain);
 		chain.limit = vi.fn(() => Promise.resolve({ data: [], error: null }));
@@ -247,8 +251,8 @@ describe("facebook webhook — event paths", () => {
 		);
 	});
 
-	it("does NOT answer when the 24h inactivity gate is closed", async () => {
-		// Session last updated 25h ago → the bot prompts the user to write again.
+	it("answers normally when user messages even if previous session was older than 24h", async () => {
+		// User messaging opens the 24h window — never locks out returning users.
 		mockSessionRow = {
 			updated_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
 		};
@@ -258,10 +262,11 @@ describe("facebook webhook — event paths", () => {
 		);
 
 		expect(res.status).toBe(200);
-		expect(mockHandleAgentMessage).not.toHaveBeenCalled();
+		expect(mockHandleAgentMessage).toHaveBeenCalledTimes(1);
 		expect(mockSendMessage).toHaveBeenCalledWith(
 			"psid-1",
-			expect.stringContaining("ахиад мессеж бичнэ үү"),
+			"Хариулт",
+			expect.objectContaining({ quickReplies: expect.any(Array) }),
 		);
 	});
 
@@ -299,5 +304,54 @@ describe("facebook webhook — event paths", () => {
 			s.update.mock.calls.some((c) => c[0]?.last_user_message_at),
 		);
 		expect(hasUpdate).toBe(true);
+	});
+
+	it("sends bank deeplink on QPAY_BANK: postback", async () => {
+		mockQpayPendingRow = {
+			order_id: "order-123",
+			payment_link: "https://qpay.mn/q/123",
+			payment_urls: [
+				{ name: "Хаан банк", link: "khanbank://q?qPay_QRcode=000201" },
+			],
+			qr_text: "000201",
+		};
+		const { POST } = await import("@/app/api/facebook/webhook/route");
+		const res = await POST(
+			post(
+				messengerEvent({
+					postback: { payload: "QPAY_BANK:Хаан банк:order-123" },
+				}),
+			),
+		);
+		expect(res.status).toBe(200);
+		expect(mockSendMessage).toHaveBeenCalledWith(
+			"psid-1",
+			expect.stringContaining("Хаан банк"),
+			expect.objectContaining({ quickReplies: expect.any(Array) }),
+		);
+		expect(mockSendMessage).toHaveBeenCalledWith(
+			"psid-1",
+			expect.stringContaining("khanbank://q?qPay_QRcode=000201"),
+			expect.anything(),
+		);
+	});
+
+	it("sends QPay general link on QPAY_LINK: postback", async () => {
+		mockQpayPendingRow = {
+			order_id: "order-123",
+			payment_link: "https://qpay.mn/q/123",
+			payment_urls: [],
+			qr_text: "000201",
+		};
+		const { POST } = await import("@/app/api/facebook/webhook/route");
+		const res = await POST(
+			post(messengerEvent({ postback: { payload: "QPAY_LINK:order-123" } })),
+		);
+		expect(res.status).toBe(200);
+		expect(mockSendMessage).toHaveBeenCalledWith(
+			"psid-1",
+			expect.stringContaining("https://qpay.mn/q/123"),
+			expect.objectContaining({ quickReplies: expect.any(Array) }),
+		);
 	});
 });

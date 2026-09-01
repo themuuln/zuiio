@@ -40,15 +40,33 @@ const PaymentInstructionsSchema = z
 		qpay_qr_text: z.string().nullable().optional(),
 		qpay_qr_image: z.string().nullable().optional(),
 		payment_urls: z
-			.array(z.object({ name: z.string(), link: z.string().url() }))
+			.array(
+				z.object({
+					name: z.string(),
+					link: z.string(),
+					description: z.string().optional(),
+					logo: z.string().optional(),
+				}),
+			)
 			.nullable()
 			.optional(),
 		qpay_urls: z
 			.array(
 				z.object({
 					name: z.string(),
-					description: z.string(),
-					link: z.string().url(),
+					link: z.string(),
+					description: z.string().optional(),
+					logo: z.string().optional(),
+				}),
+			)
+			.nullable()
+			.optional(),
+		urls: z
+			.array(
+				z.object({
+					name: z.string(),
+					link: z.string(),
+					description: z.string().optional(),
 					logo: z.string().optional(),
 				}),
 			)
@@ -70,18 +88,43 @@ const ChatOrderResponseSchema = z.object({
 		.optional(),
 });
 
-function normalizeInstructions(
+export interface NormalizedPaymentInstructions {
+	paymentLink: string | null;
+	qrText: string | null;
+	qrImage: string | null;
+	paymentUrls: Array<{
+		name: string;
+		link: string;
+		description?: string;
+		logo?: string;
+	}>;
+}
+
+export function normalizeInstructions(
 	instructions: z.infer<typeof PaymentInstructionsSchema> | null | undefined,
-) {
+): NormalizedPaymentInstructions {
 	if (!instructions) {
 		return {
 			paymentLink: null,
 			qrText: null,
-			qrImage: null as string | null,
-			paymentUrls: [] as Array<{ name: string; link: string }>,
+			qrImage: null,
+			paymentUrls: [],
 		};
 	}
-	const paymentUrls = instructions.payment_urls ?? instructions.qpay_urls ?? [];
+	const rawUrls =
+		instructions.payment_urls ??
+		instructions.qpay_urls ??
+		instructions.urls ??
+		[];
+	const paymentUrls = rawUrls.map((u) => ({
+		name: u.name,
+		link: u.link,
+		description:
+			"description" in u && typeof u.description === "string"
+				? u.description
+				: undefined,
+		logo: "logo" in u && typeof u.logo === "string" ? u.logo : undefined,
+	}));
 	return {
 		paymentLink: instructions.qpay_short_url ?? paymentUrls[0]?.link ?? null,
 		qrText: instructions.qpay_qr_text ?? null,
@@ -233,6 +276,10 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 						status: "pending",
 						expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
 						trace_id: _context.traceId ?? null,
+						payment_urls: payment.paymentUrls,
+						payment_link: payment.paymentLink,
+						qr_text: payment.qrText,
+						qr_image: payment.qrImage,
 					};
 					let { error: pendingError } = await _context.supabase
 						.from("qpay_pending")
