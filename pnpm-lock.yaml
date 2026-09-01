@@ -24,6 +24,15 @@ catalogs:
     clsx:
       specifier: ^2.1.1
       version: 2.1.1
+    cockatiel:
+      specifier: 4.0.0
+      version: 4.0.0
+    fast-check:
+      specifier: ^4.9.0
+      version: 4.9.0
+    msw:
+      specifier: 2.15.0
+      version: 2.15.0
     next:
       specifier: 16.3.0
       version: 16.3.0
@@ -88,6 +97,9 @@ importers:
       '@zuiio/gateway-core':
         specifier: workspace:*
         version: link:../../packages/gateway-core
+      cockatiel:
+        specifier: 'catalog:'
+        version: 4.0.0
       next:
         specifier: 'catalog:'
         version: 16.3.0(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.8))(react@19.2.8)
@@ -122,6 +134,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      fast-check:
+        specifier: 'catalog:'
+        version: 4.9.0
+      msw:
+        specifier: 'catalog:'
+        version: 2.15.0(@types/node@26.1.1)(typescript@7.0.2)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -9291,6 +9309,10 @@ packages:
 
   es-iterator-helpers@1.4.0:
     resolution: {integrity: sha512-c/A0P0oxkACDc+cKWw8evLXK83oBKgn0qPOqCYT4x9uolpCIJAcYvJC9QYKNDRPsTeGyCrQ326jrvgZWdCdK5Q==}
+  cockatiel@4.0.0:
+    resolution: {integrity: sha512-XpUZJnogsd03BGB19T9sv7Xb8SwvD8JddZV2Tlp0LNspopZ6Idv24ZwCl8vAGJ6JwODZ0zLRYVj3NWvmRcUDqA==}
+    engines: {node: '>=22'}
+
     engines: {node: '>= 0.4'}
 
   es-module-lexer@1.7.0:
@@ -11019,6 +11041,10 @@ packages:
   is-negative-zero@2.0.3:
     resolution: {integrity: sha512-5KoIu2Ngpyek75jXodFvnafB6DJgr3u8uuK0LEZJjrU19DrMD3EVERaR8sjz8CCGgpZvxPl9SuE1GMVPFHx1mw==}
     engines: {node: '>= 0.4'}
+  fast-check@4.9.0:
+    resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
+    engines: {node: '>=12.17.0'}
+
 
   is-network-error@1.3.2:
     resolution: {integrity: sha512-PhBY86zaxNZUuWP6h13Vu5oFe0XY6/UlKzQnYFELzGVHygP3MxmvTfYSG7GN3aIab/iWudSMgjSnG9Dq+nHrgA==}
@@ -13575,6 +13601,9 @@ packages:
 
   source-map-support@0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
+
 
   source-map@0.5.7:
     resolution: {integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==}
@@ -26093,6 +26122,8 @@ snapshots:
   eventsource@3.0.7:
     dependencies:
       eventsource-parser: 3.1.0
+  cockatiel@4.0.0: {}
+
 
   exceljs@4.4.0:
     dependencies:
@@ -28949,6 +28980,10 @@ snapshots:
       minimist: 1.2.8
 
   json5@2.2.3: {}
+
+  fast-check@4.9.0:
+    dependencies:
+      pure-rand: 8.4.2
 
   jsonfile@6.2.1:
     dependencies:
@@ -32039,6 +32074,8 @@ snapshots:
       '@img/sharp-libvips-darwin-arm64': 1.3.2
       '@img/sharp-libvips-darwin-x64': 1.3.2
       '@img/sharp-libvips-linux-arm': 1.3.2
+  pure-rand@8.4.2: {}
+
       '@img/sharp-libvips-linux-arm64': 1.3.2
       '@img/sharp-libvips-linux-ppc64': 1.3.2
       '@img/sharp-libvips-linux-riscv64': 1.3.2

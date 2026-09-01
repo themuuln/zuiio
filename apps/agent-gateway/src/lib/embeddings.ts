@@ -2,6 +2,7 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { openCodeGoConfig } from "@/lib/env";
+import { withResilientFetch } from "@/lib/resilience";
 
 /**
  * Embedding generation via OpenCodeGo API.
@@ -12,6 +13,16 @@ import { openCodeGoConfig } from "@/lib/env";
 const EMBEDDING_MODEL = "text-embedding-ada-002";
 const EMBEDDING_DIMENSION = 1536;
 
+const EMBEDDING_RESILIENCE_OPTIONS = {
+	key: "opencodego-embeddings",
+	label: "Embedding API",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 4,
+	queueCapacity: 32,
+	retryable: true,
+} as const;
+
 /**
  * Generate an embedding vector from text.
  * Uses OpenCodeGo's OpenAI-compatible embeddings API.
@@ -21,18 +32,21 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 	const config = openCodeGoConfig();
 
 	try {
-		// Try OpenCodeGo's OpenAI-compatible embeddings endpoint
-		const res = await fetch(`${config.baseUrl}/embeddings`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${config.apiKey}`,
+		const res = await withResilientFetch(
+			`${config.baseUrl}/embeddings`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${config.apiKey}`,
+				},
+				body: JSON.stringify({
+					model: EMBEDDING_MODEL,
+					input: text.substring(0, 8191),
+				}),
 			},
-			body: JSON.stringify({
-				model: EMBEDDING_MODEL,
-				input: text.substring(0, 8191),
-			}),
-		});
+			EMBEDDING_RESILIENCE_OPTIONS,
+		);
 
 		if (!res.ok) {
 			// OpenCodeGo may not support embeddings on this endpoint

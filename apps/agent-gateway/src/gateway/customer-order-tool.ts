@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { capture } from "@zuiio/capture";
 import { z } from "zod";
+import { withResilientFetch } from "@/lib/resilience";
 import { resolveZerBaseUrl } from "@/lib/zer-resolver";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 
@@ -236,7 +237,7 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 					.update(JSON.stringify(stablePayload))
 					.digest("hex")
 					.slice(0, 32);
-				const response = await fetch(
+				const response = await withResilientFetch(
 					`${baseUrl}/api/internal/v1/checkout/orders`,
 					{
 						method: "POST",
@@ -250,7 +251,16 @@ export function createCustomerOrderTool(_context: ToolContext): GatewayTool {
 							contact_phone: canonicalPhone,
 							idempotency_key,
 						}),
-						signal: AbortSignal.timeout(15_000),
+					},
+					{
+						key: `qpay-order-create:${baseUrl}`,
+						label: "QPay order create",
+						maxRetries: 2,
+						timeoutMs: 15_000,
+						concurrency: 4,
+						queueCapacity: 16,
+						throwOnNonOk: false,
+						retryable: true,
 					},
 				);
 				const payload = ChatOrderResponseSchema.safeParse(

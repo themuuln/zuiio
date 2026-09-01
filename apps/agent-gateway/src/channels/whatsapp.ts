@@ -1,7 +1,25 @@
 import "server-only";
 import { capture } from "@zuiio/capture";
 import { markdownToMessengerFormat } from "@/lib/format-telegram";
+import { withResilientFetch } from "@/lib/resilience";
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
+
+const WHATSAPP_RESILIENCE_OPTIONS = {
+	key: "meta-graph-whatsapp",
+	label: "WhatsApp Cloud API",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 16,
+	queueCapacity: 32,
+	throwOnNonOk: false,
+} as const;
+
+function fetchWhatsApp(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	return withResilientFetch(input, init, WHATSAPP_RESILIENCE_OPTIONS);
+}
 
 /**
  * WhatsApp Cloud API channel adapter.
@@ -33,7 +51,7 @@ export class WhatsAppChannel implements Channel {
 		endpoint: string,
 		body: Record<string, unknown>,
 	): Promise<Response> {
-		const res = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const res = await fetchWhatsApp(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -86,7 +104,7 @@ export class WhatsAppChannel implements Channel {
 					"qpay.png",
 				);
 				form.append("type", "image/png");
-				const uploadRes = await fetch(`${this.baseUrl}/media`, {
+				const uploadRes = await fetchWhatsApp(`${this.baseUrl}/media`, {
 					method: "POST",
 					headers: { Authorization: `Bearer ${this.accessToken}` },
 					body: form as unknown as BodyInit,

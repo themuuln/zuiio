@@ -2,6 +2,7 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { z } from "zod";
+import { withResilientFetch } from "@/lib/resilience";
 import { resolveZerBaseUrl } from "@/lib/zer-resolver";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 
@@ -60,10 +61,21 @@ export function createCustomerOrderStatusTool(
 					if (context.channelUserId)
 						url.searchParams.set("channel_user_id", context.channelUserId);
 					url.searchParams.set("limit", String(limit));
-					const res = await fetch(url.toString(), {
-						headers: { "x-api-key": secret },
-						signal: AbortSignal.timeout(8000),
-					});
+					const res = await withResilientFetch(
+						url.toString(),
+						{
+							headers: { "x-api-key": secret },
+						},
+						{
+							key: `qpay-order-status:${baseUrl}`,
+							label: "QPay order status",
+							maxRetries: 2,
+							timeoutMs: 8000,
+							concurrency: 4,
+							queueCapacity: 16,
+							throwOnNonOk: false,
+						},
+					);
 					if (res.ok) {
 						const json = (await res.json()) as unknown;
 						if (json && typeof json === "object" && "data" in json) {
