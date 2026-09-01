@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-08-10T11:07:04Z",
+  "generatedAt": "2026-09-01T09:26:54Z",
   "total": {
-    "files": 14782,
-    "lines": 2103387,
-    "code": 1720029
+    "files": 8246,
+    "lines": 1421398,
+    "code": 1127200
   },
   "projects": [
     {
-      "project": "apps/tolom",
-      "files": 2660,
-      "code": 380372
+      "project": "apps/archive",
+      "files": 4710,
+      "code": 655907
     },
     {
       "project": "apps/tamga",
@@ -17,104 +17,29 @@
       "code": 364371
     },
     {
-      "project": "apps/zraf",
-      "files": 4746,
-      "code": 331709
-    },
-    {
-      "project": "apps/zer",
-      "files": 1296,
-      "code": 182480
-    },
-    {
-      "project": "out/apps",
-      "files": 975,
-      "code": 132097
-    },
-    {
-      "project": "apps/tumurch",
-      "files": 184,
-      "code": 47067
-    },
-    {
-      "project": "apps/archive",
-      "files": 367,
-      "code": 41959
+      "project": "apps/agent-gateway",
+      "files": 380,
+      "code": 45116
     },
     {
       "project": "pnpm-lock.yaml",
       "files": 1,
-      "code": 40400
-    },
-    {
-      "project": "apps/khosuud",
-      "files": 197,
-      "code": 37760
-    },
-    {
-      "project": "apps/agent-gateway",
-      "files": 324,
-      "code": 35846
-    },
-    {
-      "project": "apps/side",
-      "files": 141,
-      "code": 24352
-    },
-    {
-      "project": "apps/zatly",
-      "files": 263,
-      "code": 21349
-    },
-    {
-      "project": "apps/zunch",
-      "files": 146,
-      "code": 14076
+      "code": 31570
     },
     {
       "project": "apps/zim",
       "files": 139,
-      "code": 10447
-    },
-    {
-      "project": "out/pnpm-lock.yaml",
-      "files": 1,
-      "code": 10081
-    },
-    {
-      "project": "apps/zuiio-id",
-      "files": 134,
-      "code": 10035
-    },
-    {
-      "project": "apps/zer-app",
-      "files": 41,
-      "code": 6549
-    },
-    {
-      "project": "apps/website",
-      "files": 51,
-      "code": 4639
+      "code": 10448
     },
     {
       "project": "apps/zer-mobile",
       "files": 45,
-      "code": 3250
-    },
-    {
-      "project": "apps/zoa",
-      "files": 57,
-      "code": 2743
+      "code": 3819
     },
     {
       "project": "apps/onoo-app",
       "files": 27,
       "code": 1614
-    },
-    {
-      "project": "apps/tumurch-rn",
-      "files": 26,
-      "code": 1601
     },
     {
       "project": "packages/query",
@@ -124,7 +49,7 @@
     {
       "project": "packages/core",
       "files": 24,
-      "code": 926
+      "code": 939
     },
     {
       "project": "src/app",
@@ -134,7 +59,7 @@
     {
       "project": "scripts/sso",
       "files": 4,
-      "code": 874
+      "code": 879
     },
     {
       "project": "packages/gateway-telegram",
@@ -142,24 +67,19 @@
       "code": 863
     },
     {
-      "project": "out/packages",
-      "files": 9,
-      "code": 851
-    },
-    {
       "project": "packages/branding",
       "files": 6,
-      "code": 847
+      "code": 849
+    },
+    {
+      "project": "packages/offline",
+      "files": 11,
+      "code": 713
     },
     {
       "project": "apps/tolom-mobile",
       "files": 23,
       "code": 676
-    },
-    {
-      "project": "packages/offline",
-      "files": 11,
-      "code": 660
     },
     {
       "project": "packages/supabase",
@@ -172,19 +92,19 @@
       "code": 558
     },
     {
+      "project": "packages/ai-agent",
+      "files": 9,
+      "code": 557
+    },
+    {
       "project": "scripts/deploy.sh",
       "files": 1,
-      "code": 549
+      "code": 537
     },
     {
       "project": "packages/export",
       "files": 10,
       "code": 461
-    },
-    {
-      "project": "packages/ai-agent",
-      "files": 9,
-      "code": 459
     },
     {
       "project": "packages/ui",
@@ -220,11 +140,6 @@
       "project": "apps/sakhuu",
       "files": 1,
       "code": 203
-    },
-    {
-      "project": "apps/sms-pay",
-      "files": 9,
-      "code": 195
     },
     {
       "project": "packages/search",
@@ -267,24 +182,24 @@
       "code": 140
     },
     {
+      "project": "pnpm-workspace.yaml",
+      "files": 1,
+      "code": 126
+    },
+    {
       "project": "packages/gateway-whatsapp",
       "files": 3,
       "code": 118
     },
     {
-      "project": "pnpm-workspace.yaml",
+      "project": "scripts/rotate-key.sh",
       "files": 1,
-      "code": 116
+      "code": 118
     },
     {
       "project": "packages/i18n",
       "files": 5,
       "code": 114
-    },
-    {
-      "project": "out/pnpm-workspace.yaml",
-      "files": 1,
-      "code": 106
     },
     {
       "project": "docs/design.md",
@@ -344,12 +259,7 @@
     {
       "project": "VERCEL.md",
       "files": 3,
-      "code": 15
-    },
-    {
-      "project": "README.md",
-      "files": 3,
-      "code": 13
+      "code": 11
     },
     {
       "project": "docs/development",
@@ -365,6 +275,11 @@
       "project": "CONTRIBUTING.md",
       "files": 2,
       "code": 8
+    },
+    {
+      "project": "README.md",
+      "files": 3,
+      "code": 5
     },
     {
       "project": "docs/DEPLOYMENT.md",
@@ -418,6 +333,11 @@
     },
     {
       "project": "docs/features",
+      "files": 1,
+      "code": 0
+    },
+    {
+      "project": "docs/legal-entity",
       "files": 1,
       "code": 0
     },
