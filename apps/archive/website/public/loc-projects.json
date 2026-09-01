@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-09-01T09:26:54Z",
+  "generatedAt": "2026-09-01T14:47:34Z",
   "total": {
-    "files": 8246,
-    "lines": 1421398,
-    "code": 1127200
+    "files": 8252,
+    "lines": 1422905,
+    "code": 1128536
   },
   "projects": [
     {
@@ -18,13 +18,13 @@
     },
     {
       "project": "apps/agent-gateway",
-      "files": 380,
-      "code": 45116
+      "files": 386,
+      "code": 46415
     },
     {
       "project": "pnpm-lock.yaml",
       "files": 1,
-      "code": 31570
+      "code": 31605
     },
     {
       "project": "apps/zim",
@@ -184,7 +184,7 @@
     {
       "project": "pnpm-workspace.yaml",
       "files": 1,
-      "code": 126
+      "code": 128
     },
     {
       "project": "packages/gateway-whatsapp",
