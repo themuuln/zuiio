@@ -9,10 +9,19 @@ import { handleAgentMessage } from "@/gateway/agent-handler";
 import type { GatewayContext } from "@/gateway/types";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { decryptSecret } from "@/lib/crypto";
+import { withConcurrencyLimit } from "@/lib/resilience";
 import { createServiceClient, type ServiceClient } from "@/lib/supabase";
-import { claimJobs, completeJob, type JobPayload } from "@/state/job-queue";
+import {
+	type AsyncJobRow,
+	claimJobs,
+	completeJob,
+	type JobPayload,
+} from "@/state/job-queue";
 
 export const dynamic = "force-dynamic";
+
+const JOB_CLAIM_LIMIT = 5;
+const JOB_PROCESSING_CONCURRENCY = 3;
 
 /**
  * POST /api/cron/process-jobs
@@ -30,42 +39,18 @@ export async function POST(request: Request) {
 	const sb = createServiceClient();
 
 	try {
-		const jobs = await claimJobs(sb, 5);
-
-		let processed = 0;
-		let failed = 0;
-
-		for (const job of jobs) {
-			const rawPayload = job.payload as unknown;
-			try {
-				if (isBroadcastPayload(rawPayload)) {
-					await deliverBroadcast(sb, rawPayload, job.organization_id);
-				} else {
-					const payload = rawPayload as JobPayload & { qpayImage?: string };
-					const response = await handleAgentMessage(
-						payload.ctx,
-						payload.text,
-						payload.chatType,
-						{
-							getSystemPrompt: systemPromptFor,
-							getTools: (toolCtx) =>
-								getProductTools(payload.productType, toolCtx),
-						},
-					);
-					await deliverReply(payload.ctx, response, payload.qpayImage);
-				}
-				await completeJob(sb, job.id);
-				processed++;
-			} catch (err) {
-				failed++;
-				capture(err, { context: "agent-gateway: process async job" });
-				await completeJob(
-					sb,
-					job.id,
-					err instanceof Error ? err.message : "Unknown job failure",
-				);
-			}
-		}
+		const jobs = await claimJobs(sb, JOB_CLAIM_LIMIT);
+		const results = await Promise.all(
+			jobs.map((job) =>
+				withConcurrencyLimit(() => processJob(sb, job), {
+					key: "async-job-processor",
+					concurrency: JOB_PROCESSING_CONCURRENCY,
+					queueCapacity: JOB_CLAIM_LIMIT,
+				}),
+			),
+		);
+		const processed = results.filter(Boolean).length;
+		const failed = results.length - processed;
 
 		return NextResponse.json({ status: "ok", processed, failed });
 	} catch (err) {
@@ -77,6 +62,40 @@ export async function POST(request: Request) {
 			},
 			{ status: 500 },
 		);
+	}
+}
+
+async function processJob(
+	sb: ServiceClient,
+	job: AsyncJobRow,
+): Promise<boolean> {
+	const rawPayload = job.payload as unknown;
+	try {
+		if (isBroadcastPayload(rawPayload)) {
+			await deliverBroadcast(sb, rawPayload, job.organization_id);
+		} else {
+			const payload = rawPayload as JobPayload & { qpayImage?: string };
+			const response = await handleAgentMessage(
+				payload.ctx,
+				payload.text,
+				payload.chatType,
+				{
+					getSystemPrompt: systemPromptFor,
+					getTools: (toolCtx) => getProductTools(payload.productType, toolCtx),
+				},
+			);
+			await deliverReply(payload.ctx, response, payload.qpayImage);
+		}
+		await completeJob(sb, job.id);
+		return true;
+	} catch (err) {
+		capture(err, { context: "agent-gateway: process async job" });
+		await completeJob(
+			sb,
+			job.id,
+			err instanceof Error ? err.message : "Unknown job failure",
+		);
+		return false;
 	}
 }
 

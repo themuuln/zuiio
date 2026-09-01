@@ -2,10 +2,28 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import { markdownToMessengerFormat } from "@/lib/format-telegram";
+import { withResilientFetch } from "@/lib/resilience";
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
 const GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
+
+const META_RESILIENCE_OPTIONS = {
+	key: "meta-graph",
+	label: "Meta Graph",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 16,
+	queueCapacity: 32,
+	throwOnNonOk: false,
+} as const;
+
+function fetchMeta(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	return withResilientFetch(input, init, META_RESILIENCE_OPTIONS);
+}
 
 /**
  * Facebook Messenger + Instagram channel adapter.
@@ -78,7 +96,7 @@ export class FacebookChannel implements Channel {
 					}));
 			}
 
-			const res = await fetch(url, {
+			const res = await fetchMeta(url, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
@@ -137,7 +155,7 @@ export class FacebookChannel implements Channel {
 				},
 			};
 
-			const res = await fetch(url, {
+			const res = await fetchMeta(url, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
@@ -236,7 +254,7 @@ export class FacebookChannel implements Channel {
 			return element;
 		});
 		try {
-			const res = await fetch(
+			const res = await fetchMeta(
 				`${GRAPH_API_BASE}/${this.pageId}/messages?access_token=${this.pageAccessToken}`,
 				{
 					method: "POST",
@@ -285,7 +303,7 @@ export class FacebookChannel implements Channel {
 		try {
 			// 1. Regular HTTP/HTTPS URL
 			if (/^https?:\/\//i.test(trimmed)) {
-				const res = await fetch(
+				const res = await fetchMeta(
 					`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
 					{
 						method: "POST",
@@ -352,7 +370,7 @@ export class FacebookChannel implements Channel {
 				"qpay.png",
 			);
 
-			const res = await fetch(
+			const res = await fetchMeta(
 				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
 				{
 					method: "POST",
@@ -408,7 +426,7 @@ export class FacebookChannel implements Channel {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;
 
-			const res = await fetch(url, {
+			const res = await fetchMeta(url, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ subscribed_fields: subscribedFields }),
@@ -440,7 +458,7 @@ export class FacebookChannel implements Channel {
 	): Promise<boolean> {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/subscribed_apps?access_token=${pageAccessToken}`;
-			const res = await fetch(url, { method: "DELETE" });
+			const res = await fetchMeta(url, { method: "DELETE" });
 			if (!res.ok) {
 				const err = await res.text().catch(() => "unknown");
 				capture(
@@ -470,7 +488,7 @@ export class FacebookChannel implements Channel {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}?fields=id,name,instagram_business_account{id}&access_token=${pageAccessToken}`;
 
-			const res = await fetch(url);
+			const res = await fetchMeta(url);
 			if (!res.ok) return null;
 
 			const data = (await res.json()) as {
@@ -498,7 +516,7 @@ export class FacebookChannel implements Channel {
 
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
-			await fetch(url, {
+			await fetchMeta(url, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -519,7 +537,7 @@ export class FacebookChannel implements Channel {
 		const pageAccessToken = this.pageAccessToken;
 		if (!pageAccessToken) return false;
 		try {
-			const res = await fetch(
+			const res = await fetchMeta(
 				`${GRAPH_API_BASE}/${commentId}/comments?access_token=${pageAccessToken}`,
 				{
 					method: "POST",
@@ -551,7 +569,7 @@ export class FacebookChannel implements Channel {
 		const pageAccessToken = this.pageAccessToken;
 		if (!pageId || !pageAccessToken) return false;
 		try {
-			const res = await fetch(
+			const res = await fetchMeta(
 				`${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`,
 				{
 					method: "POST",
@@ -589,7 +607,7 @@ export class FacebookChannel implements Channel {
 			let url: string | null =
 				`${GRAPH_API_BASE}/${commentId}/comments?fields=from{id}&limit=100&access_token=${pageAccessToken}`;
 			for (let page = 0; page < 2 && url; page++) {
-				const res = await fetch(url);
+				const res = await fetchMeta(url);
 				if (!res.ok) return false;
 				const data = (await res.json()) as {
 					data?: Array<{ from?: { id?: string } }>;
@@ -622,7 +640,7 @@ export class FacebookChannel implements Channel {
 		if (!pageAccessToken) return null;
 		try {
 			const url = `${GRAPH_API_BASE}/me/messenger_profile?fields=${fields.join(",")}&access_token=${pageAccessToken}`;
-			const res = await fetch(url);
+			const res = await fetchMeta(url);
 			if (!res.ok) return null;
 			return (await res.json()) as Record<string, unknown>;
 		} catch {
@@ -637,7 +655,7 @@ export class FacebookChannel implements Channel {
 		if (!pageAccessToken) return false;
 		try {
 			const url = `${GRAPH_API_BASE}/me/messenger_profile?access_token=${pageAccessToken}`;
-			const res = await fetch(url, {
+			const res = await fetchMeta(url, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
@@ -661,7 +679,7 @@ export class FacebookChannel implements Channel {
 		if (!pageAccessToken) return false;
 		try {
 			const url = `${GRAPH_API_BASE}/me/messenger_profile?access_token=${pageAccessToken}`;
-			const res = await fetch(url, {
+			const res = await fetchMeta(url, {
 				method: "DELETE",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ fields }),

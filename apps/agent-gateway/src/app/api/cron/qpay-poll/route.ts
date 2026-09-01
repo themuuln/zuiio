@@ -6,9 +6,19 @@ import { FacebookChannel } from "@/channels/facebook";
 import { TelegramChannel } from "@/channels/telegram";
 import { WhatsAppChannel } from "@/channels/whatsapp";
 import { decryptSecret } from "@/lib/crypto";
+import { withResilientFetch } from "@/lib/resilience";
 import { createServiceClient } from "@/lib/supabase";
 import { resolveZerBaseUrl } from "@/lib/zer-resolver";
 
+const QPAY_POLL_RESILIENCE_OPTIONS = {
+	key: "qpay-poll-order-status",
+	label: "QPay order status",
+	maxRetries: 2,
+	timeoutMs: 8000,
+	concurrency: 4,
+	queueCapacity: 16,
+	throwOnNonOk: false,
+} as const;
 /**
  * GET /api/cron/qpay-poll
  * Polls pending QPay orders for 15min window, notifies on paid/expired.
@@ -124,14 +134,13 @@ export async function GET(request: Request) {
 			if (!baseUrl) continue;
 			const secret = process.env.AGENT_GATEWAY_API_SECRET?.trim();
 			if (!secret) continue;
-
-			const res = await fetch(
+			const res = await withResilientFetch(
 				`${baseUrl}/api/internal/v1/checkout/orders/${orderId}`,
 				{
 					method: "GET",
 					headers: { "x-api-key": secret },
-					signal: AbortSignal.timeout(8000),
 				},
+				QPAY_POLL_RESILIENCE_OPTIONS,
 			);
 			if (!res.ok) continue;
 			const json = (await res.json()) as {

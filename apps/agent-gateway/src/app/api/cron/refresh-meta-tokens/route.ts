@@ -5,14 +5,30 @@ import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
+import { withResilientFetch } from "@/lib/resilience";
 import { createServiceClient } from "@/lib/supabase";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
+const META_GRAPH_RESILIENCE_OPTIONS = {
+	key: "meta-graph",
+	label: "Meta Graph API",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 16,
+	queueCapacity: 32,
+	throwOnNonOk: false,
+} as const;
+
+function fetchMetaGraph(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	return withResilientFetch(input, init, META_GRAPH_RESILIENCE_OPTIONS);
+}
 
 interface ExpiringConnection {
 	id: string;
@@ -115,7 +131,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 				exchangeUrl.searchParams.set("client_secret", FB_APP_SECRET);
 				exchangeUrl.searchParams.set("fb_exchange_token", userToken);
 
-				const exchangeResponse = await fetch(exchangeUrl);
+				const exchangeResponse = await fetchMetaGraph(exchangeUrl);
 				const exchangeData = (await exchangeResponse.json()) as {
 					access_token?: string;
 					error?: { message?: string };
@@ -140,7 +156,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 				accountsUrl.searchParams.set("access_token", activeUserToken);
 				accountsUrl.searchParams.set("fields", "id,access_token");
 
-				const accountsResponse = await fetch(accountsUrl);
+				const accountsResponse = await fetchMetaGraph(accountsUrl);
 				const accountsData = (await accountsResponse.json()) as {
 					data?: Array<{ id: string; access_token: string }>;
 					error?: { message?: string };

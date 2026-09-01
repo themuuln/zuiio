@@ -6,11 +6,28 @@ import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
 import { getRedis } from "@/lib/redis";
+import { withResilientFetch } from "@/lib/resilience";
 
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
 const FB_OAUTH_REDIRECT_URI = process.env.FB_OAUTH_REDIRECT_URI || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
+const META_GRAPH_RESILIENCE_OPTIONS = {
+	key: "meta-graph",
+	label: "Meta Graph API",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 16,
+	queueCapacity: 32,
+	throwOnNonOk: false,
+} as const;
+
+function fetchMetaGraph(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	return withResilientFetch(input, init, META_GRAPH_RESILIENCE_OPTIONS);
+}
 
 function tokenSecret(): string {
 	return process.env.TOKEN_SIGNING_SECRET || "dev-fallback";
@@ -170,7 +187,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		tokenUrl.searchParams.set("redirect_uri", FB_OAUTH_REDIRECT_URI);
 		tokenUrl.searchParams.set("code", code);
 
-		const tokenResponse = await fetch(tokenUrl);
+		const tokenResponse = await fetchMetaGraph(tokenUrl);
 		const tokenData = (await tokenResponse.json()) as {
 			access_token?: string;
 			expires_in?: number;
@@ -198,7 +215,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			tokenData.access_token,
 		);
 
-		const longLivedResponse = await fetch(longLivedTokenUrl);
+		const longLivedResponse = await fetchMetaGraph(longLivedTokenUrl);
 		const longLivedData = (await longLivedResponse.json()) as {
 			access_token?: string;
 			expires_in?: number;
@@ -215,7 +232,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		pagesUrl.searchParams.set("access_token", userAccessToken);
 		pagesUrl.searchParams.set("fields", "id,name,access_token");
 
-		const pagesResponse = await fetch(pagesUrl);
+		const pagesResponse = await fetchMetaGraph(pagesUrl);
 		const pagesData = (await pagesResponse.json()) as {
 			data?: Array<{ id: string; name: string; access_token: string }>;
 			error?: { message?: string };

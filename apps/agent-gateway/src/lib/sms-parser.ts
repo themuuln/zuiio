@@ -4,6 +4,7 @@
  * Uses GPT-4o-mini for Cyrillic text parsing (~$0.00005/call).
  */
 
+import { withResilientFetch } from "@/lib/resilience";
 import type { ServiceClient } from "./supabase";
 
 interface ParsedPayment {
@@ -143,20 +144,33 @@ Rules:
 
 Return ONLY the JSON object, no other text.`;
 
-	const response = await fetch(`${baseUrl}/chat/completions`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${apiKey}`,
-			"Content-Type": "application/json",
+	const response = await withResilientFetch(
+		`${baseUrl}/chat/completions`,
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${apiKey}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				model,
+				messages: [{ role: "user", content: prompt }],
+				temperature: 0,
+				max_tokens: 200,
+				response_format: { type: "json_object" },
+			}),
 		},
-		body: JSON.stringify({
-			model,
-			messages: [{ role: "user", content: prompt }],
-			temperature: 0,
-			max_tokens: 200,
-			response_format: { type: "json_object" },
-		}),
-	});
+		{
+			key: `llm:${baseUrl}:${model}`,
+			label: "SMS parser LLM",
+			maxRetries: 2,
+			timeoutMs: 15_000,
+			concurrency: 4,
+			queueCapacity: 16,
+			throwOnNonOk: false,
+			retryable: true,
+		},
+	);
 
 	if (!response.ok) {
 		const error = await response.text();

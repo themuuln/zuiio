@@ -110,6 +110,31 @@ describe("POST /api/cron/process-jobs", () => {
 		expect(mockSendMessage).toHaveBeenCalledTimes(2);
 		expect(mockCompleteJob).toHaveBeenCalledTimes(2);
 	});
+	it("limits concurrent async jobs to three", async () => {
+		delete process.env.CRON_SECRET;
+		mockClaimJobs.mockResolvedValue(
+			Array.from({ length: 5 }, (_, index) => makeJob(`j${index}`)),
+		);
+
+		let active = 0;
+		let maxActive = 0;
+		mockHandleAgentMessage.mockImplementation(async () => {
+			active++;
+			maxActive = Math.max(maxActive, active);
+			await new Promise((resolve) => setTimeout(resolve, 10));
+			active--;
+			return "Хариулт";
+		});
+
+		const { POST } = await import("@/app/api/cron/process-jobs/route");
+		const res = await POST(
+			new Request("http://localhost/api/cron/process-jobs", { method: "POST" }),
+		);
+		const json = (await res.json()) as { processed: number; failed: number };
+
+		expect(json).toEqual({ status: "ok", processed: 5, failed: 0 });
+		expect(maxActive).toBe(3);
+	});
 
 	it("marks failing jobs as failed and continues", async () => {
 		delete process.env.CRON_SECRET;

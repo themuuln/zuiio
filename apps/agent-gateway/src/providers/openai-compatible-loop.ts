@@ -1,5 +1,6 @@
 import "server-only";
 
+import { withResilientFetch } from "@/lib/resilience";
 import type { GatewayTool, ToolContext } from "./types";
 
 /** History message shape accepted by the providers. */
@@ -33,13 +34,8 @@ export interface OpenAiCompatibleLoopOptions {
 	/** Per-request timeout in ms. */
 	timeoutMs?: number;
 }
-
 const DEFAULT_TIMEOUT_MS = 45_000;
 const MAX_RETRIES = 2;
-
-function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * OpenAI-compatible multi-turn tool-calling loop with SSE streaming.
@@ -133,60 +129,24 @@ export async function runOpenAiCompatibleLoop(
 			body.tools = openAiTools;
 		}
 
-		// One fetch attempt with timeout; retry transient failures with backoff.
-		let response: Response | null = null;
-		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-			const controller = new AbortController();
-			const timer = setTimeout(() => controller.abort(), timeoutMs);
-			try {
-				const res = await fetch(`${baseUrl}/chat/completions`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${apiKey}`,
-					},
-					body: JSON.stringify(body),
-					signal: controller.signal,
-				});
-
-				if (
-					res.status === 429 ||
-					res.status === 500 ||
-					res.status === 502 ||
-					res.status === 503
-				) {
-					// Retryable — drain body and retry.
-					await res.text().catch(() => "");
-					if (attempt < MAX_RETRIES) {
-						await sleep(500 * 2 ** attempt);
-						continue;
-					}
-				}
-
-				response = res;
-				break;
-			} catch (err) {
-				if (controller.signal.aborted) {
-					throw new Error(`${label} API timed out after ${timeoutMs}ms`);
-				}
-				if (attempt < MAX_RETRIES) {
-					await sleep(500 * 2 ** attempt);
-					continue;
-				}
-				throw err;
-			} finally {
-				clearTimeout(timer);
-			}
-		}
-
-		if (!response) {
-			throw new Error(`${label} API request failed after retries`);
-		}
-
-		if (!response.ok) {
-			const errBody = await response.text().catch(() => "unknown error");
-			throw new Error(`${label} API error: ${response.status} — ${errBody}`);
-		}
+		const response = await withResilientFetch(
+			`${baseUrl}/chat/completions`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+				},
+				body: JSON.stringify(body),
+			},
+			{
+				key: `llm:${baseUrl}:${model}`,
+				label,
+				maxRetries: MAX_RETRIES,
+				timeoutMs,
+				retryable: true,
+			},
+		);
 
 		// Parse response — streaming or non-streaming
 		let message: {

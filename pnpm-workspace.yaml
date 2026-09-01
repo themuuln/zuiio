@@ -87,6 +87,8 @@ catalog:
   '@stryker-mutator/vitest-runner': ^9.6.1
   tsx: ^4.23.12
   react-native-get-random-values: ^2.0.0
+  msw: 2.15.0
+  cockatiel: 4.0.0
 
 allowBuilds:
   '@google/genai': true

@@ -5,10 +5,28 @@ import {
 	convertMarkdownToRichBlocks,
 	markdownToTelegramHtml,
 } from "@/lib/format-telegram";
+import { withResilientFetch } from "@/lib/resilience";
 
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
+
+const TELEGRAM_RESILIENCE_OPTIONS = {
+	key: "telegram-bot-api",
+	label: "Telegram Bot API",
+	maxRetries: 2,
+	timeoutMs: 15_000,
+	concurrency: 16,
+	queueCapacity: 32,
+	throwOnNonOk: false,
+} as const;
+
+function fetchTelegram(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	return withResilientFetch(input, init, TELEGRAM_RESILIENCE_OPTIONS);
+}
 
 /**
  * Telegram bot channel adapter.
@@ -71,7 +89,7 @@ export class TelegramChannel implements Channel {
 	 */
 	async isChatAvailable(chatId: number | string): Promise<boolean> {
 		try {
-			const res = await fetch(`${this.baseUrl}/getChat`, {
+			const res = await fetchTelegram(`${this.baseUrl}/getChat`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ chat_id: chatId }),
@@ -100,7 +118,7 @@ export class TelegramChannel implements Channel {
 		);
 		if (caption) formData.append("caption", caption);
 
-		const res = await fetch(`${this.baseUrl}/sendDocument`, {
+		const res = await fetchTelegram(`${this.baseUrl}/sendDocument`, {
 			method: "POST",
 			body: formData,
 		});
@@ -130,7 +148,7 @@ export class TelegramChannel implements Channel {
 					"qpay.png",
 				);
 				if (caption) form.append("caption", caption);
-				const res = await fetch(`${this.baseUrl}/sendPhoto`, {
+				const res = await fetchTelegram(`${this.baseUrl}/sendPhoto`, {
 					method: "POST",
 					body: form as unknown as BodyInit,
 				});
@@ -147,7 +165,7 @@ export class TelegramChannel implements Channel {
 				}
 				return res.ok;
 			}
-			const res = await fetch(`${this.baseUrl}/sendPhoto`, {
+			const res = await fetchTelegram(`${this.baseUrl}/sendPhoto`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -178,7 +196,7 @@ export class TelegramChannel implements Channel {
 		blocks: Array<Record<string, unknown>>,
 	): Promise<boolean> {
 		try {
-			const res = await fetch(`${this.baseUrl}/sendRichMessage`, {
+			const res = await fetchTelegram(`${this.baseUrl}/sendRichMessage`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -216,7 +234,7 @@ export class TelegramChannel implements Channel {
 		if (options?.replyToMessageId)
 			body.reply_to_message_id = options.replyToMessageId;
 
-		const res = await fetch(`${this.baseUrl}/sendMessage`, {
+		const res = await fetchTelegram(`${this.baseUrl}/sendMessage`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(body),
@@ -247,7 +265,7 @@ export class TelegramChannel implements Channel {
 			),
 		};
 
-		const res = await fetch(`${this.baseUrl}/sendMessage`, {
+		const res = await fetchTelegram(`${this.baseUrl}/sendMessage`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -278,7 +296,7 @@ export class TelegramChannel implements Channel {
 		};
 		if (text) body.text = text;
 
-		await fetch(`${this.baseUrl}/answerCallbackQuery`, {
+		await fetchTelegram(`${this.baseUrl}/answerCallbackQuery`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(body),
@@ -290,7 +308,7 @@ export class TelegramChannel implements Channel {
 		messageId: number,
 		text: string,
 	): Promise<void> {
-		await fetch(`${this.baseUrl}/editMessageText`, {
+		await fetchTelegram(`${this.baseUrl}/editMessageText`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -306,7 +324,7 @@ export class TelegramChannel implements Channel {
 		const body: Record<string, unknown> = { url };
 		if (secretToken) body.secret_token = secretToken;
 
-		const res = await fetch(`${this.baseUrl}/setWebhook`, {
+		const res = await fetchTelegram(`${this.baseUrl}/setWebhook`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(body),
@@ -325,7 +343,7 @@ export class TelegramChannel implements Channel {
 	async getFile(
 		fileId: string,
 	): Promise<{ file_path: string; file_size?: number }> {
-		const res = await fetch(
+		const res = await fetchTelegram(
 			`${this.baseUrl}/getFile?file_id=${encodeURIComponent(fileId)}`,
 		);
 		if (!res.ok) {
@@ -351,7 +369,7 @@ export class TelegramChannel implements Channel {
 	 */
 	async downloadFile(filePath: string): Promise<Buffer> {
 		const fileUrl = `https://api.telegram.org/file/bot${this.baseUrl.split("/bot")[1]}/${filePath}`;
-		const res = await fetch(fileUrl);
+		const res = await fetchTelegram(fileUrl);
 		if (!res.ok) {
 			const err = await res.text().catch(() => "unknown");
 			throw new Error(`Telegram downloadFile failed: ${res.status} — ${err}`);
@@ -365,7 +383,7 @@ export class TelegramChannel implements Channel {
 		chatId: number | string,
 		action = "typing",
 	): Promise<void> {
-		await fetch(`${this.baseUrl}/sendChatAction`, {
+		await fetchTelegram(`${this.baseUrl}/sendChatAction`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ chat_id: chatId, action }),
@@ -381,7 +399,7 @@ export class TelegramChannel implements Channel {
 		emoji: string,
 	): Promise<void> {
 		try {
-			const res = await fetch(`${this.baseUrl}/setMessageReaction`, {
+			const res = await fetchTelegram(`${this.baseUrl}/setMessageReaction`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -426,7 +444,7 @@ export class TelegramChannel implements Channel {
 		text: string,
 	): Promise<boolean> {
 		try {
-			const res = await fetch(`${this.baseUrl}/sendMessageDraft`, {
+			const res = await fetchTelegram(`${this.baseUrl}/sendMessageDraft`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -454,7 +472,7 @@ export class TelegramChannel implements Channel {
 		chatId: number | string,
 	): Promise<number | null> {
 		try {
-			const res = await fetch(`${this.baseUrl}/sendMessage`, {
+			const res = await fetchTelegram(`${this.baseUrl}/sendMessage`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ chat_id: chatId, text: "…" }),
@@ -482,7 +500,7 @@ export class TelegramChannel implements Channel {
 		text: string,
 	): Promise<boolean> {
 		try {
-			const res = await fetch(`${this.baseUrl}/editMessageText`, {
+			const res = await fetchTelegram(`${this.baseUrl}/editMessageText`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({

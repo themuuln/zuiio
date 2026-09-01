@@ -31,6 +31,7 @@
 		"@zuiio/ai-agent": "workspace:*",
 		"@zuiio/capture": "workspace:*",
 		"@zuiio/core": "workspace:*",
+		"cockatiel": "catalog:",
 		"next": "catalog:",
 		"qrcode": "^1.5.4",
 		"react": "catalog:",
@@ -45,6 +46,8 @@
 		"@types/qrcode": "^1.5.6",
 		"@types/react": "catalog:",
 		"@types/react-dom": "^19.2.3",
+		"fast-check": "catalog:",
+		"msw": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	}

@@ -130,9 +130,9 @@ describe("runOpenAiCompatibleLoop — streaming", () => {
 	});
 });
 describe("runOpenAiCompatibleLoop — resilience", () => {
-	it("retries on 429 then succeeds", async () => {
+	it("retries on transient 503 then succeeds", async () => {
 		globalThis.fetch = makeFetchMock([
-			{ status: 429, body: "rate limited" },
+			{ status: 503, body: "service unavailable" },
 			{ body: JSON.stringify({ choices: [{ message: { content: "ok" } }] }) },
 		]);
 
@@ -148,6 +148,27 @@ describe("runOpenAiCompatibleLoop — resilience", () => {
 
 		expect(result).toBe("ok");
 		expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+	});
+
+	it("fails fast immediately on 429 quota/rate limit error without retrying", async () => {
+		globalThis.fetch = makeFetchMock([
+			{ status: 429, body: "rate limited" },
+			{ body: JSON.stringify({ choices: [{ message: { content: "ok" } }] }) },
+		]);
+
+		await expect(
+			runOpenAiCompatibleLoop({
+				apiKey: "k",
+				baseUrl: "https://api.test/v1",
+				model: "m",
+				system: "sys",
+				userMessage: "hi",
+				tools: [],
+				context: CONTEXT,
+			}),
+		).rejects.toThrow(/429/);
+
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 	it("throws a timeout error when the request hangs", async () => {
