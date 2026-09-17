@@ -548,75 +548,80 @@ export type FontOption = {
 };
 
 export const FONT_OPTIONS: FontOption[] = [
-  {
-    name: "inter",
-    label: "Inter",
-    family: "'Inter', sans-serif",
-    cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..900&display=swap",
-  },
+  // Curated 2026-09-17: every entry ships cyrillic-ext (Ө/Ү at U+460-52F),
+  // verified in Next font-data. Killed: Playfair Display, Instrument Serif,
+  // Fraunces, Outfit, Newsreader, Space Grotesk (no cyrillic-ext → Ө/Ү
+  // fall back to Times). cssImportUrl is the org-preview path; apps load
+  // via next/font with ["latin","cyrillic","cyrillic-ext"].
   {
     name: "onest",
     label: "Onest",
     family: "'Onest', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Onest:wght@300..900&display=swap",
+      "https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap",
+  },
+  {
+    name: "golos-text",
+    label: "Golos Text",
+    family: "'Golos Text', sans-serif",
+    cssImportUrl:
+      "https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap",
   },
   {
     name: "manrope",
     label: "Manrope",
     family: "'Manrope', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&display=swap",
+      "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
   },
   {
-    name: "nunito",
-    label: "Nunito",
-    family: "'Nunito', sans-serif",
+    name: "ibm-plex-sans",
+    label: "IBM Plex Sans",
+    family: "'IBM Plex Sans', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Nunito:opsz,wght@6..12,300..800&display=swap",
+      "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
   },
   {
-    name: "montserrat",
-    label: "Montserrat",
-    family: "'Montserrat', sans-serif",
+    name: "source-sans-3",
+    label: "Source Sans 3",
+    family: "'Source Sans 3', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Montserrat:opsz,wght@14..32,300..800&display=swap",
+      "https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap",
+  },
+  {
+    name: "pt-sans",
+    label: "PT Sans",
+    family: "'PT Sans', sans-serif",
+    cssImportUrl:
+      "https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap",
+  },
+  {
+    name: "lora",
+    label: "Lora",
+    family: "'Lora', serif",
+    cssImportUrl:
+      "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap",
+  },
+  {
+    name: "spectral",
+    label: "Spectral",
+    family: "'Spectral', serif",
+    cssImportUrl:
+      "https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap",
   },
   {
     name: "noto-sans",
     label: "Noto Sans",
     family: "'Noto Sans', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Noto+Sans:opsz,wght@6..12,300..900&display=swap",
+      "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap",
   },
   {
-    name: "open-sans",
-    label: "Open Sans",
-    family: "'Open Sans', sans-serif",
+    name: "inter",
+    label: "Inter (legacy)",
+    family: "'Inter', sans-serif",
     cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Open+Sans:opsz,wght@6..12,300..800&display=swap",
-  },
-  {
-    name: "roboto",
-    label: "Roboto",
-    family: "'Roboto', sans-serif",
-    cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Roboto:opsz,wght@14..32,300..700&display=swap",
-  },
-  {
-    name: "plus-jakarta-sans",
-    label: "Plus Jakarta Sans",
-    family: "'Plus Jakarta Sans', sans-serif",
-    cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:opsz,wght@14..32,300..800&display=swap",
-  },
-  {
-    name: "dm-sans",
-    label: "DM Sans",
-    family: "'DM Sans', sans-serif",
-    cssImportUrl:
-      "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&display=swap",
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
   },
 ];
 
