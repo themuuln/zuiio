@@ -1,28 +1,5 @@
 # @zuiio — Project Instructions (for AI agents)
 
-
-## Package API Evidence
-
-For third-party package APIs, use retrieval-led reasoning instead of training-memory guesses:
-
-1. Determine the resolved version from the repository lockfile. For pnpm, prefer `pnpm-lock.yaml`; package.json and pnpm catalogs express intent; the lockfile records the resolved dependency tree.
-2. Read the local package `package.json`, README, exports/types, and relevant source or tests when available.
-3. Read official documentation for that exact version. Prefer package-shipped docs, versioned vendor docs, and exact Git tags.
-4. Read official release notes or migration guides for upgrades, deprecations, and breaking changes.
-5. Use Context7 only with the exact package/library version. Resolve the library first, then query its versioned ID.
-6. Use web search to locate authoritative sources; treat snippets, tutorials, and community posts as discovery evidence only.
-7. If sources conflict, prefer installed types/source/tests for implemented behavior, then exact-version official docs. State the conflict and uncertainty.
-
-For normal feature work, use the repository's resolved version. Never silently use an API from the registry's latest version. For explicit upgrade/latest work, compare the requested range, resolved version, registry latest, publish date, and release-note delta. Do not query the registry on every task.
-
-`.agents/package-index.md` is the package evidence navigation map. Verify its resolved versions against the lockfile before relying on it. Never copy full third-party documentation into `AGENTS.md`. Missing or unavailable package docs are a limitation to report, not a reason to invent an API.
-
-Regenerate or check the index with:
-
-```bash
-pnpm agent:docs:index
-pnpm agent:docs:index --check
-```
 **Private platform repository** for Zuiio, a Mongolian software company. Product applications live in independent sibling repositories. This repository owns shared `@zuiio/*` packages and platform tooling.
 
 ## Communication & Domain Language
@@ -181,3 +158,26 @@ Use production logs to debug issues before diving into code. Two sources availab
 - **Generated types**: never manually edit `database.types.ts`; regenerate after migrations; keep `turbo.json` `env` list untouched (cache-invalidating).
 - **Dependencies**: pnpm only; runtime deps in `dependencies`; no new/upgraded deps without approval; no barrel re-exports (`export *`).
 - **Clean cutover**: no dead code, shims, or compatibility layers; migrate every caller in the same change.
+
+## Package API Evidence
+
+For third-party package APIs, use retrieval-led reasoning instead of training-memory guesses:
+
+1. Determine the resolved version from the repository lockfile. For pnpm, prefer `pnpm-lock.yaml`; package.json and pnpm catalogs express intent; the lockfile records the resolved dependency tree.
+2. Read the local package `package.json`, README, exports/types, and relevant source or tests when available.
+3. Read official documentation for that exact version. Prefer package-shipped docs, versioned vendor docs, and exact Git tags.
+4. Read official release notes or migration guides for upgrades, deprecations, and breaking changes.
+5. Use Context7 only with the exact package/library version. Resolve the library first, then query its versioned ID.
+6. Use web search to locate authoritative sources; treat snippets, tutorials, and community posts as discovery evidence only.
+7. If sources conflict, prefer installed types/source/tests for implemented behavior, then exact-version official docs. State the conflict and uncertainty.
+
+For normal feature work, use the repository's resolved version. Never silently use an API from the registry's latest version. For explicit upgrade/latest work, compare the requested range, resolved version, registry latest, publish date, and release-note delta. Do not query the registry on every task.
+
+`.agents/package-index.md` is the package evidence navigation map. Verify its resolved versions against the lockfile before relying on it. Never copy full third-party documentation into `AGENTS.md`. Missing or unavailable package docs are a limitation to report, not a reason to invent an API.
+
+Regenerate or check the index with:
+
+```bash
+pnpm agent:docs:index
+pnpm agent:docs:index --check
+```

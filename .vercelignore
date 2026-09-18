@@ -1,19 +1,12 @@
-# Root-level ignore for `vercel deploy` run from the monorepo root.
-# Per-app Vercel projects (zer, agent-gateway, website, …) have their own
-# rootDirectory inside apps/* — their sources MUST be uploaded, so sibling
-# app dirs are NOT excluded here. Only generated/heavy dirs are ignored
-# (they are also gitignored; kept here for tgz-archive deploys).
-
-# --- Heavy / generated (also gitignored, kept here for the tgz archive path) ---
-**/node_modules
-**/.next
-**/coverage
-**/test-results
-**/playwright-report
-**/.turbo
-**/logs
-**/*.tsbuildinfo
-**/*.log
-**/.env
-**/.env.*
-apps/archive/
+.git/
+.next/
+**/.next/
+node_modules/
+**/node_modules/
+.turbo/
+**/.turbo/
+.vercel/
+**/.vercel/
+test-results/
+playwright-report/
+midscene_run/

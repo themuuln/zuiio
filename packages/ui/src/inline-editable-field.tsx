@@ -43,6 +43,9 @@ export function InlineEditableField({
   const [editText, setEditText] = useState("");
   const commitRef = useRef(value);
   const cursorRef = useRef<number | null>(null);
+  // Synchronous ref for the latest edit text — avoids stale closure
+  // when Enter -> blur fires before React commits setEditText.
+  const editTextRef = useRef("");
 
   // Auto-focus on mount for newly added items
   useEffect(() => {
@@ -60,10 +63,11 @@ export function InlineEditableField({
   const inputValue = editing ? editText : displayText;
 
   const handleFocus = useCallback(() => {
-    setEditText(formatDisplay ? formatDisplay(value) : String(value));
+    const initial = formatDisplay ? formatDisplay(value) : String(value);
+    editTextRef.current = initial;
+    setEditText(initial);
     setEditing(true);
   }, [value, formatDisplay]);
-
   useEffect(() => {
     if (!editing) {
       commitRef.current = value;
@@ -79,7 +83,16 @@ export function InlineEditableField({
 
   const handleSave = useCallback(() => {
     setEditing(false);
-    const parsed = parseInput ? parseInput(editText) : Number(editText);
+    const raw =
+      editTextRef.current !== "" ? editTextRef.current : (inputRef.current?.value ?? editText);
+    // Empty -> revert, don't save 0 (lets user clear then Escape or blur without losing value)
+    if (raw.trim() === "") {
+      const revert = formatDisplay ? formatDisplay(commitRef.current) : String(commitRef.current);
+      editTextRef.current = revert;
+      setEditText(revert);
+      return;
+    }
+    const parsed = parseInput ? parseInput(raw) : Number(raw);
     if (!Number.isNaN(parsed) && parsed !== commitRef.current) {
       commitRef.current = parsed;
       onSave(parsed);
@@ -87,8 +100,7 @@ export function InlineEditableField({
     }
     // No change or invalid — keep commitRef as-is so the effect
     // doesn't overwrite it when the parent re-renders.
-  }, [editText, parseInput, onSave]);
-
+  }, [editText, parseInput, onSave, formatDisplay]);
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
@@ -96,14 +108,26 @@ export function InlineEditableField({
         (e.target as HTMLInputElement).blur();
       }
       if (e.key === "Escape") {
+        e.preventDefault();
+        // Revert to last committed value and exit without saving
+        const revert = formatDisplay ? formatDisplay(commitRef.current) : String(commitRef.current);
+        editTextRef.current = revert;
+        setEditText(revert);
         setEditing(false);
+        (e.target as HTMLInputElement).blur();
       }
     },
-    [],
+    [formatDisplay],
   );
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
+      // Allow empty while typing — don't jump to ₮ 0
+      if (raw.trim() === "") {
+        editTextRef.current = "";
+        setEditText("");
+        return;
+      }
       const num = parseInput ? parseInput(raw) : Number(raw);
       const selStart = e.target.selectionStart ?? 0;
 
@@ -134,8 +158,10 @@ export function InlineEditableField({
           if (count <= digitsBefore) pos = formatted.length;
           cursorRef.current = pos;
         }
+        editTextRef.current = formatted;
         setEditText(formatted);
       } else {
+        editTextRef.current = raw;
         setEditText(raw);
       }
 
@@ -143,6 +169,10 @@ export function InlineEditableField({
     },
     [formatDisplay, parseInput, onChange],
   );
+
+  // Width: content-sized but capped to avoid row jump. Parent w-* (e.g. w-20) caps it.
+  const widthCh = Math.max(String(inputValue).length + 1, 4);
+  const hasFixedWidth = /\bw-\d/.test(className);
 
   return (
     <input
@@ -155,23 +185,32 @@ export function InlineEditableField({
       onKeyDown={handleKeyDown}
       onChange={handleChange}
       className={[
-        // Shared sizing / font — identical in both modes
-        "inline-flex items-center min-w-0 px-0.5",
-        "text-xs font-semibold tabular-nums font-sans leading-none h-auto",
-        "bg-transparent border-0",
+        // Base
+        "inline-flex items-center min-w-0 px-1 py-0.5 rounded-md",
+        "text-xs font-semibold tabular-nums font-sans leading-none",
+        "bg-transparent border border-transparent",
+        "transition-colors duration-150",
         isNumber
           ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           : "",
-        // Display mode: looks like plain text
+        // Display: subtle affordance
         !editing
-          ? "cursor-pointer rounded hover:underline hover:decoration-dashed hover:underline-offset-2"
+          ? "cursor-pointer hover:bg-muted/60 hover:border-border/60"
           : "",
-        // Editing mode: keep native cursor, no focus ring
-        editing ? "outline-none ring-0" : "",
+        // Editing: clear focus ring
+        editing
+          ? "bg-background border-input shadow-sm outline-none ring-1 ring-ring/20 focus:ring-2 focus:ring-ring/30 focus:border-ring"
+          : "outline-none",
         className,
       ].join(" ")}
-      style={{ width: `${Math.max(String(inputValue).length + 2, 4)}ch` }}
+      style={
+        hasFixedWidth
+          ? undefined
+          : { width: `${Math.min(widthCh, 14)}ch`, maxWidth: "14ch" }
+      }
       aria-label={displayText}
+      aria-valuenow={isNumber ? value : undefined}
+      title={displayText}
     />
   );
 }

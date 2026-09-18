@@ -9,11 +9,13 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "check": "turbo run typecheck lint --continue",
+    "check:changed": "turbo run typecheck lint --filter='...[HEAD]' --continue",
     "test": "bash scripts/with-test-lock.sh turbo run test",
-    "test:changed": "turbo run test --filter='...[HEAD]'",
-    "test:coverage": "turbo run test:coverage",
-    "verify": "turbo run typecheck lint test:coverage --continue",
-    "audit": "turbo run verify && turbo run test:e2e",
+    "test:changed": "bash scripts/with-test-lock.sh turbo run test --filter='...[HEAD]'",
+    "test:coverage": "bash scripts/with-test-lock.sh turbo run test:coverage",
+    "verify": "bash scripts/with-test-lock.sh turbo run typecheck lint test:coverage --continue",
+    "verify:changed": "bash scripts/with-test-lock.sh turbo run typecheck lint test --filter='...[HEAD]' --continue",
+    "audit": "pnpm verify && turbo run test:e2e",
     "format": "biome format --write",
     "prepare": "husky",
     "sso:plan": "tsx scripts/sso/cli.ts plan",
@@ -21,8 +23,8 @@
     "sso:doctor": "tsx scripts/sso/cli.ts doctor",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
     "design:check": "bash scripts/design-quality-check.sh",
+    "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'",
     "agent:docs:index": "node scripts/generate-agent-package-index.mjs"
-    "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
