@@ -73,6 +73,7 @@ Six themes ship in `BRAND_THEMES` — each provides full light + dark mode varia
 | Orange | `orange` | Улбар шар |
 | Rose | `rose` | Ягаан өнгө |
 | Goku Gym | `goku-gym` | Goku Gym |
+| Nature | `nature` | Байгаль |
 
 ## TypeScript API
 

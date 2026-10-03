@@ -5,7 +5,7 @@ OKLch design tokens and global CSS source of truth for all Zuiio apps.
 | Export | Description |
 |--------|-------------|
 | `globals.css` | CSS custom properties: violet/teal brand primitives, OKLch semantic tokens, typography, spacing, motion, shadows |
-| `BRAND_THEMES` | Array of `BrandTheme` presets (zuiio, neutral, blue, green, purple, orange, rose, goku-gym) |
+| `BRAND_THEMES` | Array of `BrandTheme` presets (zuiio, neutral, blue, green, purple, orange, rose, goku-gym, nature) |
 | `BrandConfig` | Type: `{ theme, radius, logo_url, custom_colors?, font_body?, font_heading? }` |
 | `DEFAULT_BRAND_CONFIG` | `{ theme: "zuiio", radius: 0.5, logo_url: null }` |
 | `resolveBrandConfig(input)` | Merge partial/nullable config with defaults; null → zuiio preset |
