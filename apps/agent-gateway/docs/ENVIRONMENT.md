@@ -35,7 +35,8 @@ These do not block startup; each gates its own surface and fails closed when uns
 
 | Variable | Description | Example |
 |---|---|---|
-| `AGENT_GATEWAY_API_SECRET` | Shared server-to-server secret. Sent as `x-api-key` by Zer/Tolom to `/api/link/generate` and `/api/link/code`. Must match the value configured in Zer/Tolom. Fail-closed: both routes return 401 when unset. | `<random-32-byte-string>` |
+| `AGENT_GATEWAY_API_SECRET` | Shared server-to-server secret used by Tolom and legacy callers for `/api/link/generate` and for `/api/link/code` requests with `productType: "tolom"`. | `<random-32-byte-string>` |
+| `ZER_API_SECRET` | Zer-specific server-to-server secret. Must match Zer `AGENT_GATEWAY_ZER_API_SECRET`; used for `/api/link/code` requests with `productType: "zer"`. | `<random-32-byte-string>` |
 | `ZER_APP_URL` | Zer public server URL for the authenticated customer checkout boundary (`/api/internal/v1/checkout/orders`) | _(none — QPay chat orders disabled)_ |
 | `DASHBOARD_SECRET` | Gate for the ops dashboard: `/dashboard/login` sets an HMAC cookie, middleware protects `/dashboard/*` and `/api/dashboard/*`. Fail-closed: dashboard returns 503 when unset. | `<random-32-byte-string>` |
 | `CRON_SECRET` | Optional but recommended. All `/api/cron/*` endpoints (and `/api/flow/publish`) require `Authorization: Bearer <CRON_SECRET>` when set; skipped when unset. | `<random-32-byte-string>` |
