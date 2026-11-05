@@ -33,7 +33,9 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 const TEST_SECRET = "test-gateway-secret";
+const TEST_ZER_SECRET = "test-zer-secret";
 const AUTH_HEADERS = { "x-api-key": TEST_SECRET };
+const ZER_AUTH_HEADERS = { "x-api-key": TEST_ZER_SECRET };
 
 function makeRequest(
 	url: string,
@@ -49,10 +51,12 @@ function makeRequest(
 
 beforeEach(() => {
 	process.env.AGENT_GATEWAY_API_SECRET = TEST_SECRET;
+	process.env.ZER_API_SECRET = TEST_ZER_SECRET;
 });
 
 afterEach(() => {
 	delete process.env.AGENT_GATEWAY_API_SECRET;
+	delete process.env.ZER_API_SECRET;
 });
 
 describe("POST /api/link/code", () => {
@@ -66,7 +70,7 @@ describe("POST /api/link/code", () => {
 				userId: "user-123",
 				productType: "zer",
 			},
-			AUTH_HEADERS,
+			ZER_AUTH_HEADERS,
 		);
 
 		const response = await POST(request);
@@ -109,15 +113,48 @@ describe("POST /api/link/code", () => {
 		expect(response.status).toBe(401);
 	});
 
+	it("generates a Tolom link code with the generic gateway key", async () => {
+		const { POST } = await import("@/app/api/link/code/route");
+
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{
+				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+				userId: "user-123",
+				productType: "tolom",
+			},
+			AUTH_HEADERS,
+		);
+
+		const response = await POST(request);
+		expect(response.status).toBe(200);
+	});
+
+	it("rejects the generic gateway key for Zer-specific link codes", async () => {
+		const { POST } = await import("@/app/api/link/code/route");
+
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{
+				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+				userId: "user-123",
+				productType: "zer",
+			},
+			AUTH_HEADERS,
+		);
+
+		const response = await POST(request);
+		expect(response.status).toBe(401);
+	});
+
 	it("rejects missing orgId", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
 		const request = makeRequest(
 			"http://localhost/api/link/code",
 			{ userId: "user-123", productType: "zer" },
-			AUTH_HEADERS,
+			ZER_AUTH_HEADERS,
 		);
-
 		const response = await POST(request);
 		expect(response.status).toBe(400);
 	});
