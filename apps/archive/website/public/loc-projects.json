@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-11-02T10:29:04Z",
+  "generatedAt": "2026-11-05T15:40:37Z",
   "total": {
     "files": 8252,
-    "lines": 1422905,
-    "code": 1128536
+    "lines": 1422955,
+    "code": 1128579
   },
   "projects": [
     {
@@ -19,7 +19,7 @@
     {
       "project": "apps/agent-gateway",
       "files": 386,
-      "code": 46415
+      "code": 46458
     },
     {
       "project": "pnpm-lock.yaml",
