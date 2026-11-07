@@ -125,12 +125,14 @@ For non-Supabase applications — Django, Go, PHP, plain JavaScript, Flutter, et
 
 Zuiio ID is a standards-compliant OIDC Provider. You can use any OIDC library or raw HTTP.
 
+The production identity host is `https://id.zuiio.app`. `https://id.zuiiotech.com` is a hostname-level test alias on the same Worker, not an isolated environment; use `.app` for production clients.
+
 ### Discovery
 
 All metadata is available at:
 
 ```
-https://id.zuiiotech.com/.well-known/openid-configuration
+https://id.zuiio.app/.well-known/openid-configuration
 ```
 
 This returns the authorization endpoint, token endpoint, JWKS URI, supported scopes, response types, and more.
@@ -236,7 +238,7 @@ userinfo = requests.get(discovery["userinfo_endpoint"],
 ```go
 import "github.com/coreos/go-oidc/v3/oidc"
 
-provider, err := oidc.NewProvider(ctx, "https://id.zuiiotech.com")
+provider, err := oidc.NewProvider(ctx, "https://id.zuiio.app")
 // Use provider.Endpoint() for AuthURL, TokenURL
 // Generate PKCE with crypto/rand, use oauth2 package for token exchange
 ```
@@ -248,9 +250,9 @@ $provider = new \League\OAuth2\Client\Provider\GenericProvider([
     'clientId' => 'your-client-id',
     'clientSecret' => 'your-client-secret',
     'redirectUri' => 'https://yourapp.com/auth/callback',
-    'urlAuthorize' => 'https://id.zuiiotech.com/api/oauth/authorize',
-    'urlAccessToken' => 'https://id.zuiiotech.com/api/oauth/token',
-    'urlResourceOwnerDetails' => 'https://id.zuiiotech.com/api/oauth/userinfo',
+    'urlAuthorize' => 'https://id.zuiio.app/api/auth/oauth2/authorize',
+    'urlAccessToken' => 'https://id.zuiio.app/api/auth/oauth2/token',
+    'urlResourceOwnerDetails' => 'https://id.zuiio.app/api/auth/oauth2/userinfo',
 ]);
 
 // Generate PKCE
@@ -286,13 +288,13 @@ You can also register a public client (no secret) for mobile apps or SPAs, but P
 
 ## Token verification
 
-Zuiio ID JWKS endpoint:
+Use the OIDC discovery document:
 
 ```
-GET https://id.zuiiotech.com/api/oauth/jwks
+GET https://id.zuiio.app/.well-known/openid-configuration
 ```
 
-Returns public keys for RS256-signed ID tokens. Use these to verify token signatures locally.
+Read `jwks_uri` from that metadata (`https://id.zuiio.app/api/auth/jwks`) to verify OIDC ID tokens. The legacy M2M `/api/oauth/jwks` endpoint serves client-credentials keys, not OIDC ID-token keys.
 
 For Supabase Federation products, token verification happens automatically through Supabase Auth.
 

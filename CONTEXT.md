@@ -14,6 +14,7 @@ When app and root definitions conflict, the app-level file wins for its own scop
 - **FastGate** — The verification contract: `npm run verify` runs typecheck → lint → unit tests with coverage gating. A change is complete only when the gate is green.
 - **RLS (Row Level Security)** — The database-level tenant isolation mechanism. Never bypass it; never expose service-role credentials to client code.
 - **Design system** — The shared visual language (OKLch tokens, typography, spacing, motion) defined in `docs/design.md`. Every product uses it.
+- **Production service hostname** — `<service>.zuiio.app` is the production hostname for a service. **Hostname-level test alias** — `<service>.zuiiotech.com` is a test alias for that service only; it does not imply isolated infrastructure. Both apex domains and all other aliases remain unchanged.
 
 ## Preferred Terms
 
