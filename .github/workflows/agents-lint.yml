@@ -24,8 +24,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.10
+      # The builder has Node and pnpm installed; installer actions unpack into a
+      # shared ~/setup-pnpm that races when several runner jobs start together.
+      - name: Use the builder toolchain
+        run: |
+          echo /opt/homebrew/bin >> "$GITHUB_PATH"
+          /opt/homebrew/bin/pnpm --version
 
       - name: Install dependencies
         run: pnpm install

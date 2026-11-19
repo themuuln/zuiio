@@ -69,7 +69,12 @@ jobs:
             package.json
             turbo.json
             tsconfig.json
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      # The builder has Node and pnpm installed; installer actions unpack into a
+      # shared ~/setup-pnpm that races when several runner jobs start together.
+      - name: Use the builder toolchain
+        run: |
+          echo /opt/homebrew/bin >> "$GITHUB_PATH"
+          /opt/homebrew/bin/pnpm --version
       - run: corepack enable
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
