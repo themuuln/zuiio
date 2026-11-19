@@ -73,7 +73,10 @@ jobs:
       # shared ~/setup-pnpm that races when several runner jobs start together.
       - name: Use the builder toolchain
         run: |
-          echo /opt/homebrew/bin >> "$GITHUB_PATH"
+          {
+            echo /opt/homebrew/bin
+            echo "$PWD/node_modules/.bin"
+          } >> "$GITHUB_PATH"
           /opt/homebrew/bin/pnpm --version
       - run: corepack enable
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
