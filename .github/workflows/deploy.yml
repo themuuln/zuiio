@@ -25,7 +25,7 @@ permissions:
 jobs:
   # ─── Detect which apps actually changed ───
   detect-changes:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     outputs:
 
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
@@ -54,7 +54,7 @@ jobs:
   typecheck:
     needs: detect-changes
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,12 +69,19 @@ jobs:
             package.json
             turbo.json
             tsconfig.json
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      # The builder has Node and pnpm installed; installer actions unpack into a
+      # shared ~/setup-pnpm that races when several runner jobs start together.
+      - name: Use the builder toolchain
+        run: |
+          {
+            echo /opt/homebrew/bin
+            echo "$PWD/node_modules/.bin"
+          } >> "$GITHUB_PATH"
+          /opt/homebrew/bin/pnpm --version
       - run: corepack enable
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
-          cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: 🧹 FastGate — lint

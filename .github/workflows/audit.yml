@@ -35,7 +35,7 @@ jobs:
   security:
     needs: fastgate
     if: always() && !cancelled()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     continue-on-error: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -64,14 +64,22 @@ jobs:
   license:
     needs: fastgate
     if: always() && !cancelled()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     continue-on-error: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: pnpm/action-setup@v6.0.10
+      # The builder has Node and pnpm installed; installer actions unpack into a
+      # shared ~/setup-pnpm that races when several runner jobs start together.
+      - name: Use the builder toolchain
+        run: |
+          {
+            echo /opt/homebrew/bin
+            echo "$PWD/node_modules/.bin"
+          } >> "$GITHUB_PATH"
+          /opt/homebrew/bin/pnpm --version
       - run: corepack enable
       - uses: actions/setup-node@v7.0.0
-        with: { node-version: "24", cache: pnpm }
+        with: { node-version: "24" }
       - run: pnpm install --frozen-lockfile
       - name: Check licenses
         run: pnpm licenses check
@@ -83,7 +91,7 @@ jobs:
   gate-result:
     if: always() && !cancelled()
     needs: [fastgate, security, license]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     steps:
       - name: Check gate results
         run: |

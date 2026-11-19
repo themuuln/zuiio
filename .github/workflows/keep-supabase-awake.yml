@@ -53,7 +53,7 @@ permissions:
 
 jobs:
   ping:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, arm64, builder]
     steps:
       - name: Ping all Supabase projects
         env:
