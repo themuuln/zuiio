@@ -42,8 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
+      # pnpm/action-setup installs the version pinned by `packageManager`;
+      # `corepack enable` is not used because a host version manager (mise)
+      # owns `corepack` on the self-hosted runner.
       - uses: pnpm/action-setup@v6.0.10
-      - run: corepack enable
 
       - uses: actions/setup-node@v7.0.0
         with:
