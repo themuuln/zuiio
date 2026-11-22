@@ -1,7 +1,7 @@
 {
   "name": "@zuiio/oidc",
-  "version": "0.1.0",
   "version": "0.2.3",
+  "description": "OIDC client for Zuiio ID — discovery, PKCE authorization, token refresh, logout",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -11,6 +11,17 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
+    "provenance": false
   },
   "peerDependencies": {
     "openid-client": "^6"
