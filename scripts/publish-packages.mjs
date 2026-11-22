@@ -355,10 +355,13 @@ function buildStagedManifest(pkg, stagedExports, repository) {
   if (rootDefault) manifest.main = rootDefault;
   if (rootDefault) manifest.module = rootDefault;
 
-  manifest.publishConfig = { registry: pkg.registry, access: pkg.access };
-  // npm auto-adds provenance for trusted publishing; it cannot be generated
-  // from a private source repository, so the flag must reach the manifest.
-  if (pkg.manifest.publishConfig?.provenance === false) manifest.publishConfig.provenance = false;
+  // Provenance is on by default: npm only generates an attestation when it is
+  // asked to, and a manifest that carries `provenance: false` opts out.
+  manifest.publishConfig = {
+    registry: pkg.registry,
+    access: pkg.access,
+    provenance: pkg.manifest.publishConfig?.provenance !== false,
+  };
   return manifest;
 }
 
@@ -551,6 +554,7 @@ async function publishPackage(pkg, stageDir, token, tag, stage) {
       tag,
       "--access",
       pkg.access,
+      ...(pkg.manifest.publishConfig?.provenance === false ? [] : ["--provenance"]),
       ...authArgs,
       "--no-audit",
       "--no-fund",

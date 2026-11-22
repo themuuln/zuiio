@@ -1,6 +1,6 @@
 {
   "name": "@zuiio/supabase",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Supabase server utilities — auth, query, storage, R2, Turnstile, Workers AI",
   "license": "MIT",
   "repository": {
@@ -28,7 +28,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public",
-    "provenance": false
+    "provenance": true
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2"

@@ -66,11 +66,14 @@ A new trust relationship must complete its first successful publish within
 **2 days**, or it expires and has to be recreated — configure trust and release
 in the same sitting.
 
-`themuuln/zuiio` is a **private repository**, so npm's automatic provenance
-attestations are unavailable (they require a public source repo), and the
-manifests carry `publishConfig.provenance: false` to stop npm attempting one.
-Publishing itself is unaffected. Remove that flag if the repository ever becomes
-public.
+`themuuln/zuiio` is a **public repository**, which is a hard requirement for
+provenance: npm refuses to attest a package whose source repository is private.
+Each manifest therefore carries `publishConfig.provenance: true`, the publish
+script stages that flag and passes `--provenance` to `npm publish`, and the
+registry records a SLSA provenance attestation alongside the tarball. A manifest
+that sets `provenance: false` opts its package out again — doing that while the
+repository is private is not needed, but publishing from a private fork/deploy
+of this repository will not produce attestations.
 
 The workflow must keep `permissions: id-token: write` and publish from the
 workflow file named above — npm matches both, and a renamed file breaks

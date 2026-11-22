@@ -1,6 +1,6 @@
 {
   "name": "@zuiio/oidc",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "OIDC client for Zuiio ID — discovery, PKCE authorization, token refresh, logout",
   "license": "MIT",
   "repository": {
@@ -21,7 +21,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public",
-    "provenance": false
+    "provenance": true
   },
   "peerDependencies": {
     "openid-client": "^6"
