@@ -35,7 +35,10 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    # Self-hosted macOS runner registered to this repository as `zuiio-mac`.
+    # GitHub-hosted minutes are unavailable on this private repository, and
+    # trusted publishing works identically through the runner's OIDC token.
+    runs-on: [self-hosted, macOS, ARM64, zuiio]
     steps:
       - uses: actions/checkout@v7.0.1
 
