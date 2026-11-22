@@ -25,4 +25,12 @@
 		"@aws-sdk/client-s3": "^3.1081.0",
 		"@aws-sdk/s3-request-presigner": "^3.1081.0"
 	}
+  "version": "0.2.3",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/themuuln/zuiio.git",
+    "directory": "packages/supabase"
+  },
+    "access": "public",
+    "provenance": false
 }
