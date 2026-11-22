@@ -1,0 +1,86 @@
+name: Publish packages
+
+# Publishes the `@zuiio/*` line publicly to npmjs through a GitHub trusted
+# publisher (OIDC, `id-token: write`) — no NPM_TOKEN secret involved.
+# See docs/packages-publish.md for the versioning, consumption and rollback rules.
+#
+# Trigger a release by pushing a tag, or run it by hand from the Actions UI.
+# Nothing is published when the exact version already exists in the registry;
+# bump the package version to ship a new one.
+
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: "Only this package (e.g. @zuiio/oidc). Empty = every package with publishConfig.registry."
+        type: string
+        required: false
+        default: ""
+      dry_run:
+        description: "Build and stage only — publish nothing"
+        type: boolean
+        required: false
+        default: false
+  push:
+    tags:
+      - "packages-v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-packages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: pnpm/action-setup@v6.0.10
+      - run: corepack enable
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      # Trusted publishing needs npm >= 11.5.1; pin nothing older by accident.
+      - name: Ensure npm supports trusted publishing
+        run: npm install -g npm@latest && npm --version
+
+      # No `registry-url` here on purpose: it would rewrite the registry for
+      # every dependency in the workspace. The publish script passes the
+      # package's `publishConfig.registry` explicitly instead.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish to npm (trusted publisher)
+        env:
+          RELEASE_FILTER: ${{ inputs.filter }}
+          RELEASE_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          # No token: npm exchanges the job's OIDC identity for a short-lived
+          # credential. Requires a trusted publisher for each package
+          # (`npm trust github @zuiio/<pkg> --file publish-packages.yml --repo themuuln/zuiio --allow-publish`).
+          args=(--tag latest)
+          if [ -n "${RELEASE_FILTER:-}" ]; then
+            args+=("--filter=${RELEASE_FILTER}")
+          fi
+          if [ "${RELEASE_DRY_RUN:-false}" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          node scripts/publish-packages.mjs "${args[@]}"
+
+      - name: Upload publish summary
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: publish-summary-${{ github.run_id }}
+          path: .publish/**/package.json
+          retention-days: 14
+          include-hidden-files: true
+          if-no-files-found: ignore
