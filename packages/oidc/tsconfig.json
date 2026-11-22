@@ -1,9 +1,10 @@
 {
-  "extends": "@zuiio/config/tsconfig",
+  "extends": "../config/tsconfig.json",
   "compilerOptions": {
-    "paths": {
-      "@zuiio/oidc": ["./src/index.ts"]
-    }
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "incremental": false,
+    "inlineSources": true
   },
   "include": ["src"]
 }
