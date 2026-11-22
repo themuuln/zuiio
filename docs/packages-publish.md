@@ -75,6 +75,13 @@ that sets `provenance: false` opts its package out again — doing that while th
 repository is private is not needed, but publishing from a private fork/deploy
 of this repository will not produce attestations.
 
+The publish job must also run on a **GitHub-hosted** runner, not the self-hosted
+one: npm rejects the attestation with
+`E422 … Unsupported GitHub Actions runner environment: "self-hosted"`, so
+provenance and self-hosted runners are mutually exclusive. The repository is
+public, so hosted minutes are free; drop `--provenance` and the manifest flag if
+the job ever has to move back to the self-hosted macOS runner.
+
 The workflow must keep `permissions: id-token: write` and publish from the
 workflow file named above — npm matches both, and a renamed file breaks
 publishing with `E404`/`E403`.

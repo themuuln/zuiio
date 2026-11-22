@@ -35,16 +35,15 @@ concurrency:
 
 jobs:
   publish:
-    # Self-hosted macOS runner registered to this repository as `zuiio-mac`.
-    # GitHub-hosted minutes are unavailable on this private repository, and
-    # trusted publishing works identically through the runner's OIDC token.
-    runs-on: [self-hosted, macOS, ARM64, zuiio]
+    # Provenance is the reason this job is GitHub-hosted: npm rejects an
+    # attestation whose runner is not `github-hosted`
+    # (`E422 ... Unsupported GitHub Actions runner environment: "self-hosted"`),
+    # and the repository is public, so hosted minutes are free.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
 
-      # pnpm/action-setup installs the version pinned by `packageManager`;
-      # `corepack enable` is not used because a host version manager (mise)
-      # owns `corepack` on the self-hosted runner.
+      # pnpm/action-setup installs the version pinned by `packageManager`.
       - uses: pnpm/action-setup@v6.0.10
 
       - uses: actions/setup-node@v7.0.0
