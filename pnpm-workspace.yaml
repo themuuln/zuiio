@@ -89,6 +89,9 @@ catalog:
   react-native-get-random-values: ^2.0.0
   msw: 2.15.0
   cockatiel: 4.0.0
+  expo-observe: ~57.0.26
+  # JWT / JWKS
+  jose: ^6.2.14
 
 allowBuilds:
   '@google/genai': true

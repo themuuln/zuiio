@@ -1,28 +1,46 @@
 {
-	"name": "@zuiio/supabase",
-	"version": "0.1.0",
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./auth": "./src/auth.ts",
-		"./errors": "./src/errors.ts",
-		"./query": "./src/query.ts",
-		"./storage": "./src/storage.ts",
-		"./turnstile": "./src/turnstile.ts",
-		"./r2-storage": "./src/r2-storage.ts",
-		"./workers-ai": "./src/workers-ai.ts"
-	},
-	"peerDependencies": {
-		"@supabase/supabase-js": "^2"
-	},
-	"devDependencies": {
-		"@supabase/supabase-js": "^2.110.6",
-		"@typescript/native": "npm:typescript@^7.0.2",
-		"@zuiio/config": "workspace:*",
-		"typescript": "^7.0.2"
-	},
-	"dependencies": {
-		"@aws-sdk/client-s3": "^3.1081.0",
-		"@aws-sdk/s3-request-presigner": "^3.1081.0"
-	}
+  "name": "@zuiio/supabase",
+  "version": "0.2.4",
+  "description": "Supabase server utilities — auth, query, storage, R2, Turnstile, Workers AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/themuuln/zuiio.git",
+    "directory": "packages/supabase"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./errors": "./src/errors.ts",
+    "./query": "./src/query.ts",
+    "./storage": "./src/storage.ts",
+    "./turnstile": "./src/turnstile.ts",
+    "./r2-storage": "./src/r2-storage.ts",
+    "./workers-ai": "./src/workers-ai.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.110.6",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@zuiio/config": "workspace:*",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1081.0",
+    "@aws-sdk/s3-request-presigner": "^3.1081.0"
+  }
 }

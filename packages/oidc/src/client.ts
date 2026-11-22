@@ -33,11 +33,22 @@
  */
 
 import {
-  Issuer,
-  generators,
-  type Client as OidcClient,
-  type TokenSet as OidcTokenSet,
-  type UserinfoResponse,
+  ClientSecretBasic,
+  None,
+  authorizationCodeGrant,
+  buildAuthorizationUrl,
+  buildEndSessionUrl,
+  calculatePKCECodeChallenge,
+  discovery,
+  fetchUserInfo,
+  randomNonce,
+  randomPKCECodeVerifier,
+  randomState,
+  refreshTokenGrant,
+  skipSubjectCheck,
+  type Configuration,
+  type TokenEndpointResponse,
+  type UserInfoResponse,
 } from "openid-client";
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -80,8 +91,8 @@ export interface ZuiioTokenSet {
   refreshToken?: string;
   /** Access token expiry as Unix timestamp (seconds) */
   expiresAt?: number;
-  /** Raw openid-client token set (for advanced usage) */
-  raw: OidcTokenSet;
+  /** Raw openid-client token response (for advanced usage) */
+  raw: TokenEndpointResponse;
 }
 
 /** Userinfo claims returned from the userinfo endpoint. */
@@ -93,7 +104,7 @@ export interface ZuiioUserinfo {
   fullName?: string;
   username?: string;
   picture?: string;
-  updatedAt?: string;
+  updatedAt?: number;
   [key: string]: unknown;
 }
 
@@ -154,8 +165,8 @@ export interface ZuiioOidcClient {
     postLogoutRedirectUri?: string,
   ): string | undefined;
 
-  /** The underlying openid-client Client instance (for advanced use). */
-  raw: OidcClient;
+  /** The underlying openid-client Configuration (for advanced use). */
+  raw: Configuration;
 }
 
 // ─── Factory ────────────────────────────────────────────────────────
@@ -175,15 +186,18 @@ export interface ZuiioOidcClient {
 export async function createZuiioOidcClient(
   config: ZuiioOidcConfig,
 ): Promise<ZuiioOidcClient> {
-  const issuer = await Issuer.discover(config.issuer);
-
-  const client = new issuer.Client({
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
-    redirect_uris: [config.redirectUri],
-    response_types: ["code"],
-    token_endpoint_auth_method: config.clientSecret ? "client_secret_basic" : "none",
-  });
+  const oidc = await discovery(
+    new URL(config.issuer),
+    config.clientId,
+    {
+      redirect_uris: [config.redirectUri],
+      response_types: ["code"],
+      token_endpoint_auth_method: config.clientSecret
+        ? "client_secret_basic"
+        : "none",
+    },
+    config.clientSecret ? ClientSecretBasic(config.clientSecret) : None(),
+  );
 
   const scopes = config.scopes ?? [
     "openid",
@@ -192,14 +206,28 @@ export async function createZuiioOidcClient(
     "offline_access",
   ];
 
+  function toTokenSet(response: TokenEndpointResponse): ZuiioTokenSet {
+    return {
+      accessToken: response.access_token,
+      idToken: response.id_token ?? "",
+      refreshToken: response.refresh_token,
+      expiresAt:
+        typeof response.expires_in === "number"
+          ? Math.floor(Date.now() / 1000) + response.expires_in
+          : undefined,
+      raw: response,
+    };
+  }
+
   // ── beginAuthorization ──
   async function beginAuthorization(): Promise<AuthorizationTransaction> {
-    const codeVerifier = generators.codeVerifier();
-    const codeChallenge = generators.codeChallenge(codeVerifier);
-    const state = generators.state();
-    const nonce = generators.nonce();
+    const codeVerifier = randomPKCECodeVerifier();
+    const codeChallenge = await calculatePKCECodeChallenge(codeVerifier);
+    const state = randomState();
+    const nonce = randomNonce();
 
-    const url = client.authorizationUrl({
+    const url = buildAuthorizationUrl(oidc, {
+      redirect_uri: config.redirectUri,
       scope: scopes.join(" "),
       code_challenge: codeChallenge,
       code_challenge_method: "S256",
@@ -207,7 +235,7 @@ export async function createZuiioOidcClient(
       nonce,
     });
 
-    return { url, state, nonce, codeVerifier };
+    return { url: url.href, state, nonce, codeVerifier };
   }
 
   // ── handleCallback ──
@@ -218,53 +246,42 @@ export async function createZuiioOidcClient(
     const url =
       typeof callbackUrl === "string" ? new URL(callbackUrl) : callbackUrl;
 
-    const params = client.callbackParams(url.toString());
+    const response = await authorizationCodeGrant(oidc, url, {
+      expectedState: transaction.state,
+      expectedNonce: transaction.nonce,
+      pkceCodeVerifier: transaction.codeVerifier,
+    });
 
-    const tokenSet = await client.callback(
-      config.redirectUri,
-      params,
-      {
-        code_verifier: transaction.codeVerifier,
-        state: transaction.state,
-        nonce: transaction.nonce,
-      },
-    );
-
-    return {
-      accessToken: tokenSet.access_token ?? "",
-      idToken: tokenSet.id_token ?? "",
-      refreshToken: tokenSet.refresh_token,
-      expiresAt: tokenSet.expires_at,
-      raw: tokenSet,
-    };
+    return toTokenSet(response);
   }
 
   // ── refresh ──
   async function refresh(refreshToken: string): Promise<ZuiioTokenSet> {
-    const tokenSet = await client.refresh(refreshToken);
-
-    return {
-      accessToken: tokenSet.access_token ?? "",
-      idToken: tokenSet.id_token ?? "",
-      refreshToken: tokenSet.refresh_token,
-      expiresAt: tokenSet.expires_at,
-      raw: tokenSet,
-    };
+    return toTokenSet(await refreshTokenGrant(oidc, refreshToken));
   }
 
   // ── userinfo ──
   async function userinfo(accessToken: string): Promise<ZuiioUserinfo> {
-    const response: UserinfoResponse = await client.userinfo(accessToken);
+    const response: UserInfoResponse = await fetchUserInfo(
+      oidc,
+      accessToken,
+      skipSubjectCheck,
+    );
+
     return {
+      ...response,
       sub: response.sub,
       email: response.email,
       emailVerified: response.email_verified,
       name: response.name,
-      fullName: response.full_name,
-      username: response.username,
+      fullName:
+        typeof response.full_name === "string" ? response.full_name : undefined,
+      username:
+        typeof response.username === "string"
+          ? response.username
+          : response.preferred_username,
       picture: response.picture,
       updatedAt: response.updated_at,
-      ...response,
     };
   }
 
@@ -273,11 +290,15 @@ export async function createZuiioOidcClient(
     idTokenHint?: string,
     postLogoutRedirectUri?: string,
   ): string | undefined {
-    if (!client.endSessionUrl) return undefined;
-    return client.endSessionUrl({
-      id_token_hint: idTokenHint,
-      post_logout_redirect_uri: postLogoutRedirectUri,
-    });
+    if (!oidc.serverMetadata().end_session_endpoint) return undefined;
+
+    const parameters: Record<string, string> = {};
+    if (idTokenHint) parameters.id_token_hint = idTokenHint;
+    if (postLogoutRedirectUri) {
+      parameters.post_logout_redirect_uri = postLogoutRedirectUri;
+    }
+
+    return buildEndSessionUrl(oidc, parameters).href;
   }
 
   return {
@@ -286,6 +307,6 @@ export async function createZuiioOidcClient(
     refresh,
     userinfo,
     endSessionUrl,
-    raw: client,
+    raw: oidc,
   };
 }
